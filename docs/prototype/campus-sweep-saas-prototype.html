@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><nav class="nav"><button class="active" data-scene="matrix">楼栋矩阵</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav></header>
+  <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><nav class="nav"><button class="active" data-scene="matrix">楼栋矩阵</button><button data-scene="batch">批量标记</button><button data-scene="single">单独记录</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav></header>
   <main class="wrap">
     <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS</p></div>
 
@@ -28,6 +28,15 @@
         <div class="phone"><div class="statusbar">19:49</div><div class="appbar"><div class="back">‹ 返回选择</div><h3>统一标记4间</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice">🟡 待补扫</button><button class="choice on">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="noteSelect"><span id="noteValue">请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="noteDropdown"><div class="note-option">已加种子</div><div class="note-option">已注册</div><div class="note-option">已成交</div><div class="note-option">已充分沟通</div><div class="note-option">有人可帮忙传达</div><div class="note-option">明确没需求</div><div class="note-option">＋ 自定义备注</div></div></div><div class="bottom"><button class="primary">保存4间宿舍</button></div></div>
       </div>
       <div class="help">快捷备注使用全宽横幅下拉框；展开最多显示五条，更多选项只在下拉框内部滚动，不把页面继续撑长。</div>
+    </section>
+
+    <section class="scene" id="single">
+      <div class="scene-title"><h2>单独记录</h2><p>楼栋矩阵点宿舍 → 宿舍详情 → 记录这个宿舍 → 保存后回详情</p></div>
+      <div class="phones two">
+        <div class="phone"><div class="statusbar">19:43</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼 · 6楼</div><div style="display:flex;justify-content:space-between;align-items:center"><h3>603</h3><span class="pill" style="background:#fff2c9;color:#8d5f00">🟡 整体待补扫</span></div></div><div class="record-section"><div class="label">我的记录</div><div class="record" style="text-align:center;padding:24px 14px"><b style="display:block;margin-bottom:7px">你还没有记录</b><span class="small">可以参考整体状态，再留下自己的判断</span><button class="primary" data-single-entry style="margin-top:18px">记录这个宿舍</button></div><div class="linkrow"><span>历史记录 <span class="small">1条</span></span><span>›</span></div></div></div>
+        <div class="phone"><div class="statusbar">19:44</div><div class="appbar"><div class="back" data-jump="detail">‹ 返回603</div><h3>记录603</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice">🟡 待补扫</button><button class="choice on">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="singleNoteSelect"><span id="singleNoteValue">请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="singleNoteDropdown"><div class="note-option">已加种子</div><div class="note-option">已注册</div><div class="note-option">已成交</div><div class="note-option">已充分沟通</div><div class="note-option">有人可帮忙传达</div><div class="note-option">明确没需求</div><div class="note-option">＋ 自定义备注</div></div><div class="help" style="margin-top:18px">如果已经有自己的记录，本页会预填原状态和备注，标题改为“修改603”。</div></div><div class="bottom"><button class="primary" data-jump="detail">保存并返回宿舍详情</button></div></div>
+      </div>
+      <div class="help"><b>与批量标记共用同一个记录编辑组件：</b>状态按钮、快捷备注下拉和校验完全一致。差别只在于单独记录处理一间宿舍，批量标记把同一结果应用到多间宿舍。</div>
     </section>
 
     <section class="scene" id="detail">
@@ -48,9 +57,11 @@
     const showScene=id=>{document.querySelectorAll('.scene').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.scene===id));window.scrollTo({top:0,behavior:'smooth'})};
     document.querySelectorAll('[data-scene]').forEach(b=>b.addEventListener('click',()=>showScene(b.dataset.scene)));
     document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>showScene(b.dataset.jump)));
-    const select=document.getElementById('noteSelect'),drop=document.getElementById('noteDropdown'),value=document.getElementById('noteValue');
-    select.addEventListener('click',()=>drop.classList.toggle('open'));
-    drop.querySelectorAll('.note-option').forEach(o=>o.addEventListener('click',()=>{drop.querySelectorAll('.note-option').forEach(x=>x.classList.remove('on'));o.classList.add('on');value.textContent=o.textContent;drop.classList.remove('open')}));
+    document.querySelectorAll('#matrix .room').forEach(room=>{room.style.cursor='pointer';room.addEventListener('click',()=>showScene('detail'))});
+    document.querySelectorAll('#detail .record.mine,[data-single-entry]').forEach(entry=>{entry.style.cursor='pointer';entry.addEventListener('click',()=>showScene('single'))});
+    const wireSelect=(selectId,dropdownId,valueId)=>{const select=document.getElementById(selectId),drop=document.getElementById(dropdownId),value=document.getElementById(valueId);select.addEventListener('click',()=>drop.classList.toggle('open'));drop.querySelectorAll('.note-option').forEach(o=>o.addEventListener('click',()=>{drop.querySelectorAll('.note-option').forEach(x=>x.classList.remove('on'));o.classList.add('on');value.textContent=o.textContent;drop.classList.remove('open')}))};
+    wireSelect('noteSelect','noteDropdown','noteValue');
+    wireSelect('singleNoteSelect','singleNoteDropdown','singleNoteValue');
   </script>
 </body>
 </html>
