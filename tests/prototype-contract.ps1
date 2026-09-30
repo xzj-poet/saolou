@@ -48,7 +48,7 @@ Assert-Contains 'event\.stopPropagation\(\)' 'Opening a three-dot menu must not 
 Assert-Contains "event\.key==='Escape'" 'The open action menu must close when Escape is pressed.'
 
 $nativeMenuCount = ([regex]::Matches($html, '<details class="menu-shell">')).Count
-if ($nativeMenuCount -ne 8) {
+if ($nativeMenuCount -ne 18) {
     $failures.Add("Every school, building, and agent action menu must use an independent native disclosure; found $nativeMenuCount.")
 }
 
@@ -110,6 +110,27 @@ Assert-Contains 'revealCreatedAgentPassword\(' 'Agent creation must reveal the o
 Assert-Contains "searchParams\.get\('agent'\)" 'The prototype must support direct-open agent dialogs for visual review.'
 Assert-Contains "searchParams\.get\('passwordRevealed'\)" 'The prototype must support direct review of the post-reset password state.'
 Assert-Contains "searchParams\.get\('agentCreated'\)" 'The prototype must support direct review of the post-create password state.'
+Assert-Contains 'class="module wide quick-note-module"' 'Quick notes must use a full-width admin module.'
+Assert-Contains 'data-quick-note-tab="pending"' 'Quick-note management must separate pending notes.'
+Assert-Contains 'data-quick-note-tab="covered"' 'Quick-note management must separate covered notes.'
+Assert-Contains 'data-quick-note-panel="pending"' 'Pending quick notes must have their own management panel.'
+Assert-Contains 'data-quick-note-panel="covered"' 'Covered quick notes must have their own management panel.'
+Assert-Contains 'data-note-id="pending-no-answer"' 'Quick-note rows must have stable identities.'
+Assert-Contains 'data-note-move="up"' 'Administrators must be able to move notes upward.'
+Assert-Contains 'data-note-move="down"' 'Administrators must be able to move notes downward.'
+Assert-Contains 'data-action="add-quick-note"' 'Administrators must be able to add quick notes.'
+Assert-Contains 'data-action="edit-quick-note"' 'Administrators must be able to edit quick notes.'
+Assert-Contains 'data-action="toggle-quick-note"' 'Administrators must be able to enable or disable quick notes.'
+Assert-Contains 'data-action="delete-quick-note"' 'Administrators must be able to delete quick notes.'
+Assert-Contains 'id="admin-form-add-quick-note"' 'Quick-note creation must use the shared admin dialog.'
+Assert-Contains 'id="admin-form-edit-quick-note"' 'Quick-note editing must use the shared admin dialog.'
+Assert-Contains 'id="admin-form-delete-quick-note"' 'Quick-note deletion must use the shared admin dialog.'
+Assert-Contains 'data-note-snapshot-policy="immutable"' 'Quick-note configuration must explicitly preserve historical record text.'
+Assert-Contains 'data-system-quick-note="custom"' 'The fixed custom-note entry must be documented outside the editable list.'
+Assert-Contains 'wireQuickNoteTabs\(' 'Quick-note groups must switch without leaving the admin page.'
+Assert-Contains "adminToast\.textContent='原型演示：操作已确认，示例数据未改变'" 'Modal confirmation must restore the general success message after quick-note actions.'
+Assert-Contains "searchParams\.get\('noteGroup'\)" 'The prototype must support direct review of either quick-note group.'
+Assert-Contains "searchParams\.get\('noteId'\)" 'The prototype must support direct review of a specific quick-note action.'
 Assert-Contains 'data-building-card="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Agent building cards must derive floor and dorm counts from dormitory data.'
 Assert-Contains 'data-building-matrix="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'The building matrix must use the same derived counts.'
 Assert-Contains 'data-building-id="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Admin building counts must derive from dormitory data.'
