@@ -43,6 +43,21 @@ Assert-Contains 'data-action="delete-dorm-batch"' 'Dormitories must support batc
 Assert-Contains 'data-delete-policy="record-disable"' 'Dormitories with sweep records must be protected from deletion.'
 Assert-Contains 'data-delete-policy="children-disable"' 'Schools and buildings with children must be protected from deletion.'
 Assert-Contains 'URLSearchParams\(window\.location\.search\)' 'The prototype must support direct scene links for review.'
+Assert-Contains 'data-building-card="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Agent building cards must derive floor and dorm counts from dormitory data.'
+Assert-Contains 'data-building-matrix="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'The building matrix must use the same derived counts.'
+Assert-Contains 'data-building-id="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Admin building counts must derive from dormitory data.'
+Assert-Contains 'data-floor="2"' 'The 3-building example must contain the derived second-floor group.'
+Assert-Contains 'data-room-no="201"' 'The 3-building example must contain room 201.'
+Assert-Contains 'data-room-no="202"' 'The 3-building example must contain room 202.'
+
+if ($html -match 'data-count-source="note"') {
+    $failures.Add('Building notes must never be used as the source of counts.')
+}
+
+$floorNodeCount = ([regex]::Matches($html, 'class="floor-node"')).Count
+if ($floorNodeCount -ne 1) {
+    $failures.Add("The 3-building admin example must derive exactly 1 floor; found $floorNodeCount.")
+}
 
 if ($failures.Count -gt 0) {
     $failures | ForEach-Object { Write-Error $_ -ErrorAction Continue }
