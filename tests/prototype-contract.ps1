@@ -48,8 +48,8 @@ Assert-Contains 'event\.stopPropagation\(\)' 'Opening a three-dot menu must not 
 Assert-Contains "event\.key==='Escape'" 'The open action menu must close when Escape is pressed.'
 
 $nativeMenuCount = ([regex]::Matches($html, '<details class="menu-shell">')).Count
-if ($nativeMenuCount -ne 18) {
-    $failures.Add("Every school, building, and agent action menu must use an independent native disclosure; found $nativeMenuCount.")
+if ($nativeMenuCount -ne 21) {
+    $failures.Add("Every school, building, agent, quick-note, and sweep-record action menu must use an independent native disclosure; found $nativeMenuCount.")
 }
 
 if ($html -match 'class="floor-node"|data-menu-trigger="dormitory"|class="context-menu dormitory-menu"') {
@@ -131,6 +131,30 @@ Assert-Contains 'wireQuickNoteTabs\(' 'Quick-note groups must switch without lea
 Assert-Contains "adminToast\.textContent='原型演示：操作已确认，示例数据未改变'" 'Modal confirmation must restore the general success message after quick-note actions.'
 Assert-Contains "searchParams\.get\('noteGroup'\)" 'The prototype must support direct review of either quick-note group.'
 Assert-Contains "searchParams\.get\('noteId'\)" 'The prototype must support direct review of a specific quick-note action.'
+Assert-Contains 'class="module wide sweep-data-module"' 'Sweep data must use a full-width admin module.'
+Assert-Contains 'data-sweep-data-tab="records"' 'Sweep data must provide a current-records tab.'
+Assert-Contains 'data-sweep-data-tab="audit"' 'Sweep data must provide an audit-log tab.'
+Assert-Contains 'data-sweep-data-panel="records"' 'Current records must have their own panel.'
+Assert-Contains 'data-sweep-data-panel="audit"' 'Audit entries must have their own read-only panel.'
+Assert-Contains 'data-record-filter="school"' 'Current records must be filterable by school.'
+Assert-Contains 'data-record-filter="building"' 'Current records must be filterable by building.'
+Assert-Contains 'data-record-filter="room"' 'Current records must be filterable by room number.'
+Assert-Contains 'data-record-filter="agent"' 'Current records must be filterable by agent.'
+Assert-Contains 'data-record-filter="status"' 'Current records must be filterable by status.'
+Assert-Contains 'data-sweep-record-id="record-zhang-201"' 'Current sweep records must have stable identities.'
+Assert-Contains 'data-action="edit-sweep-record"' 'Administrators must be able to correct a current sweep record.'
+Assert-Contains 'data-action="delete-sweep-record"' 'Administrators must be able to remove an erroneous current sweep record.'
+Assert-Contains 'id="admin-form-edit-sweep-record"' 'Sweep-record editing must use the shared admin dialog.'
+Assert-Contains 'id="admin-form-delete-sweep-record"' 'Sweep-record deletion must use a second-confirmation dialog.'
+Assert-Contains 'data-delete-audit-snapshot="preserved"' 'Deleting a current record must preserve its original text in the audit log.'
+Assert-Contains 'data-overall-status-recalculation="required"' 'Editing or deleting a current record must recalculate the dormitory overall status.'
+Assert-Contains 'data-audit-action="UPDATE"' 'The audit log must show record corrections.'
+Assert-Contains 'data-audit-action="DELETE"' 'The audit log must show deleted-record snapshots.'
+Assert-Contains 'class="audit-before"' 'Audit entries must show the state before an administrator change.'
+Assert-Contains 'class="audit-after"' 'Audit entries must show the state after an administrator change.'
+Assert-Contains 'wireSweepDataTabs\(' 'Current records and audit logs must switch without leaving the admin page.'
+Assert-Contains "searchParams\.get\('dataView'\)" 'The prototype must support direct review of either sweep-data tab.'
+Assert-Contains "searchParams\.get\('recordId'\)" 'The prototype must support direct review of a specific current record action.'
 Assert-Contains 'data-building-card="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Agent building cards must derive floor and dorm counts from dormitory data.'
 Assert-Contains 'data-building-matrix="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'The building matrix must use the same derived counts.'
 Assert-Contains 'data-building-id="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Admin building counts must derive from dormitory data.'
