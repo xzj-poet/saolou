@@ -29,6 +29,21 @@ if ($buildingCardCount -lt 3) {
     $failures.Add("The building page must show at least 3 buildings; found $buildingCardCount.")
 }
 
+Assert-Contains 'class="admin-data-tree"' 'Admin basic data must use a nested data tree.'
+Assert-Contains 'class="tree-node school-node"' 'The data tree must have school accordions.'
+Assert-Contains 'class="tree-node building-node"' 'School accordions must contain building accordions.'
+Assert-Contains 'class="floor-node"' 'Building accordions must group dormitories by floor.'
+Assert-Contains 'data-action="add-school"' 'The school level must provide an add-school action.'
+Assert-Contains 'data-action="edit-building-name"' 'Buildings must support renaming.'
+Assert-Contains 'data-action="edit-building-note"' 'Buildings must support optional notes.'
+Assert-Contains 'data-action="add-dorm-single"' 'Dormitories must support single add.'
+Assert-Contains 'data-action="add-dorm-batch"' 'Dormitories must support batch add.'
+Assert-Contains 'data-action="delete-dorm-single"' 'Dormitories must support single delete.'
+Assert-Contains 'data-action="delete-dorm-batch"' 'Dormitories must support batch delete.'
+Assert-Contains 'data-delete-policy="record-disable"' 'Dormitories with sweep records must be protected from deletion.'
+Assert-Contains 'data-delete-policy="children-disable"' 'Schools and buildings with children must be protected from deletion.'
+Assert-Contains 'URLSearchParams\(window\.location\.search\)' 'The prototype must support direct scene links for review.'
+
 if ($failures.Count -gt 0) {
     $failures | ForEach-Object { Write-Error $_ -ErrorAction Continue }
     exit 1

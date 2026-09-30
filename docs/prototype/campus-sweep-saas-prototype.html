@@ -28,12 +28,18 @@
     .building-progress .covered{background:#4dca8b}.building-progress .pending{background:#efbd3f}.building-progress .unvisited{background:#cbd4df}
     .building-counts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;color:#6b7789;font-size:9px}
     .building-counts span{display:flex;align-items:center;gap:4px}.building-counts b{font-size:12px;color:#253147}
+    .tree-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .admin-action{min-height:34px;border:1px solid #d8e0e8;border-radius:9px;background:#fff;color:#435066;padding:0 11px;font-size:10px;font-weight:800;cursor:pointer}
+    .admin-action.primary{background:var(--green);border-color:var(--green);color:#fff}.admin-action.warn{color:#8d5f00;background:#fff8df;border-color:#f1d887}.admin-action.danger{color:#b33b3b;background:#fff5f5;border-color:#efc7c7}.admin-action:disabled{cursor:not-allowed;color:#8b95a3;background:#eef1f4;border-color:#e1e6ec}
+    .admin-data-tree,.building-tree,.floor-list{display:grid;gap:10px}.tree-node,.floor-node{border:1px solid #dce3eb;border-radius:13px;background:#fff;overflow:hidden}
+    .tree-node>summary,.floor-node>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;padding:11px 14px;cursor:pointer}.tree-node>summary::-webkit-details-marker,.floor-node>summary::-webkit-details-marker{display:none}.tree-node>summary:after,.floor-node>summary:after{content:'⌄';font-size:16px;color:#6f7b8d;transition:.15s}.tree-node[open]>summary:after,.floor-node[open]>summary:after{transform:rotate(180deg)}
+    .node-identity{display:grid;gap:3px;min-width:0}.node-title{font-size:13px;font-weight:900}.node-meta{font-size:9px;color:#7a8697}.node-body{border-top:1px solid #e6ebf0;padding:12px;background:#f7f9fb}.node-actions,.dorm-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.node-note{margin:10px 0;padding:9px 11px;border-radius:9px;background:#fff;color:#596579;font-size:10px}.building-tree{margin-top:11px}.building-node>summary{background:#fff}.floor-list{margin-top:10px}.floor-node{border-radius:10px}.floor-node>summary{min-height:46px;padding:8px 11px;background:#fff}.dorm-toolbar{margin-bottom:10px}.dorm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:7px}.dorm-chip{min-height:40px;border:1px solid #dce3ea;border-radius:9px;background:#fff;padding:6px 8px;display:flex;align-items:center;gap:6px;font-size:10px}.dorm-chip.selected{border-color:#6aa88f;background:#f0faf5}.dorm-chip.locked{background:#f2f4f7;color:#7b8695}.dorm-no{font-weight:900;min-width:26px}.single-delete{margin-left:auto;border:0;background:transparent;color:#b44a4a;font-size:9px;font-weight:800;cursor:pointer}.single-delete:disabled{color:#9099a6;cursor:not-allowed}.safety-tip{margin-top:10px;padding:9px 11px;border-radius:9px;background:#fff7dc;color:#7b5a05;font-size:9px;line-height:1.5}
   </style>
 </head>
 <body>
   <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><nav class="nav"><button class="active" data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav></header>
   <main class="wrap">
-    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v7</p></div>
+    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v8</p></div>
 
     <section class="scene active" id="school">
       <div class="scene-title"><h2>选择学校</h2><p>学校名称在左，授权状态在右；整行作为入口</p></div>
@@ -86,7 +92,65 @@
 
     <section class="scene" id="admin">
       <div class="scene-title"><h2>管理员后台</h2><p>管理学校、楼栋、宿舍，并为代理配置可访问学校</p></div>
-      <div class="desktop"><div class="window"></div><div class="admin-shell"><aside class="sidebar"><div class="side-brand">校园扫楼</div><div class="side-item on">基础数据</div><div class="side-item">代理与学校权限</div><div class="side-item">快捷备注</div><div class="side-item">扫楼数据</div></aside><div class="admin-content"><div class="admin-head"><div><span class="small">管理后台</span><h3 style="margin:3px 0 0">基础数据与权限</h3></div><span class="pill">管理员</span></div><div class="modules"><section class="module wide"><div class="module-title"><div><h4>学校、楼栋与宿舍</h4><span class="small">2所学校 · 10栋楼 · 1200间宿舍</span></div><div style="display:flex;gap:7px;flex-wrap:wrap"><span class="mini-btn">添加学校</span><span class="mini-btn">添加楼栋</span><span class="mini-btn">添加宿舍</span><span class="mini-btn">批量生成宿舍</span></div></div><div class="building-grid"><div class="building"><b>苏州大学本部</b><br><span class="small">6栋楼 · 720间</span></div><div class="building"><b>苏州大学独墅湖校区</b><br><span class="small">4栋楼 · 480间</span></div><div class="building"><b>3号楼</b><br><span class="small">本部 · 120间</span></div></div></section><section class="module"><div class="module-title"><div><h4>代理与学校权限</h4><span class="small">只允许进入已授权学校</span></div><span class="mini-btn">创建代理</span></div><div class="row"><b>张三</b><span class="pill">本部</span><span>配置权限</span></div><div class="row"><b>李四</b><span class="pill">仅本部</span><span>配置权限</span></div><div class="row"><b>王五</b><span class="pill" style="background:#eef1f4;color:#687587">未授权</span><span>配置权限</span></div></section><section class="module"><div class="module-title"><div><h4>快捷备注</h4><span class="small">分组 / 排序 / 启停</span></div><span class="mini-btn">新增</span></div><div class="row"><b>没人开门</b><span class="pill">启用</span><span>编辑</span></div><div class="row"><b>只有1-2人在</b><span class="pill">启用</span><span>编辑</span></div></section><section class="module wide"><div class="module-title"><div><h4>扫楼数据</h4><span class="small">当前记录 / 审计日志</span></div><span class="mini-btn">查看审计</span></div><table class="table"><thead><tr><th>学校</th><th>楼栋/宿舍</th><th>代理</th><th>状态</th><th>备注</th><th>操作</th></tr></thead><tbody><tr><td>苏州大学本部</td><td>3号楼 / 603</td><td>张三</td><td style="color:#137347">已覆盖</td><td>已加种子</td><td>修改 · 删除</td></tr><tr><td>苏州大学本部</td><td>3号楼 / 603</td><td>李四</td><td style="color:#8d5f00">待补扫</td><td>只有1-2人在</td><td>修改 · 删除</td></tr></tbody></table></section></div></div></div></div>
+      <div class="desktop">
+        <div class="window"></div>
+        <div class="admin-shell">
+          <aside class="sidebar"><div class="side-brand">校园扫楼</div><div class="side-item on">基础数据</div><div class="side-item">代理与学校权限</div><div class="side-item">快捷备注</div><div class="side-item">扫楼数据</div></aside>
+          <div class="admin-content">
+            <div class="admin-head"><div><span class="small">管理后台</span><h3 style="margin:3px 0 0">基础数据与权限</h3></div><span class="pill">管理员</span></div>
+            <div class="modules">
+              <section class="module wide">
+                <div class="tree-toolbar"><div><h4>学校、楼栋与宿舍</h4><span class="small">逐层展开管理 · 2所学校 · 10栋楼 · 1200间宿舍</span></div><button class="admin-action primary" data-action="add-school">＋ 添加学校</button></div>
+                <div class="admin-data-tree">
+                  <details class="tree-node school-node" open data-delete-policy="children-disable">
+                    <summary><span class="node-identity"><span class="node-title">苏州大学本部</span><span class="node-meta">6栋楼 · 720间宿舍</span></span><span class="pill">启用中</span></summary>
+                    <div class="node-body">
+                      <div class="node-actions"><button class="admin-action">编辑学校名称</button><button class="admin-action primary" data-action="add-building">＋ 添加楼栋</button><button class="admin-action warn">停用学校</button><button class="admin-action" disabled>有下级数据，只能停用</button></div>
+                      <div class="safety-tip">学校下已有楼栋，不能永久删除。停用后代理端不再显示，历史数据仍保留。</div>
+                      <div class="building-tree">
+                        <details class="tree-node building-node" open data-delete-policy="children-disable">
+                          <summary><span class="node-identity"><span class="node-title">3号楼</span><span class="node-meta">6层 · 120间宿舍 · 备注：靠近东门，晚间进出方便</span></span><span class="pill">启用中</span></summary>
+                          <div class="node-body">
+                            <div class="node-actions"><button class="admin-action" data-action="edit-building-name">编辑楼栋名称</button><button class="admin-action" data-action="edit-building-note">编辑楼栋备注</button><button class="admin-action warn">停用楼栋</button><button class="admin-action" disabled>有下级数据，只能停用</button></div>
+                            <div class="node-note"><b>楼栋备注：</b>靠近东门，晚间进出方便。备注只供管理员查看。</div>
+                            <div class="floor-list">
+                              <details class="floor-node" open>
+                                <summary><span class="node-identity"><span class="node-title">6楼</span><span class="node-meta">20间宿舍 · 601–620</span></span><span class="pill">已展开</span></summary>
+                                <div class="node-body">
+                                  <div class="dorm-toolbar"><button class="admin-action primary" data-action="add-dorm-single">＋ 单独添加宿舍</button><button class="admin-action" data-action="add-dorm-batch">批量添加宿舍</button><button class="admin-action danger" data-action="delete-dorm-batch">删除所选（2）</button></div>
+                                  <div class="dorm-grid">
+                                    <div class="dorm-chip selected"><input type="checkbox" checked><span class="dorm-no">601</span><button class="single-delete" data-action="delete-dorm-single">单独删除</button></div>
+                                    <div class="dorm-chip selected"><input type="checkbox" checked><span class="dorm-no">602</span><button class="single-delete" data-action="delete-dorm-single">单独删除</button></div>
+                                    <div class="dorm-chip locked" data-delete-policy="record-disable"><input type="checkbox" disabled><span class="dorm-no">603</span><button class="single-delete" disabled>有扫楼记录，只能停用</button></div>
+                                    <div class="dorm-chip"><input type="checkbox"><span class="dorm-no">604</span><button class="single-delete" data-action="delete-dorm-single">单独删除</button></div>
+                                    <div class="dorm-chip"><input type="checkbox"><span class="dorm-no">605</span><button class="single-delete" data-action="delete-dorm-single">单独删除</button></div>
+                                    <div class="dorm-chip"><input type="checkbox"><span class="dorm-no">606</span><button class="single-delete" data-action="delete-dorm-single">单独删除</button></div>
+                                    <div class="dorm-chip"><input type="checkbox"><span class="dorm-no">607</span><button class="single-delete" data-action="delete-dorm-single">单独删除</button></div>
+                                    <div class="dorm-chip"><input type="checkbox"><span class="dorm-no">608</span><button class="single-delete" data-action="delete-dorm-single">单独删除</button></div>
+                                  </div>
+                                  <div class="safety-tip">删除前需要二次确认；已有扫楼记录的宿舍不能删除，只能停用。</div>
+                                </div>
+                              </details>
+                              <details class="floor-node"><summary><span class="node-identity"><span class="node-title">5楼</span><span class="node-meta">20间宿舍 · 501–520</span></span><span class="pill">20间</span></summary><div class="node-body"><div class="dorm-toolbar"><button class="admin-action primary" data-action="add-dorm-single">＋ 单独添加宿舍</button><button class="admin-action" data-action="add-dorm-batch">批量添加宿舍</button></div></div></details>
+                              <details class="floor-node"><summary><span class="node-identity"><span class="node-title">4楼</span><span class="node-meta">20间宿舍 · 401–420</span></span><span class="pill">20间</span></summary><div class="node-body"><div class="dorm-toolbar"><button class="admin-action primary" data-action="add-dorm-single">＋ 单独添加宿舍</button><button class="admin-action" data-action="add-dorm-batch">批量添加宿舍</button></div></div></details>
+                            </div>
+                          </div>
+                        </details>
+                        <details class="tree-node building-node" data-delete-policy="children-disable"><summary><span class="node-identity"><span class="node-title">2号楼</span><span class="node-meta">6层 · 120间宿舍 · 备注：无</span></span><span class="pill">启用中</span></summary><div class="node-body"><div class="node-actions"><button class="admin-action" data-action="edit-building-name">编辑楼栋名称</button><button class="admin-action" data-action="edit-building-note">编辑楼栋备注</button><button class="admin-action warn">停用楼栋</button><button class="admin-action" disabled>有下级数据，只能停用</button></div></div></details>
+                        <details class="tree-node building-node"><summary><span class="node-identity"><span class="node-title">新建空楼栋</span><span class="node-meta">0层 · 0间宿舍 · 可永久删除</span></span><span class="pill">空楼栋</span></summary><div class="node-body"><div class="node-actions"><button class="admin-action" data-action="edit-building-name">编辑楼栋名称</button><button class="admin-action" data-action="edit-building-note">编辑楼栋备注</button><button class="admin-action danger">删除空楼栋</button></div></div></details>
+                      </div>
+                    </div>
+                  </details>
+                  <details class="tree-node school-node" data-delete-policy="children-disable"><summary><span class="node-identity"><span class="node-title">苏州大学独墅湖校区</span><span class="node-meta">4栋楼 · 480间宿舍</span></span><span class="pill">启用中</span></summary><div class="node-body"><div class="node-actions"><button class="admin-action">编辑学校名称</button><button class="admin-action primary" data-action="add-building">＋ 添加楼栋</button><button class="admin-action warn">停用学校</button><button class="admin-action" disabled>有下级数据，只能停用</button></div></div></details>
+                </div>
+              </section>
+              <section class="module"><div class="module-title"><div><h4>代理与学校权限</h4><span class="small">只允许进入已授权学校</span></div><span class="mini-btn">创建代理</span></div><div class="row"><b>张三</b><span class="pill">本部</span><span>配置权限</span></div><div class="row"><b>李四</b><span class="pill">仅本部</span><span>配置权限</span></div><div class="row"><b>王五</b><span class="pill" style="background:#eef1f4;color:#687587">未授权</span><span>配置权限</span></div></section>
+              <section class="module"><div class="module-title"><div><h4>快捷备注</h4><span class="small">分组 / 排序 / 启停</span></div><span class="mini-btn">新增</span></div><div class="row"><b>没人开门</b><span class="pill">启用</span><span>编辑</span></div><div class="row"><b>只有1-2人在</b><span class="pill">启用</span><span>编辑</span></div></section>
+              <section class="module wide"><div class="module-title"><div><h4>扫楼数据</h4><span class="small">当前记录 / 审计日志</span></div><span class="mini-btn">查看审计</span></div><table class="table"><thead><tr><th>学校</th><th>楼栋/宿舍</th><th>代理</th><th>状态</th><th>备注</th><th>操作</th></tr></thead><tbody><tr><td>苏州大学本部</td><td>3号楼 / 603</td><td>张三</td><td style="color:#137347">已覆盖</td><td>已加种子</td><td>修改 · 删除</td></tr><tr><td>苏州大学本部</td><td>3号楼 / 603</td><td>李四</td><td style="color:#8d5f00">待补扫</td><td>只有1-2人在</td><td>修改 · 删除</td></tr></tbody></table></section>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
   <script>
@@ -100,6 +164,8 @@
     wireSelect('noteSelect','noteDropdown','noteValue');
     wireSelect('singleNoteSelect','singleNoteDropdown','singleNoteValue');
     wireSelect('editNoteSelect','editNoteDropdown','editNoteValue');
+    const initialScene=new URLSearchParams(window.location.search).get('scene');
+    if(initialScene&&document.getElementById(initialScene))showScene(initialScene);
     document.documentElement.dataset.prototypeReady='true';
   </script>
 </body>
