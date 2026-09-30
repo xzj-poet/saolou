@@ -48,8 +48,8 @@ Assert-Contains 'event\.stopPropagation\(\)' 'Opening a three-dot menu must not 
 Assert-Contains "event\.key==='Escape'" 'The open action menu must close when Escape is pressed.'
 
 $nativeMenuCount = ([regex]::Matches($html, '<details class="menu-shell">')).Count
-if ($nativeMenuCount -ne 5) {
-    $failures.Add("Every school and building action menu must use an independent native disclosure; found $nativeMenuCount.")
+if ($nativeMenuCount -ne 8) {
+    $failures.Add("Every school, building, and agent action menu must use an independent native disclosure; found $nativeMenuCount.")
 }
 
 if ($html -match 'class="floor-node"|data-menu-trigger="dormitory"|class="context-menu dormitory-menu"') {
@@ -86,6 +86,30 @@ Assert-Contains 'openBlueprint\(buildingId' 'Building cards must open the bluepr
 Assert-Contains 'renderBlueprintRooms\(buildingId' 'Each building blueprint must render its own room structure.'
 Assert-Contains 'data-blueprint-note=' 'Each building blueprint must use the selected building note.'
 Assert-Contains "searchParams\.get\('blueprint'\)" 'The prototype must support direct-open blueprints for review.'
+Assert-Contains 'class="module wide agent-module"' 'Agent and school access management must use a full-width module.'
+Assert-Contains 'class="agent-list"' 'The administrator must see agents in one scan-friendly list.'
+Assert-Contains 'data-agent-id="zhang-san"[^>]*data-agent-status="active"' 'Active agents must expose their current account state.'
+Assert-Contains 'data-agent-id="wang-wu"[^>]*data-agent-status="disabled"' 'Disabled agents must remain visible to the administrator.'
+Assert-Contains 'data-menu-trigger="agent"' 'Every agent must expose a compact three-dot action menu.'
+Assert-Contains 'data-action="create-agent"' 'Administrators must be able to create an agent.'
+Assert-Contains 'data-action="edit-agent-name"' 'Administrators must be able to rename an agent.'
+Assert-Contains 'data-action="configure-agent-schools"' 'Administrators must be able to configure school access.'
+Assert-Contains 'data-action="reset-agent-password"' 'Administrators must be able to reset an agent password.'
+Assert-Contains 'data-action="toggle-agent-status"' 'Administrators must be able to disable or enable an agent.'
+Assert-Contains 'id="admin-form-create-agent"' 'Agent creation must use the shared admin dialog.'
+Assert-Contains 'id="admin-form-create-agent".*data-generated-password hidden' 'Initial passwords must remain hidden until agent creation succeeds.'
+Assert-Contains 'id="admin-form-configure-agent-schools"' 'School access configuration must use the shared admin dialog.'
+Assert-Contains 'data-school-access="school-main"' 'School access configuration must list the main campus explicitly.'
+Assert-Contains 'data-school-access="school-dushuhu"' 'School access configuration must list the Dushuhu campus explicitly.'
+Assert-Contains 'data-generated-password' 'Generated passwords must be displayed in a dedicated one-time field.'
+Assert-Contains 'data-copy-password' 'Generated passwords must offer a copy action.'
+Assert-Contains "copied\?'已复制':'请手动复制'" 'Copy controls must not claim success when clipboard access fails.'
+Assert-Contains '\.password-output\[hidden\]\{display:none\}' 'Reset passwords must remain hidden until the administrator confirms the reset.'
+Assert-Contains 'revealResetPassword\(' 'Password reset confirmation must reveal the generated password without closing the dialog.'
+Assert-Contains 'revealCreatedAgentPassword\(' 'Agent creation must reveal the one-time initial password only after confirmation.'
+Assert-Contains "searchParams\.get\('agent'\)" 'The prototype must support direct-open agent dialogs for visual review.'
+Assert-Contains "searchParams\.get\('passwordRevealed'\)" 'The prototype must support direct review of the post-reset password state.'
+Assert-Contains "searchParams\.get\('agentCreated'\)" 'The prototype must support direct review of the post-create password state.'
 Assert-Contains 'data-building-card="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Agent building cards must derive floor and dorm counts from dormitory data.'
 Assert-Contains 'data-building-matrix="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'The building matrix must use the same derived counts.'
 Assert-Contains 'data-building-id="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Admin building counts must derive from dormitory data.'
