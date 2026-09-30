@@ -38,11 +38,29 @@ Assert-Contains 'data-action="edit-building-name"' 'Buildings must support renam
 Assert-Contains 'data-action="edit-building-note"' 'Buildings must support optional notes.'
 Assert-Contains 'data-action="add-dorm-single"' 'Dormitories must support single add.'
 Assert-Contains 'data-action="add-dorm-batch"' 'Dormitories must support batch add.'
-Assert-Contains 'data-action="delete-dorm-single"' 'Dormitories must support single delete.'
-Assert-Contains 'data-action="delete-dorm-batch"' 'Dormitories must support batch delete.'
+Assert-Contains 'data-menu-trigger="school"' 'School cards must expose a three-dot action menu.'
+Assert-Contains 'data-menu-trigger="building"' 'Building cards must expose a three-dot action menu.'
+Assert-Contains 'data-menu-trigger="dormitory"' 'Floor cards must expose a three-dot dormitory action menu.'
+Assert-Contains 'class="context-menu school-menu"' 'The school action menu must be a compact popover.'
+Assert-Contains 'class="context-menu building-menu"' 'The building action menu must be a compact popover.'
+Assert-Contains 'class="context-menu dormitory-menu"' 'The dormitory action menu must be a compact popover.'
+Assert-Contains 'data-action="edit-school-name"' 'School menus must support renaming.'
+Assert-Contains 'data-action="delete-or-disable-school"' 'School menus must combine safe delete and disable.'
+Assert-Contains 'data-action="delete-or-disable-building"' 'Building menus must combine safe delete and disable.'
+Assert-Contains 'data-action="delete-or-disable-dormitory"' 'Dormitory menus must enter safe delete or disable mode.'
+Assert-Contains 'data-dorm-selection-mode="inactive"' 'Dormitory checkboxes must stay hidden until selection mode starts.'
+Assert-Contains 'event\.stopPropagation\(\)' 'Opening a three-dot menu must not toggle its accordion.'
+Assert-Contains "event\.key==='Escape'" 'The open action menu must close when Escape is pressed.'
+
+$nativeMenuCount = ([regex]::Matches($html, '<details class="menu-shell">')).Count
+if ($nativeMenuCount -ne 6) {
+    $failures.Add("Every school, building, and floor action menu must use an independent native disclosure; found $nativeMenuCount.")
+}
+
 Assert-Contains 'data-delete-policy="record-disable"' 'Dormitories with sweep records must be protected from deletion.'
 Assert-Contains 'data-delete-policy="children-disable"' 'Schools and buildings with children must be protected from deletion.'
 Assert-Contains 'URLSearchParams\(window\.location\.search\)' 'The prototype must support direct scene links for review.'
+Assert-Contains "searchParams\.get\('menu'\)" 'The prototype must support direct-open action menus for visual review.'
 Assert-Contains 'data-building-card="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Agent building cards must derive floor and dorm counts from dormitory data.'
 Assert-Contains 'data-building-matrix="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'The building matrix must use the same derived counts.'
 Assert-Contains 'data-building-id="3"[^>]*data-floor-count="1"[^>]*data-dorm-count="2"[^>]*data-count-source="dormitories"' 'Admin building counts must derive from dormitory data.'
