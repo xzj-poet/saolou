@@ -60,7 +60,7 @@
 <body data-scene="login">
   <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><div class="top-actions"><nav class="nav"><button class="active" data-scene="login">登录</button><button data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav><details class="session-menu" data-session-menu hidden><summary class="session-summary"><span data-session-name>张三</span><small data-session-role>代理</small><span aria-hidden="true">⌄</span></summary><div class="session-popover"><button type="button" data-session-logout>退出登录</button></div></details></div></header>
   <main class="wrap">
-    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v24</p></div>
+    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v25</p></div>
 
     <section class="scene active" id="login">
       <div class="scene-title"><h2>登录入口</h2><p>管理员与代理共用一个入口，系统根据账号身份进入对应页面</p></div>
@@ -302,6 +302,16 @@
     }
     function hasMyRecord(state,roomNo){return Boolean(state[roomNo]?.myRecord)}
     /* sweep-state:end */
+    /* navigation-state:start */
+    const supportedScenes=['login','school','building','matrix','single','edit','batch','detail','history','admin'];
+    function sceneUsesRoom(scene){return ['single','edit','detail','history'].includes(scene)}
+    function buildSceneUrl(href,scene,roomNo=''){
+      const url=new URL(href),safeScene=supportedScenes.includes(scene)?scene:'login';url.searchParams.set('scene',safeScene);if(sceneUsesRoom(safeScene)&&roomNo)url.searchParams.set('room',roomNo);else url.searchParams.delete('room');if(safeScene!=='admin')url.hash='';return `${url.pathname}${url.search}${url.hash}`;
+    }
+    function readSceneLocation(href){
+      const url=new URL(href),requestedScene=url.searchParams.get('scene')||'login',scene=supportedScenes.includes(requestedScene)?requestedScene:'login',room=sceneUsesRoom(scene)?url.searchParams.get('room')||'':'';return {scene,room};
+    }
+    /* navigation-state:end */
     const sweepStatusMeta={covered:{label:'🟢 已覆盖',overall:'🟢 整体已覆盖',color:'#137347'},pending:{label:'🟡 待补扫',overall:'🟡 整体待补扫',color:'#8d5f00'},unvisited:{label:'⚪ 未扫',overall:'⚪ 整体未扫',color:'#64748b'}};
     let sweepDemoState=createInitialSweepState(),activeRoomNo='201';
     function setStatusClass(element,status){element.classList.remove('covered','pending','unvisited');element.classList.add(status)}
@@ -331,7 +341,7 @@
     function wireLogin(initialState=''){
       const username=document.querySelector('[data-login-username]'),password=document.querySelector('[data-login-password]'),toggle=document.querySelector('[data-login-password-toggle]'),submit=document.querySelector('[data-login-submit]');
       toggle.addEventListener('click',()=>{const showing=password.type==='text';password.type=showing?'password':'text';toggle.textContent=showing?'显示':'隐藏'});
-      submit.addEventListener('click',()=>{setLoginState();const role=username.value.trim().toLowerCase()==='admin'?'admin':'agent';setSessionIdentity(role);showScene(routeAfterLogin(role))});
+      submit.addEventListener('click',()=>{setLoginState();const role=username.value.trim().toLowerCase()==='admin'?'admin':'agent';setSessionIdentity(role);navigateScene(routeAfterLogin(role),{replace:true})});
       [username,password].forEach(input=>input.addEventListener('keydown',event=>{if(event.key==='Enter')submit.click()}));setLoginState(initialState);
     }
     const sessionMenu=document.querySelector('[data-session-menu]'),sessionDialog=document.querySelector('[data-session-dialog]');
@@ -343,9 +353,9 @@
       sessionDialog.dataset.activeSessionState=state;sessionDialog.querySelector('[data-session-dialog-title]').textContent=titles[state]||titles.expired;sessionDialog.querySelectorAll('[data-session-state]').forEach(message=>message.hidden=message.dataset.sessionState!==state);sessionDialog.querySelector('[data-session-dialog-cancel]').hidden=state!=='logout-dirty';sessionDialog.querySelector('[data-session-dialog-confirm]').textContent=confirmLabels[state]||'重新登录';sessionMenu.removeAttribute('open');sessionDialog.classList.add('open');
     }
     function closeSessionDialog(){sessionDialog.classList.remove('open')}
-    function returnToLogin(){resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;document.querySelector('[data-login-password]').value='';closeSessionDialog();showScene('login')}
+    function returnToLogin(){resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;document.querySelector('[data-login-password]').value='';closeSessionDialog();navigateScene('login',{replace:true})}
     function wireSessionControls(initialState='',initialRole='agent'){
-      setSessionIdentity(initialRole);sessionMenu.querySelector('[data-session-logout]').addEventListener('click',()=>{window.hasUnsavedRecordChanges?openSessionDialog('logout-dirty'):returnToLogin()});sessionDialog.querySelector('[data-session-dialog-cancel]').addEventListener('click',closeSessionDialog);sessionDialog.querySelector('[data-session-dialog-confirm]').addEventListener('click',()=>{const state=sessionDialog.dataset.activeSessionState;if(state==='access-revoked'){resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;closeSessionDialog();showScene('school');return}returnToLogin()});if(['expired','disabled','access-revoked','logout-dirty'].includes(initialState))openSessionDialog(initialState);
+      setSessionIdentity(initialRole);sessionMenu.querySelector('[data-session-logout]').addEventListener('click',()=>{window.hasUnsavedRecordChanges?openSessionDialog('logout-dirty'):returnToLogin()});sessionDialog.querySelector('[data-session-dialog-cancel]').addEventListener('click',closeSessionDialog);sessionDialog.querySelector('[data-session-dialog-confirm]').addEventListener('click',()=>{const state=sessionDialog.dataset.activeSessionState;if(state==='access-revoked'){resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;closeSessionDialog();navigateScene('school',{replace:true});return}returnToLogin()});if(['expired','disabled','access-revoked','logout-dirty'].includes(initialState))openSessionDialog(initialState);
     }
     const agentViewConfigs={school:{loading:'正在加载学校',emptyTitle:'暂无可进入的学校',emptyMessage:'当前没有已授权学校，请联系管理员为你开通学校权限。',emptyIcon:'校'},building:{loading:'正在加载楼栋',emptyTitle:'暂无楼栋',emptyMessage:'这个学校还没有建立楼栋，请联系管理员完成基础数据配置。',emptyIcon:'栋',emptyAction:'返回学校选择',emptyTarget:'school'},matrix:{loading:'正在加载宿舍',emptyTitle:'暂无宿舍',emptyMessage:'这栋楼还没有建立宿舍，请联系管理员完成宿舍配置。',emptyIcon:'室',emptyAction:'返回楼栋选择',emptyTarget:'building'}};
     function setAgentViewState(page,state='ready'){
@@ -358,13 +368,13 @@
     }
     window.hasUnsavedRecordChanges=false;
     const discardDialog=document.querySelector('[data-discard-dialog]');
-    let pendingSceneTarget='';
-    function openDiscardDialog(target){pendingSceneTarget=target;sessionMenu.removeAttribute('open');discardDialog.classList.add('open')}
-    function closeDiscardDialog(){discardDialog.classList.remove('open');pendingSceneTarget=''}
-    function requestSceneChange(target){if(window.hasUnsavedRecordChanges){openDiscardDialog(target);return}showScene(target)}
+    let pendingSceneTarget={scene:'',room:''};
+    function openDiscardDialog(target,room=''){pendingSceneTarget={scene:target,room};sessionMenu.removeAttribute('open');discardDialog.classList.add('open')}
+    function closeDiscardDialog(){discardDialog.classList.remove('open');pendingSceneTarget={scene:'',room:''}}
+    function requestSceneChange(target,options={}){const room=sceneUsesRoom(target)?options.room||activeRoomNo:'';if(window.hasUnsavedRecordChanges){openDiscardDialog(target,room);return}navigateScene(target,{room,replace:Boolean(options.replace)})}
     function wireDiscardDialog(){
       discardDialog.querySelector('[data-discard-cancel]').addEventListener('click',closeDiscardDialog);
-      discardDialog.querySelector('[data-discard-confirm]').addEventListener('click',()=>{const target=pendingSceneTarget||'matrix';resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;closeDiscardDialog();showScene(target)});
+      discardDialog.querySelector('[data-discard-confirm]').addEventListener('click',()=>{const target=pendingSceneTarget.scene||'matrix',room=pendingSceneTarget.room;resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;closeDiscardDialog();navigateScene(target,{room,replace:true})});
     }
     function renderRecordEditor(editor){
       const state=editor.recordEditorState,select=editor.querySelector('[data-note-select]'),value=editor.querySelector('[data-note-value]'),dropdown=editor.querySelector('[data-note-dropdown]'),custom=editor.querySelector('[data-custom-note]'),customInput=editor.querySelector('[data-custom-note-input]'),save=editor.querySelector('[data-save-flow]');
@@ -406,13 +416,21 @@
       if(state==='idle')button.textContent=!hasStatus?'请选择状态':isBatch?(batchCount?`保存${batchCount}间并返回矩阵`:'保存并返回矩阵'):'保存并返回楼栋矩阵';
     }
     function wireSaveFeedback(initialFlow='',initialState=''){
-      document.querySelectorAll('[data-save-flow]').forEach(button=>button.addEventListener('click',()=>{const flow=button.dataset.saveFlow;window.hasUnsavedRecordChanges=true;setSaveState(flow,'saving');setTimeout(()=>{if(!commitRecordEditor(flow)){setSaveState(flow,'error');return}setSaveState(flow,'success');window.hasUnsavedRecordChanges=false;setTimeout(()=>{if(flow==='batch')resetBatchFlow();showScene('matrix')},800)},650)}));
+      document.querySelectorAll('[data-save-flow]').forEach(button=>button.addEventListener('click',()=>{const flow=button.dataset.saveFlow;window.hasUnsavedRecordChanges=true;setSaveState(flow,'saving');setTimeout(()=>{if(!commitRecordEditor(flow)){setSaveState(flow,'error');return}setSaveState(flow,'success');window.hasUnsavedRecordChanges=false;setTimeout(()=>{if(flow==='batch')resetBatchFlow();navigateScene('matrix',{replace:true})},800)},650)}));
       if(initialFlow&&['saving','success','error'].includes(initialState))setSaveState(initialFlow,initialState);
       window.addEventListener('beforeunload',event=>{if(!window.hasUnsavedRecordChanges)return;event.preventDefault();event.returnValue=''});
     }
     function showScene(id){const navId=id==='building'?'school':id==='history'?'detail':id;document.body.dataset.scene=id;document.querySelectorAll('.scene').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.scene===navId));sessionMenu.hidden=id==='login';sessionMenu.removeAttribute('open');window.scrollTo({top:0,behavior:'smooth'})}
+    let currentNavigation={scene:'login',room:''};
+    function renderSceneRoute(scene,room=''){
+      if(sceneUsesRoom(scene)&&room&&sweepDemoState[room])activeRoomNo=room;if(scene==='single')prepareSingleEditor(activeRoomNo);if(scene==='edit')prepareEditEditor(activeRoomNo);renderSweepDemo();showScene(scene);currentNavigation={scene,room:sceneUsesRoom(scene)?activeRoomNo:''};return currentNavigation;
+    }
+    function navigateScene(scene,{room='',replace=false}={}){
+      const target=renderSceneRoute(supportedScenes.includes(scene)?scene:'login',room),currentDepth=history.state?.campusPrototype?history.state.depth:0,nextState={campusPrototype:true,depth:replace?currentDepth:currentDepth+1},url=buildSceneUrl(window.location.href,target.scene,target.room);history[replace?'replaceState':'pushState'](nextState,'',url);
+    }
+    function navigateBack(fallback){if(history.state?.campusPrototype&&history.state.depth>0){history.back();return}requestSceneChange(fallback,{replace:true})}
     document.querySelectorAll('.nav [data-scene]').forEach(button=>{button.onclick=()=>requestSceneChange(button.dataset.scene)});
-    document.querySelectorAll('[data-jump]').forEach(button=>{button.onclick=()=>{if(!button.disabled)requestSceneChange(button.dataset.jump)}});
+    document.querySelectorAll('[data-jump]').forEach(button=>{button.onclick=()=>{if(button.disabled)return;if(button.classList.contains('back')){navigateBack(button.dataset.jump);return}requestSceneChange(button.dataset.jump)}});
     document.querySelectorAll('#matrix [data-matrix-room]').forEach(room=>{room.style.cursor='pointer';room.addEventListener('click',()=>{activeRoomNo=room.dataset.matrixRoom;renderSweepDemo();if(hasMyRecord(sweepDemoState,activeRoomNo)){requestSceneChange('detail');return}prepareSingleEditor(activeRoomNo);requestSceneChange('single')})});
     document.querySelectorAll('#detail .record.mine').forEach(entry=>{entry.style.cursor='pointer';entry.addEventListener('click',()=>{prepareEditEditor(activeRoomNo);requestSceneChange('edit')})});
     const closeContextMenus=(except=null)=>{document.querySelectorAll('.menu-shell[open]').forEach(menu=>{if(menu!==except)menu.removeAttribute('open')})};
@@ -529,9 +547,8 @@
     blueprintModal.querySelector('[data-blueprint-close]').addEventListener('click',closeBlueprint);blueprintModal.addEventListener('click',event=>{if(event.target===blueprintModal)closeBlueprint()});
     document.addEventListener('click',event=>{if(!event.target.closest('.menu-shell'))closeContextMenus()});
     document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeContextMenus();closeAdminModal();closeBlueprint()}});
-    const searchParams=new URLSearchParams(window.location.search);
-    const initialScene=searchParams.get('scene'),requestedRoom=searchParams.get('room');
-    activeRoomNo=requestedRoom&&sweepDemoState[requestedRoom]?requestedRoom:initialScene==='single'?'202':'201';
+    const searchParams=new URLSearchParams(window.location.search),initialLocation=readSceneLocation(window.location.href),initialScene=initialLocation.scene;
+    activeRoomNo=initialLocation.room&&sweepDemoState[initialLocation.room]?initialLocation.room:initialScene==='single'?'202':'201';
     wireDiscardDialog();
     const loginState=searchParams.get('loginState');
     wireLogin(loginState==='error'?'credentials':loginState==='disabled'?'disabled':'');
@@ -540,11 +557,8 @@
     const viewPage=searchParams.get('viewPage'),viewState=searchParams.get('viewState');
     wireAgentViewStates(viewPage,viewState);
     wireRecordEditors();
-    if(initialScene==='single'&&!hasMyRecord(sweepDemoState,activeRoomNo))prepareSingleEditor(activeRoomNo);
-    if(initialScene==='edit'&&hasMyRecord(sweepDemoState,activeRoomNo))prepareEditEditor(activeRoomNo);
     const batchStep=searchParams.get('batchStep');
     wireBatchFlow(batchStep==='edit'?'edit':'select');
-    renderSweepDemo();
     const saveFlow=searchParams.get('saveFlow'),saveState=searchParams.get('saveState');
     wireSaveFeedback(saveFlow,saveState);
     window.requestedManagerTab=searchParams.get('managerTab');
@@ -552,7 +566,9 @@
     wireQuickNoteTabs(noteGroup==='covered'?'covered':'pending');
     const dataView=searchParams.get('dataView');
     wireSweepDataTabs(dataView==='audit'?'audit':'records');
-    if(initialScene&&document.getElementById(initialScene))showScene(initialScene);
+    renderSceneRoute(initialScene,initialLocation.room);
+    history.replaceState({campusPrototype:true,depth:0},'',buildSceneUrl(window.location.href,currentNavigation.scene,currentNavigation.room));
+    window.addEventListener('popstate',()=>{const target=readSceneLocation(window.location.href);if(window.hasUnsavedRecordChanges){const restoredDepth=(history.state?.campusPrototype?history.state.depth:0)+1;history.pushState({campusPrototype:true,depth:restoredDepth},'',buildSceneUrl(window.location.href,currentNavigation.scene,currentNavigation.room));openDiscardDialog(target.scene,target.room);return}renderSceneRoute(target.scene,target.room)});
     const navigationState=searchParams.get('navigationState');
     if(navigationState==='discard'){window.hasUnsavedRecordChanges=true;openDiscardDialog(searchParams.get('navigationTarget')||'matrix')}
     const initialMenu=searchParams.get('menu');
