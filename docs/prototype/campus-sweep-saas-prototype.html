@@ -53,11 +53,14 @@
   <style>
     [data-view-content][hidden],.view-state[hidden],.state-skeleton[hidden],.state-action[hidden],.state-offline-note[hidden]{display:none}.view-state{margin:18px 14px;padding:30px 18px;border:1px solid #dce3eb;border-radius:16px;background:#fff;text-align:center}.state-icon{width:50px;height:50px;margin:0 auto 15px;display:grid;place-items:center;border-radius:15px;background:#eef2f5;color:#536176;font-size:23px;font-weight:900}.view-state h4{margin:0 0 8px;font-size:17px}.view-state p{margin:0 auto;color:#748094;font-size:11px;line-height:1.65;max-width:245px}.state-action{width:100%;min-height:48px;margin-top:18px;border:0;border-radius:12px;background:var(--green);color:#fff;font-weight:900;cursor:pointer}.state-offline-note{display:block;margin-top:11px;color:#8a95a4;font-size:9px}.state-skeleton{display:grid;gap:10px}.skeleton-line{height:48px;border-radius:12px;background:linear-gradient(90deg,#edf1f4 25%,#f8fafb 45%,#edf1f4 65%);background-size:220% 100%;animation:state-shimmer 1.2s linear infinite}.skeleton-line.short{width:68%}@keyframes state-shimmer{to{background-position:-220% 0}}
   </style>
+  <style>
+    .choice{cursor:pointer}.choice[data-status="pending"].on{background:var(--yellow-bg);color:var(--yellow);border-color:#e2b73d}.choice[data-status="covered"].on{background:var(--green-bg);color:#137347;border-color:#48b480}.selectbox.disabled{cursor:not-allowed;background:#eef1f4;color:#8994a3}.note-option{width:100%;border:0;background:#fff;color:inherit;font:inherit;text-align:left}.custom-note{display:grid;gap:7px;margin-top:10px}.custom-note[hidden]{display:none}.custom-note label{font-size:11px;font-weight:900;color:#445167}.custom-note input{width:100%;min-height:50px;border:1px solid #cfd8e5;border-radius:12px;background:#fff;padding:0 13px;color:#26344a;font:inherit}.custom-note input:focus{outline:3px solid rgba(23,107,80,.12);border-color:#48a47f}
+  </style>
 </head>
 <body data-scene="login">
   <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><div class="top-actions"><nav class="nav"><button class="active" data-scene="login">登录</button><button data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav><details class="session-menu" data-session-menu hidden><summary class="session-summary"><span data-session-name>张三</span><small data-session-role>代理</small><span aria-hidden="true">⌄</span></summary><div class="session-popover"><button type="button" data-session-logout>退出登录</button></div></details></div></header>
   <main class="wrap">
-    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v22</p></div>
+    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v23</p></div>
 
     <section class="scene active" id="login">
       <div class="scene-title"><h2>登录入口</h2><p>管理员与代理共用一个入口，系统根据账号身份进入对应页面</p></div>
@@ -86,20 +89,20 @@
     <section class="scene" id="batch">
       <div class="scene-title"><h2>批量标记</h2><p>选择宿舍 → 选择状态 → 可选备注 → 一次保存</p></div>
       <div class="phones two" style="grid-template-columns:minmax(280px,340px)">
-        <div class="phone" data-record-editor="batch" data-batch-atomic="true" data-batch-flow="two-step"><div class="statusbar">19:48</div><div class="batch-step" data-batch-step="select"><div class="appbar"><div class="back" data-jump="matrix">‹ 退出批量模式</div><h3 data-batch-selection-title>选择宿舍 · 0间</h3></div><div class="floors"><span class="floor active">2楼</span></div><div class="rooms"><button class="room covered" type="button" data-batch-room="201" aria-pressed="false">201</button><button class="room unvisited" type="button" data-batch-room="202" aria-pressed="false">202</button></div><div class="bottom"><button class="primary" type="button" data-batch-next disabled>请先选择宿舍</button></div></div><div class="batch-step" data-batch-step="edit" hidden><div class="appbar"><div class="back" data-batch-back-to-selection>‹ 返回选择</div><h3 data-batch-edit-title>标记宿舍</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice">🟡 待补扫</button><button class="choice on">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="noteSelect"><span id="noteValue">请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="noteDropdown"><div class="note-option">已加种子</div><div class="note-option">已注册</div><div class="note-option">已成交</div><div class="note-option">已充分沟通</div><div class="note-option">有人可帮忙传达</div><div class="note-option">明确没需求</div><div class="note-option">＋ 自定义备注</div></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="batch">保存并返回矩阵</button></div></div></div>
+        <div class="phone" data-record-editor="batch" data-initial-status="covered" data-initial-note="" data-batch-atomic="true" data-batch-flow="two-step"><div class="statusbar">19:48</div><div class="batch-step" data-batch-step="select"><div class="appbar"><div class="back" data-jump="matrix">‹ 退出批量模式</div><h3 data-batch-selection-title>选择宿舍 · 0间</h3></div><div class="floors"><span class="floor active">2楼</span></div><div class="rooms"><button class="room covered" type="button" data-batch-room="201" aria-pressed="false">201</button><button class="room unvisited" type="button" data-batch-room="202" aria-pressed="false">202</button></div><div class="bottom"><button class="primary" type="button" data-batch-next disabled>请先选择宿舍</button></div></div><div class="batch-step" data-batch-step="edit" hidden><div class="appbar"><div class="back" data-batch-back-to-selection>‹ 返回选择</div><h3 data-batch-edit-title>标记宿舍</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice on" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="noteSelect" data-note-select><span id="noteValue" data-note-value>请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="noteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="batch">保存并返回矩阵</button></div></div></div>
       </div>
       <div class="help">选择页和编辑页在同一台手机内切换；返回选择时保留已选宿舍。快捷备注使用全宽横幅下拉框，展开最多显示五条。<span data-offline-queue="none">系统不做离线队列；批量记录要么整批保存成功，要么全部保留在当前页重新保存。</span></div>
     </section>
 
     <section class="scene" id="single">
       <div class="scene-title"><h2>单独记录</h2><p>楼栋矩阵点宿舍；没有自己的记录时，直接进入记录编辑器</p></div>
-      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="single"><div class="statusbar">19:44</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼 · 2楼</div><h3>记录 202</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice">🟡 待补扫</button><button class="choice">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="singleNoteSelect"><span id="singleNoteValue">请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="singleNoteDropdown"><div class="note-option">已加种子</div><div class="note-option">已注册</div><div class="note-option">已成交</div><div class="note-option">已充分沟通</div><div class="note-option">有人可帮忙传达</div><div class="note-option">明确没需求</div><div class="note-option">＋ 自定义备注</div></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="single">保存并返回楼栋矩阵</button></div></div></div>
+      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="single" data-initial-status="" data-initial-note=""><div class="statusbar">19:44</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼 · 2楼</div><h3>记录 202</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox disabled" id="singleNoteSelect" data-note-select aria-disabled="true"><span id="singleNoteValue" data-note-value>请先选择状态</span><span>⌄</span></div><div class="dropdown" id="singleNoteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="single" disabled>请选择状态</button></div></div></div>
       <div class="help"><b>单独记录：</b>状态和备注为空，保存时新建“当前代理 × 202”记录与审计日志，然后返回原楼层矩阵。</div>
     </section>
 
     <section class="scene" id="edit">
       <div class="scene-title"><h2>编辑记录</h2><p>从宿舍详情点击“编辑记录”进入；视觉和单独记录、批量标记完全一致</p></div>
-      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="edit"><div class="statusbar">20:18</div><div class="appbar"><div class="back" data-jump="detail">‹ 返回201详情</div><h3>编辑 201</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice">🟡 待补扫</button><button class="choice on">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="editNoteSelect"><span id="editNoteValue">已加种子</span><span>⌄</span></div><div class="dropdown" id="editNoteDropdown"><div class="note-option on">已加种子</div><div class="note-option">已注册</div><div class="note-option">已成交</div><div class="note-option">已充分沟通</div><div class="note-option">有人可帮忙传达</div><div class="note-option">明确没需求</div><div class="note-option">＋ 自定义备注</div></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="edit">保存并返回楼栋矩阵</button></div></div></div>
+      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="edit" data-initial-status="covered" data-initial-note="已加种子"><div class="statusbar">20:18</div><div class="appbar"><div class="back" data-jump="detail">‹ 返回201详情</div><h3>编辑 201</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice on" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="editNoteSelect" data-note-select><span id="editNoteValue" data-note-value>已加种子</span><span>⌄</span></div><div class="dropdown" id="editNoteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="edit">保存并返回楼栋矩阵</button></div></div></div>
       <div class="help"><b>编辑记录：</b>预填自己的最新状态和备注；保存时更新原记录、写入修改审计，然后默认返回原楼层矩阵。返回按钮不保存，并回到宿舍详情。</div>
     </section>
 
@@ -272,6 +275,18 @@
   </template>
   <template id="admin-form-delete-or-disable"><div class="confirm-box"><div class="confirm-row" data-delete-target>当前对象：苏州大学本部</div><div class="confirm-row danger" data-delete-rule>存在下级数据或扫楼记录，不能永久删除，本次将执行停用。</div><div class="field-help">停用后代理端不再显示，但历史数据和管理员查看入口会保留。</div></div></template>
   <script>
+    /* record-editor-state:start */
+    const recordNoteOptions={pending:['没人在','只有1-2人在','正在打游戏/忙','没聊进去','下次换时间'],covered:['已加种子','已注册','已成交','已充分沟通','有人可帮忙传达','明确没需求']};
+    function getRecordNoteOptions(status){return [...(recordNoteOptions[status]||[])]}
+    function recordEditorTransition(state,action){
+      if(action.type==='select-status')return action.status===state.status?{...state}:{status:action.status,noteMode:'none',noteText:''};
+      if(action.type==='select-note')return {...state,noteMode:'shortcut',noteText:action.noteText};
+      if(action.type==='select-custom')return {...state,noteMode:'custom',noteText:''};
+      if(action.type==='input-custom')return {...state,noteMode:'custom',noteText:action.noteText};
+      return {...state};
+    }
+    function canSaveRecord(state){return Boolean(state.status)}
+    /* record-editor-state:end */
     function routeAfterLogin(role){return role==='admin'?'admin':'school'}
     function setLoginState(state=''){
       document.querySelectorAll('[data-login-error]').forEach(alert=>alert.hidden=alert.dataset.loginError!==state);
@@ -291,9 +306,9 @@
       sessionDialog.dataset.activeSessionState=state;sessionDialog.querySelector('[data-session-dialog-title]').textContent=titles[state]||titles.expired;sessionDialog.querySelectorAll('[data-session-state]').forEach(message=>message.hidden=message.dataset.sessionState!==state);sessionDialog.querySelector('[data-session-dialog-cancel]').hidden=state!=='logout-dirty';sessionDialog.querySelector('[data-session-dialog-confirm]').textContent=confirmLabels[state]||'重新登录';sessionMenu.removeAttribute('open');sessionDialog.classList.add('open');
     }
     function closeSessionDialog(){sessionDialog.classList.remove('open')}
-    function returnToLogin(){window.hasUnsavedRecordChanges=false;document.querySelector('[data-login-password]').value='';closeSessionDialog();showScene('login')}
+    function returnToLogin(){resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;document.querySelector('[data-login-password]').value='';closeSessionDialog();showScene('login')}
     function wireSessionControls(initialState='',initialRole='agent'){
-      setSessionIdentity(initialRole);sessionMenu.querySelector('[data-session-logout]').addEventListener('click',()=>{window.hasUnsavedRecordChanges?openSessionDialog('logout-dirty'):returnToLogin()});sessionDialog.querySelector('[data-session-dialog-cancel]').addEventListener('click',closeSessionDialog);sessionDialog.querySelector('[data-session-dialog-confirm]').addEventListener('click',()=>{const state=sessionDialog.dataset.activeSessionState;if(state==='access-revoked'){window.hasUnsavedRecordChanges=false;closeSessionDialog();showScene('school');return}returnToLogin()});if(['expired','disabled','access-revoked','logout-dirty'].includes(initialState))openSessionDialog(initialState);
+      setSessionIdentity(initialRole);sessionMenu.querySelector('[data-session-logout]').addEventListener('click',()=>{window.hasUnsavedRecordChanges?openSessionDialog('logout-dirty'):returnToLogin()});sessionDialog.querySelector('[data-session-dialog-cancel]').addEventListener('click',closeSessionDialog);sessionDialog.querySelector('[data-session-dialog-confirm]').addEventListener('click',()=>{const state=sessionDialog.dataset.activeSessionState;if(state==='access-revoked'){resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;closeSessionDialog();showScene('school');return}returnToLogin()});if(['expired','disabled','access-revoked','logout-dirty'].includes(initialState))openSessionDialog(initialState);
     }
     const agentViewConfigs={school:{loading:'正在加载学校',emptyTitle:'暂无可进入的学校',emptyMessage:'当前没有已授权学校，请联系管理员为你开通学校权限。',emptyIcon:'校'},building:{loading:'正在加载楼栋',emptyTitle:'暂无楼栋',emptyMessage:'这个学校还没有建立楼栋，请联系管理员完成基础数据配置。',emptyIcon:'栋',emptyAction:'返回学校选择',emptyTarget:'school'},matrix:{loading:'正在加载宿舍',emptyTitle:'暂无宿舍',emptyMessage:'这栋楼还没有建立宿舍，请联系管理员完成宿舍配置。',emptyIcon:'室',emptyAction:'返回楼栋选择',emptyTarget:'building'}};
     function setAgentViewState(page,state='ready'){
@@ -312,7 +327,21 @@
     function requestSceneChange(target){if(window.hasUnsavedRecordChanges){openDiscardDialog(target);return}showScene(target)}
     function wireDiscardDialog(){
       discardDialog.querySelector('[data-discard-cancel]').addEventListener('click',closeDiscardDialog);
-      discardDialog.querySelector('[data-discard-confirm]').addEventListener('click',()=>{const target=pendingSceneTarget||'matrix',leavingBatch=document.body.dataset.scene==='batch';window.hasUnsavedRecordChanges=false;closeDiscardDialog();if(leavingBatch)resetBatchFlow();showScene(target)});
+      discardDialog.querySelector('[data-discard-confirm]').addEventListener('click',()=>{const target=pendingSceneTarget||'matrix';resetActiveRecordEditor();window.hasUnsavedRecordChanges=false;closeDiscardDialog();showScene(target)});
+    }
+    function renderRecordEditor(editor){
+      const state=editor.recordEditorState,select=editor.querySelector('[data-note-select]'),value=editor.querySelector('[data-note-value]'),dropdown=editor.querySelector('[data-note-dropdown]'),custom=editor.querySelector('[data-custom-note]'),customInput=editor.querySelector('[data-custom-note-input]'),save=editor.querySelector('[data-save-flow]');
+      editor.querySelectorAll('[data-status]').forEach(choice=>{const active=choice.dataset.status===state.status;choice.classList.toggle('on',active);choice.setAttribute('aria-pressed',String(active))});select.classList.toggle('disabled',!state.status);select.setAttribute('aria-disabled',String(!state.status));value.textContent=!state.status?'请先选择状态':state.noteMode==='shortcut'?state.noteText:state.noteMode==='custom'?'自定义备注':'请选择快捷备注';
+      const options=getRecordNoteOptions(state.status).map(note=>{const button=document.createElement('button');button.type='button';button.className=`note-option${state.noteMode==='shortcut'&&state.noteText===note?' on':''}`;button.dataset.noteValue=note;button.textContent=note;return button});if(state.status){const customButton=document.createElement('button');customButton.type='button';customButton.className=`note-option${state.noteMode==='custom'?' on':''}`;customButton.dataset.noteCustom='true';customButton.textContent='＋ 自定义备注';options.push(customButton)}dropdown.replaceChildren(...options);dropdown.classList.remove('open');custom.hidden=state.noteMode!=='custom';if(customInput.value!==(state.noteMode==='custom'?state.noteText:''))customInput.value=state.noteMode==='custom'?state.noteText:'';if(!save.classList.contains('saving'))save.disabled=!canSaveRecord(state);
+    }
+    function resetRecordEditor(editor){
+      const status=editor.dataset.initialStatus||'',noteText=editor.dataset.initialNote||'';editor.recordEditorState={status,noteMode:noteText?'shortcut':'none',noteText};renderRecordEditor(editor);
+    }
+    function resetActiveRecordEditor(){
+      const editor=document.querySelector(`#${document.body.dataset.scene} [data-record-editor]`);if(!editor)return;if(editor.dataset.batchFlow){resetBatchFlow();return}resetRecordEditor(editor);setSaveState(editor.dataset.recordEditor,'idle');
+    }
+    function wireRecordEditors(){
+      document.querySelectorAll('[data-record-editor]').forEach(editor=>{resetRecordEditor(editor);const flow=editor.dataset.recordEditor,select=editor.querySelector('[data-note-select]'),dropdown=editor.querySelector('[data-note-dropdown]'),customInput=editor.querySelector('[data-custom-note-input]');editor.querySelectorAll('[data-status]').forEach(choice=>choice.addEventListener('click',()=>{editor.recordEditorState=recordEditorTransition(editor.recordEditorState,{type:'select-status',status:choice.dataset.status});window.hasUnsavedRecordChanges=true;renderRecordEditor(editor);setSaveState(flow,'idle')}));select.addEventListener('click',()=>{if(editor.recordEditorState.status)dropdown.classList.toggle('open')});dropdown.addEventListener('click',event=>{const option=event.target.closest('.note-option');if(!option)return;editor.recordEditorState=recordEditorTransition(editor.recordEditorState,option.dataset.noteCustom?{type:'select-custom'}:{type:'select-note',noteText:option.dataset.noteValue});window.hasUnsavedRecordChanges=true;renderRecordEditor(editor);setSaveState(flow,'idle');if(option.dataset.noteCustom)customInput.focus()});customInput.addEventListener('input',()=>{editor.recordEditorState=recordEditorTransition(editor.recordEditorState,{type:'input-custom',noteText:customInput.value});window.hasUnsavedRecordChanges=true});setSaveState(flow,'idle')});
     }
     const batchEditor=document.querySelector('[data-batch-flow="two-step"]');
     function getBatchSelection(){return batchEditor?[...batchEditor.querySelectorAll('[data-batch-room].selected')]:[]}
@@ -324,7 +353,7 @@
       batchEditor.querySelector('[data-batch-selection-title]').textContent=`选择宿舍 · ${count}间`;batchEditor.querySelector('[data-batch-edit-title]').textContent=count?`标记 ${labels.join('、')}`:'标记宿舍';next.disabled=count===0;next.textContent=count?`下一步 · 标记${count}间`:'请先选择宿舍';if(save&&!save.classList.contains('saving')&&!save.classList.contains('success'))save.textContent=count?`保存${count}间并返回矩阵`:'保存并返回矩阵';
     }
     function resetBatchFlow(){
-      if(!batchEditor)return;batchEditor.querySelectorAll('[data-batch-room]').forEach(room=>{room.classList.remove('selected');room.setAttribute('aria-pressed','false')});batchEditor.querySelectorAll('.choice').forEach(choice=>choice.classList.toggle('on',choice.textContent.includes('已覆盖')));batchEditor.querySelectorAll('.note-option').forEach(note=>note.classList.remove('on'));batchEditor.querySelector('#noteValue').textContent='请选择快捷备注';batchEditor.querySelector('#noteDropdown').classList.remove('open');setSaveState('batch','idle');updateBatchSelection();showBatchStep('select');
+      if(!batchEditor)return;batchEditor.querySelectorAll('[data-batch-room]').forEach(room=>{room.classList.remove('selected');room.setAttribute('aria-pressed','false')});resetRecordEditor(batchEditor);setSaveState('batch','idle');updateBatchSelection();showBatchStep('select');
     }
     function wireBatchFlow(initialStep='select'){
       if(!batchEditor)return;batchEditor.querySelectorAll('[data-batch-room]').forEach(room=>room.addEventListener('click',()=>{const selected=room.classList.toggle('selected');room.setAttribute('aria-pressed',String(selected));window.hasUnsavedRecordChanges=true;updateBatchSelection()}));batchEditor.querySelector('[data-batch-next]').addEventListener('click',()=>{if(getBatchSelection().length)showBatchStep('edit')});batchEditor.querySelector('[data-batch-back-to-selection]').addEventListener('click',()=>showBatchStep('select'));
@@ -332,15 +361,14 @@
     }
     function setSaveState(flow,state='idle'){
       const editor=document.querySelector(`[data-record-editor="${flow}"]`);if(!editor)return;
-      const button=editor.querySelector('[data-save-flow]'),feedback=editor.querySelector('[data-save-feedback]'),isBatch=flow==='batch',batchCount=isBatch?getBatchSelection().length:0;
-      button.disabled=state==='saving';button.classList.toggle('saving',state==='saving');button.classList.toggle('success',state==='success');feedback.hidden=state==='idle';feedback.className=`save-feedback ${state}`;
+      const button=editor.querySelector('[data-save-flow]'),feedback=editor.querySelector('[data-save-feedback]'),isBatch=flow==='batch',batchCount=isBatch?getBatchSelection().length:0,hasStatus=canSaveRecord(editor.recordEditorState||{status:''});
+      button.disabled=state==='saving'||!hasStatus;button.classList.toggle('saving',state==='saving');button.classList.toggle('success',state==='success');feedback.hidden=state==='idle';feedback.className=`save-feedback ${state}`;
       if(state==='saving'){button.textContent='保存中…';feedback.textContent=isBatch?`正在整批保存${batchCount}间宿舍，请不要重复点击。`:'正在保存，请不要重复点击。'}
       if(state==='success'){button.textContent='已保存';feedback.textContent='保存成功，正在返回楼栋矩阵…'}
       if(state==='error'){button.textContent='重新保存';feedback.textContent=isBatch?`尚未保存：本次${batchCount}间均未写入，当前选择已保留。`:'尚未保存：状态和备注已保留，请检查网络后重新保存。'}
-      if(state==='idle')button.textContent=isBatch?(batchCount?`保存${batchCount}间并返回矩阵`:'保存并返回矩阵'):'保存并返回楼栋矩阵';
+      if(state==='idle')button.textContent=!hasStatus?'请选择状态':isBatch?(batchCount?`保存${batchCount}间并返回矩阵`:'保存并返回矩阵'):'保存并返回楼栋矩阵';
     }
     function wireSaveFeedback(initialFlow='',initialState=''){
-      document.querySelectorAll('[data-record-editor]').forEach(editor=>editor.querySelectorAll('.choice,.note-option').forEach(control=>control.addEventListener('click',()=>{window.hasUnsavedRecordChanges=true})));
       document.querySelectorAll('[data-save-flow]').forEach(button=>button.addEventListener('click',()=>{const flow=button.dataset.saveFlow;window.hasUnsavedRecordChanges=true;setSaveState(flow,'saving');setTimeout(()=>{setSaveState(flow,'success');window.hasUnsavedRecordChanges=false;setTimeout(()=>{if(flow==='batch')resetBatchFlow();showScene('matrix')},800)},650)}));
       if(initialFlow&&['saving','success','error'].includes(initialState))setSaveState(initialFlow,initialState);
       window.addEventListener('beforeunload',event=>{if(!window.hasUnsavedRecordChanges)return;event.preventDefault();event.returnValue=''});
@@ -351,10 +379,6 @@
     const roomsWithoutMyRecord=new Set(['202']);
     document.querySelectorAll('#matrix .room').forEach(room=>{room.style.cursor='pointer';room.addEventListener('click',()=>requestSceneChange(roomsWithoutMyRecord.has(room.textContent.trim())?'single':'detail'))});
     document.querySelectorAll('#detail .record.mine').forEach(entry=>{entry.style.cursor='pointer';entry.addEventListener('click',()=>requestSceneChange('edit'))});
-    const wireSelect=(selectId,dropdownId,valueId)=>{const select=document.getElementById(selectId),drop=document.getElementById(dropdownId),value=document.getElementById(valueId);select.addEventListener('click',()=>drop.classList.toggle('open'));drop.querySelectorAll('.note-option').forEach(o=>o.addEventListener('click',()=>{drop.querySelectorAll('.note-option').forEach(x=>x.classList.remove('on'));o.classList.add('on');value.textContent=o.textContent;drop.classList.remove('open')}))};
-    wireSelect('noteSelect','noteDropdown','noteValue');
-    wireSelect('singleNoteSelect','singleNoteDropdown','singleNoteValue');
-    wireSelect('editNoteSelect','editNoteDropdown','editNoteValue');
     const closeContextMenus=(except=null)=>{document.querySelectorAll('.menu-shell[open]').forEach(menu=>{if(menu!==except)menu.removeAttribute('open')})};
     document.querySelectorAll('[data-menu-trigger]').forEach(trigger=>trigger.addEventListener('click',event=>event.stopPropagation()));
     document.querySelectorAll('.menu-shell').forEach(menu=>menu.addEventListener('toggle',()=>{if(menu.open)closeContextMenus(menu)}));
@@ -477,6 +501,7 @@
     wireSessionControls(sessionState,sessionRole);
     const viewPage=searchParams.get('viewPage'),viewState=searchParams.get('viewState');
     wireAgentViewStates(viewPage,viewState);
+    wireRecordEditors();
     const batchStep=searchParams.get('batchStep');
     wireBatchFlow(batchStep==='edit'?'edit':'select');
     const saveFlow=searchParams.get('saveFlow'),saveState=searchParams.get('saveState');
