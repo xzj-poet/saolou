@@ -60,7 +60,7 @@
 <body data-scene="login">
   <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><div class="top-actions"><nav class="nav"><button class="active" data-scene="login">登录</button><button data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav><details class="session-menu" data-session-menu hidden><summary class="session-summary"><span data-session-name>张三</span><small data-session-role>代理</small><span aria-hidden="true">⌄</span></summary><div class="session-popover"><button type="button" data-session-logout>退出登录</button></div></details></div></header>
   <main class="wrap">
-    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v23</p></div>
+    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v24</p></div>
 
     <section class="scene active" id="login">
       <div class="scene-title"><h2>登录入口</h2><p>管理员与代理共用一个入口，系统根据账号身份进入对应页面</p></div>
@@ -82,39 +82,39 @@
     <section class="scene" id="matrix">
       <div class="scene-title"><h2>楼栋矩阵</h2><p>打开页面即可区分未扫、待补扫和已覆盖</p></div>
       <div class="legend"><span>⚪ 未扫</span><span>🟡 待补扫</span><span>🟢 已覆盖</span><span style="color:#2563eb">★ 我扫过</span></div>
-      <div class="phones two"><div class="phone" data-view-page="matrix" data-building-matrix="3" data-floor-count="1" data-dorm-count="2" data-count-source="dormitories"><div class="statusbar">19:42</div><div class="appbar"><div class="back" data-jump="building">‹ 返回楼栋选择</div><h3>3号楼</h3><div class="stats" data-view-content><div class="stat"><b style="color:#137347">1</b>已覆盖</div><div class="stat"><b style="color:#8d5f00">0</b>待补扫</div><div class="stat"><b style="color:#64748b">1</b>未扫</div></div></div><div class="floors" data-view-content><span class="floor active">2楼</span></div><div class="rooms" data-view-content><div class="room covered mine">201</div><div class="room unvisited">202</div></div><div class="bottom" data-view-content><button class="primary" data-jump="batch">批量标记</button></div><div class="view-state" data-view-state-host hidden aria-live="polite"><div class="state-skeleton" data-loading-skeleton hidden><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line short"></span></div><div class="state-icon" data-view-state-icon>!</div><h4 data-view-state-title>正在加载宿舍</h4><p data-view-state-message>请稍候</p><button class="state-action" type="button" data-view-state-action hidden>重新加载</button><small class="state-offline-note" data-offline-cache="none" hidden>系统不会展示旧的离线数据。</small></div></div></div>
+      <div class="phones two"><div class="phone" data-view-page="matrix" data-building-matrix="3" data-floor-count="1" data-dorm-count="2" data-count-source="dormitories"><div class="statusbar">19:42</div><div class="appbar"><div class="back" data-jump="building">‹ 返回楼栋选择</div><h3>3号楼</h3><div class="stats" data-view-content><div class="stat"><b data-matrix-count="covered" style="color:#137347">1</b>已覆盖</div><div class="stat"><b data-matrix-count="pending" style="color:#8d5f00">0</b>待补扫</div><div class="stat"><b data-matrix-count="unvisited" style="color:#64748b">1</b>未扫</div></div></div><div class="floors" data-view-content><span class="floor active">2楼</span></div><div class="rooms" data-view-content><div class="room covered mine" data-matrix-room="201" data-room-no="201">201</div><div class="room unvisited" data-matrix-room="202" data-room-no="202">202</div></div><div class="bottom" data-view-content><button class="primary" data-jump="batch">批量标记</button></div><div class="view-state" data-view-state-host hidden aria-live="polite"><div class="state-skeleton" data-loading-skeleton hidden><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line short"></span></div><div class="state-icon" data-view-state-icon>!</div><h4 data-view-state-title>正在加载宿舍</h4><p data-view-state-message>请稍候</p><button class="state-action" type="button" data-view-state-action hidden>重新加载</button><small class="state-offline-note" data-offline-cache="none" hidden>系统不会展示旧的离线数据。</small></div></div></div>
       <div class="help">点击没有自己记录的宿舍会直接进入单独记录；已有自己的记录则进入宿舍详情。所有保存完成后默认回到这个矩阵并刷新状态。</div>
     </section>
 
     <section class="scene" id="batch">
       <div class="scene-title"><h2>批量标记</h2><p>选择宿舍 → 选择状态 → 可选备注 → 一次保存</p></div>
       <div class="phones two" style="grid-template-columns:minmax(280px,340px)">
-        <div class="phone" data-record-editor="batch" data-initial-status="covered" data-initial-note="" data-batch-atomic="true" data-batch-flow="two-step"><div class="statusbar">19:48</div><div class="batch-step" data-batch-step="select"><div class="appbar"><div class="back" data-jump="matrix">‹ 退出批量模式</div><h3 data-batch-selection-title>选择宿舍 · 0间</h3></div><div class="floors"><span class="floor active">2楼</span></div><div class="rooms"><button class="room covered" type="button" data-batch-room="201" aria-pressed="false">201</button><button class="room unvisited" type="button" data-batch-room="202" aria-pressed="false">202</button></div><div class="bottom"><button class="primary" type="button" data-batch-next disabled>请先选择宿舍</button></div></div><div class="batch-step" data-batch-step="edit" hidden><div class="appbar"><div class="back" data-batch-back-to-selection>‹ 返回选择</div><h3 data-batch-edit-title>标记宿舍</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice on" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="noteSelect" data-note-select><span id="noteValue" data-note-value>请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="noteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="batch">保存并返回矩阵</button></div></div></div>
+        <div class="phone" data-record-editor="batch" data-target-rooms="" data-initial-status="covered" data-initial-note="" data-batch-atomic="true" data-batch-flow="two-step"><div class="statusbar">19:48</div><div class="batch-step" data-batch-step="select"><div class="appbar"><div class="back" data-jump="matrix">‹ 退出批量模式</div><h3 data-batch-selection-title>选择宿舍 · 0间</h3></div><div class="floors"><span class="floor active">2楼</span></div><div class="rooms"><button class="room covered" type="button" data-batch-room="201" aria-pressed="false">201</button><button class="room unvisited" type="button" data-batch-room="202" aria-pressed="false">202</button></div><div class="bottom"><button class="primary" type="button" data-batch-next disabled>请先选择宿舍</button></div></div><div class="batch-step" data-batch-step="edit" hidden><div class="appbar"><div class="back" data-batch-back-to-selection>‹ 返回选择</div><h3 data-batch-edit-title>标记宿舍</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice on" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="noteSelect" data-note-select><span id="noteValue" data-note-value>请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="noteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="batch">保存并返回矩阵</button></div></div></div>
       </div>
       <div class="help">选择页和编辑页在同一台手机内切换；返回选择时保留已选宿舍。快捷备注使用全宽横幅下拉框，展开最多显示五条。<span data-offline-queue="none">系统不做离线队列；批量记录要么整批保存成功，要么全部保留在当前页重新保存。</span></div>
     </section>
 
     <section class="scene" id="single">
       <div class="scene-title"><h2>单独记录</h2><p>楼栋矩阵点宿舍；没有自己的记录时，直接进入记录编辑器</p></div>
-      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="single" data-initial-status="" data-initial-note=""><div class="statusbar">19:44</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼 · 2楼</div><h3>记录 202</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox disabled" id="singleNoteSelect" data-note-select aria-disabled="true"><span id="singleNoteValue" data-note-value>请先选择状态</span><span>⌄</span></div><div class="dropdown" id="singleNoteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="single" disabled>请选择状态</button></div></div></div>
+      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="single" data-target-rooms="202" data-initial-status="" data-initial-note=""><div class="statusbar">19:44</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼 · 2楼</div><h3 data-editor-room-title>记录 202</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox disabled" id="singleNoteSelect" data-note-select aria-disabled="true"><span id="singleNoteValue" data-note-value>请先选择状态</span><span>⌄</span></div><div class="dropdown" id="singleNoteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="single" disabled>请选择状态</button></div></div></div>
       <div class="help"><b>单独记录：</b>状态和备注为空，保存时新建“当前代理 × 202”记录与审计日志，然后返回原楼层矩阵。</div>
     </section>
 
     <section class="scene" id="edit">
       <div class="scene-title"><h2>编辑记录</h2><p>从宿舍详情点击“编辑记录”进入；视觉和单独记录、批量标记完全一致</p></div>
-      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="edit" data-initial-status="covered" data-initial-note="已加种子"><div class="statusbar">20:18</div><div class="appbar"><div class="back" data-jump="detail">‹ 返回201详情</div><h3>编辑 201</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice on" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="editNoteSelect" data-note-select><span id="editNoteValue" data-note-value>已加种子</span><span>⌄</span></div><div class="dropdown" id="editNoteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="edit">保存并返回楼栋矩阵</button></div></div></div>
+      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="edit" data-target-rooms="201" data-initial-status="covered" data-initial-note="已加种子"><div class="statusbar">20:18</div><div class="appbar"><div class="back" data-jump="detail" data-editor-detail-back>‹ 返回201详情</div><h3 data-editor-room-title>编辑 201</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice" type="button" data-status="pending">🟡 待补扫</button><button class="choice on" type="button" data-status="covered">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="editNoteSelect" data-note-select><span id="editNoteValue" data-note-value>已加种子</span><span>⌄</span></div><div class="dropdown" id="editNoteDropdown" data-note-dropdown></div><div class="custom-note" data-custom-note hidden><label>自定义备注</label><input type="text" maxlength="60" placeholder="输入一句话，可留空" data-custom-note-input></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="edit">保存并返回楼栋矩阵</button></div></div></div>
       <div class="help"><b>编辑记录：</b>预填自己的最新状态和备注；保存时更新原记录、写入修改审计，然后默认返回原楼层矩阵。返回按钮不保存，并回到宿舍详情。</div>
     </section>
 
     <section class="scene" id="detail">
       <div class="scene-title"><h2>宿舍详情与历史记录</h2><p>主页面只保留自己的记录；历史页只展示每位代理最新结果</p></div>
-      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone"><div class="statusbar">20:16</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼</div><div style="display:flex;justify-content:space-between;align-items:center"><h3>201</h3><span class="pill">🟢 整体已覆盖</span></div></div><div class="record-section" data-detail-records="mine-only"><div class="label">我的记录 · 仅自己可编辑</div><div class="record mine"><div class="record-top"><span class="person">张三 <span class="tag">我</span></span><b style="color:#176b50;font-size:12px">编辑记录 ›</b></div><b style="color:#137347">🟢 已覆盖</b><div class="note">已加种子</div><div class="time" style="margin-top:8px">最后修改：9月29日 20:16</div></div><button class="linkrow" type="button" data-jump="history"><span>历史记录 <span class="small">2条</span></span><span>›</span></button></div></div></div>
+      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone"><div class="statusbar">20:16</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼</div><div style="display:flex;justify-content:space-between;align-items:center"><h3 data-detail-room>201</h3><span class="pill" data-detail-overall>🟢 整体已覆盖</span></div></div><div class="record-section" data-detail-records="mine-only"><div class="label">我的记录 · 仅自己可编辑</div><div class="record mine"><div class="record-top"><span class="person">张三 <span class="tag">我</span></span><b style="color:#176b50;font-size:12px">编辑记录 ›</b></div><b data-detail-my-status style="color:#137347">🟢 已覆盖</b><div class="note" data-detail-my-note>已加种子</div><div class="time" data-detail-my-time style="margin-top:8px">最后修改：9月29日 20:16</div></div><button class="linkrow" type="button" data-jump="history"><span>历史记录 <span class="small" data-detail-history-count>2条</span></span><span>›</span></button></div></div></div>
       <div class="help">代理端不展示状态变化轨迹；完整创建、修改和删除审计只在管理员后台查看。</div>
     </section>
 
     <section class="scene" id="history">
       <div class="scene-title"><h2>历史记录</h2><p>每位代理只展示当前最新结果，不展示状态变化轨迹</p></div>
-      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-history-latest-only="true"><div class="statusbar">20:16</div><div class="appbar"><div class="back" data-jump="detail">‹ 返回201详情</div><h3>历史记录</h3><div class="small" style="margin-top:6px">201 · 整体已覆盖</div></div><div class="record-section"><div class="label">按最后修改时间排序 · 2位代理</div><div class="record"><div class="record-top"><span class="person">张三 <span class="tag">我</span></span><span class="time">9月29日 20:16</span></div><b style="color:#137347">🟢 已覆盖</b><div class="note">已加种子</div></div><div class="record"><div class="record-top"><span class="person">李四</span><span class="time">9月28日 19:42</span></div><b style="color:#8d5f00">🟡 待补扫</b><div class="note">只有1-2人在</div></div></div></div></div>
+      <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-history-latest-only="true"><div class="statusbar">20:16</div><div class="appbar"><div class="back" data-jump="detail" data-history-detail-back>‹ 返回201详情</div><h3>历史记录</h3><div class="small" data-history-room-meta style="margin-top:6px">201 · 整体已覆盖</div></div><div class="record-section" data-history-list><div class="label">按最后修改时间排序 · 2位代理</div><div class="record"><div class="record-top"><span class="person">张三 <span class="tag">我</span></span><span class="time">9月29日 20:16</span></div><b style="color:#137347">🟢 已覆盖</b><div class="note">已加种子</div></div><div class="record"><div class="record-top"><span class="person">李四</span><span class="time">9月28日 19:42</span></div><b style="color:#8d5f00">🟡 待补扫</b><div class="note">只有1-2人在</div></div></div></div></div>
       <div class="help">此页面只用于队友协作判断；完整创建、修改和删除审计只在管理员后台查看。</div>
     </section>
 
@@ -287,6 +287,43 @@
     }
     function canSaveRecord(state){return Boolean(state.status)}
     /* record-editor-state:end */
+    /* sweep-state:start */
+    function createInitialSweepState(){
+      return {'201':{myRecord:{agent:'张三',status:'covered',note:'已加种子',modified:'9月29日 20:16'},otherRecords:[{agent:'李四',status:'pending',note:'只有1-2人在',modified:'9月28日 19:42'}]},'202':{myRecord:null,otherRecords:[]}};
+    }
+    function deriveOverallStatus(room){
+      const statuses=[room?.myRecord,...(room?.otherRecords||[])].filter(Boolean).map(record=>record.status);return statuses.includes('covered')?'covered':statuses.includes('pending')?'pending':'unvisited';
+    }
+    function applySweepSave(state,roomNos,status,note=''){
+      const next=JSON.parse(JSON.stringify(state));roomNos.forEach(roomNo=>{if(!next[roomNo])next[roomNo]={myRecord:null,otherRecords:[]};next[roomNo].myRecord={agent:'张三',status,note,modified:'刚刚'}});return next;
+    }
+    function summarizeSweepState(state){
+      return Object.values(state).reduce((summary,room)=>{summary[deriveOverallStatus(room)]+=1;return summary},{covered:0,pending:0,unvisited:0});
+    }
+    function hasMyRecord(state,roomNo){return Boolean(state[roomNo]?.myRecord)}
+    /* sweep-state:end */
+    const sweepStatusMeta={covered:{label:'🟢 已覆盖',overall:'🟢 整体已覆盖',color:'#137347'},pending:{label:'🟡 待补扫',overall:'🟡 整体待补扫',color:'#8d5f00'},unvisited:{label:'⚪ 未扫',overall:'⚪ 整体未扫',color:'#64748b'}};
+    let sweepDemoState=createInitialSweepState(),activeRoomNo='201';
+    function setStatusClass(element,status){element.classList.remove('covered','pending','unvisited');element.classList.add(status)}
+    function createHistoryRecord(record,isMine=false){
+      const card=document.createElement('div');card.className='record';const top=document.createElement('div');top.className='record-top';const person=document.createElement('span');person.className='person';person.textContent=record.agent;if(isMine){const tag=document.createElement('span');tag.className='tag';tag.textContent='我';person.append(' ',tag)}const time=document.createElement('span');time.className='time';time.textContent=record.modified;top.append(person,time);const status=document.createElement('b');status.textContent=sweepStatusMeta[record.status].label;status.style.color=sweepStatusMeta[record.status].color;const note=document.createElement('div');note.className='note';note.textContent=record.note||'未填写备注';card.append(top,status,note);return card;
+    }
+    function renderSweepDemo(){
+      const summary=summarizeSweepState(sweepDemoState);Object.entries(summary).forEach(([status,count])=>{const target=document.querySelector(`[data-matrix-count="${status}"]`);if(target)target.textContent=String(count)});
+      document.querySelectorAll('[data-matrix-room]').forEach(room=>{const roomNo=room.dataset.matrixRoom,status=deriveOverallStatus(sweepDemoState[roomNo]);setStatusClass(room,status);room.classList.toggle('mine',hasMyRecord(sweepDemoState,roomNo));room.setAttribute('aria-label',`${roomNo} ${sweepStatusMeta[status].label}${hasMyRecord(sweepDemoState,roomNo)?'，我扫过':''}`)});
+      document.querySelectorAll('[data-batch-room]').forEach(room=>{const status=deriveOverallStatus(sweepDemoState[room.dataset.batchRoom]);setStatusClass(room,status)});
+      const current=sweepDemoState[activeRoomNo]||{myRecord:null,otherRecords:[]},overall=deriveOverallStatus(current),meta=sweepStatusMeta[overall],records=[current.myRecord,...current.otherRecords].filter(Boolean);
+      const detailRoom=document.querySelector('[data-detail-room]'),detailOverall=document.querySelector('[data-detail-overall]');if(detailRoom)detailRoom.textContent=activeRoomNo;if(detailOverall){detailOverall.textContent=meta.overall;detailOverall.style.color=meta.color}
+      if(current.myRecord){const myMeta=sweepStatusMeta[current.myRecord.status],myStatus=document.querySelector('[data-detail-my-status]'),myNote=document.querySelector('[data-detail-my-note]'),myTime=document.querySelector('[data-detail-my-time]');myStatus.textContent=myMeta.label;myStatus.style.color=myMeta.color;myNote.textContent=current.myRecord.note||'未填写备注';myTime.textContent=`最后修改：${current.myRecord.modified}`}
+      const historyCount=document.querySelector('[data-detail-history-count]');if(historyCount)historyCount.textContent=`${records.length}条`;
+      const historyMeta=document.querySelector('[data-history-room-meta]'),historyBack=document.querySelector('[data-history-detail-back]');if(historyMeta)historyMeta.textContent=`${activeRoomNo} · ${meta.overall.replace(/^.. /,'')}`;if(historyBack)historyBack.textContent=`‹ 返回${activeRoomNo}详情`;
+      const historyList=document.querySelector('[data-history-list]');if(historyList){const label=document.createElement('div');label.className='label';label.textContent=`按最后修改时间排序 · ${records.length}位代理`;historyList.replaceChildren(label,...records.map((record,index)=>createHistoryRecord(record,index===0&&Boolean(current.myRecord))))}
+    }
+    function prepareSingleEditor(roomNo){const editor=document.querySelector('[data-record-editor="single"]');editor.dataset.targetRooms=roomNo;editor.querySelector('[data-editor-room-title]').textContent=`记录 ${roomNo}`;editor.dataset.initialStatus='';editor.dataset.initialNote='';resetRecordEditor(editor);setSaveState('single','idle')}
+    function prepareEditEditor(roomNo){const editor=document.querySelector('[data-record-editor="edit"]'),record=sweepDemoState[roomNo]?.myRecord;if(!record)return;editor.dataset.targetRooms=roomNo;editor.dataset.initialStatus=record.status;editor.dataset.initialNote=record.note;editor.querySelector('[data-editor-room-title]').textContent=`编辑 ${roomNo}`;editor.querySelector('[data-editor-detail-back]').textContent=`‹ 返回${roomNo}详情`;resetRecordEditor(editor);if(record.note&&!getRecordNoteOptions(record.status).includes(record.note)){editor.recordEditorState.noteMode='custom';renderRecordEditor(editor)}setSaveState('edit','idle')}
+    function commitRecordEditor(flow){
+      const editor=document.querySelector(`[data-record-editor="${flow}"]`),state=editor?.recordEditorState;if(!editor||!canSaveRecord(state))return false;const roomNos=flow==='batch'?getBatchSelection().map(room=>room.dataset.batchRoom):(editor.dataset.targetRooms||'').split(',').filter(Boolean);if(!roomNos.length)return false;sweepDemoState=applySweepSave(sweepDemoState,roomNos,state.status,state.noteText||'');activeRoomNo=roomNos[0];renderSweepDemo();return true;
+    }
     function routeAfterLogin(role){return role==='admin'?'admin':'school'}
     function setLoginState(state=''){
       document.querySelectorAll('[data-login-error]').forEach(alert=>alert.hidden=alert.dataset.loginError!==state);
@@ -369,16 +406,15 @@
       if(state==='idle')button.textContent=!hasStatus?'请选择状态':isBatch?(batchCount?`保存${batchCount}间并返回矩阵`:'保存并返回矩阵'):'保存并返回楼栋矩阵';
     }
     function wireSaveFeedback(initialFlow='',initialState=''){
-      document.querySelectorAll('[data-save-flow]').forEach(button=>button.addEventListener('click',()=>{const flow=button.dataset.saveFlow;window.hasUnsavedRecordChanges=true;setSaveState(flow,'saving');setTimeout(()=>{setSaveState(flow,'success');window.hasUnsavedRecordChanges=false;setTimeout(()=>{if(flow==='batch')resetBatchFlow();showScene('matrix')},800)},650)}));
+      document.querySelectorAll('[data-save-flow]').forEach(button=>button.addEventListener('click',()=>{const flow=button.dataset.saveFlow;window.hasUnsavedRecordChanges=true;setSaveState(flow,'saving');setTimeout(()=>{if(!commitRecordEditor(flow)){setSaveState(flow,'error');return}setSaveState(flow,'success');window.hasUnsavedRecordChanges=false;setTimeout(()=>{if(flow==='batch')resetBatchFlow();showScene('matrix')},800)},650)}));
       if(initialFlow&&['saving','success','error'].includes(initialState))setSaveState(initialFlow,initialState);
       window.addEventListener('beforeunload',event=>{if(!window.hasUnsavedRecordChanges)return;event.preventDefault();event.returnValue=''});
     }
     function showScene(id){const navId=id==='building'?'school':id==='history'?'detail':id;document.body.dataset.scene=id;document.querySelectorAll('.scene').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.scene===navId));sessionMenu.hidden=id==='login';sessionMenu.removeAttribute('open');window.scrollTo({top:0,behavior:'smooth'})}
     document.querySelectorAll('.nav [data-scene]').forEach(button=>{button.onclick=()=>requestSceneChange(button.dataset.scene)});
     document.querySelectorAll('[data-jump]').forEach(button=>{button.onclick=()=>{if(!button.disabled)requestSceneChange(button.dataset.jump)}});
-    const roomsWithoutMyRecord=new Set(['202']);
-    document.querySelectorAll('#matrix .room').forEach(room=>{room.style.cursor='pointer';room.addEventListener('click',()=>requestSceneChange(roomsWithoutMyRecord.has(room.textContent.trim())?'single':'detail'))});
-    document.querySelectorAll('#detail .record.mine').forEach(entry=>{entry.style.cursor='pointer';entry.addEventListener('click',()=>requestSceneChange('edit'))});
+    document.querySelectorAll('#matrix [data-matrix-room]').forEach(room=>{room.style.cursor='pointer';room.addEventListener('click',()=>{activeRoomNo=room.dataset.matrixRoom;renderSweepDemo();if(hasMyRecord(sweepDemoState,activeRoomNo)){requestSceneChange('detail');return}prepareSingleEditor(activeRoomNo);requestSceneChange('single')})});
+    document.querySelectorAll('#detail .record.mine').forEach(entry=>{entry.style.cursor='pointer';entry.addEventListener('click',()=>{prepareEditEditor(activeRoomNo);requestSceneChange('edit')})});
     const closeContextMenus=(except=null)=>{document.querySelectorAll('.menu-shell[open]').forEach(menu=>{if(menu!==except)menu.removeAttribute('open')})};
     document.querySelectorAll('[data-menu-trigger]').forEach(trigger=>trigger.addEventListener('click',event=>event.stopPropagation()));
     document.querySelectorAll('.menu-shell').forEach(menu=>menu.addEventListener('toggle',()=>{if(menu.open)closeContextMenus(menu)}));
@@ -494,6 +530,8 @@
     document.addEventListener('click',event=>{if(!event.target.closest('.menu-shell'))closeContextMenus()});
     document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeContextMenus();closeAdminModal();closeBlueprint()}});
     const searchParams=new URLSearchParams(window.location.search);
+    const initialScene=searchParams.get('scene'),requestedRoom=searchParams.get('room');
+    activeRoomNo=requestedRoom&&sweepDemoState[requestedRoom]?requestedRoom:initialScene==='single'?'202':'201';
     wireDiscardDialog();
     const loginState=searchParams.get('loginState');
     wireLogin(loginState==='error'?'credentials':loginState==='disabled'?'disabled':'');
@@ -502,8 +540,11 @@
     const viewPage=searchParams.get('viewPage'),viewState=searchParams.get('viewState');
     wireAgentViewStates(viewPage,viewState);
     wireRecordEditors();
+    if(initialScene==='single'&&!hasMyRecord(sweepDemoState,activeRoomNo))prepareSingleEditor(activeRoomNo);
+    if(initialScene==='edit'&&hasMyRecord(sweepDemoState,activeRoomNo))prepareEditEditor(activeRoomNo);
     const batchStep=searchParams.get('batchStep');
     wireBatchFlow(batchStep==='edit'?'edit':'select');
+    renderSweepDemo();
     const saveFlow=searchParams.get('saveFlow'),saveState=searchParams.get('saveState');
     wireSaveFeedback(saveFlow,saveState);
     window.requestedManagerTab=searchParams.get('managerTab');
@@ -511,7 +552,6 @@
     wireQuickNoteTabs(noteGroup==='covered'?'covered':'pending');
     const dataView=searchParams.get('dataView');
     wireSweepDataTabs(dataView==='audit'?'audit':'records');
-    const initialScene=searchParams.get('scene');
     if(initialScene&&document.getElementById(initialScene))showScene(initialScene);
     const navigationState=searchParams.get('navigationState');
     if(navigationState==='discard'){window.hasUnsavedRecordChanges=true;openDiscardDialog(searchParams.get('navigationTarget')||'matrix')}
