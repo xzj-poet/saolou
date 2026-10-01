@@ -57,7 +57,7 @@
 <body data-scene="login">
   <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><div class="top-actions"><nav class="nav"><button class="active" data-scene="login">登录</button><button data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav><details class="session-menu" data-session-menu hidden><summary class="session-summary"><span data-session-name>张三</span><small data-session-role>代理</small><span aria-hidden="true">⌄</span></summary><div class="session-popover"><button type="button" data-session-logout>退出登录</button></div></details></div></header>
   <main class="wrap">
-    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v20</p></div>
+    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v21</p></div>
 
     <section class="scene active" id="login">
       <div class="scene-title"><h2>登录入口</h2><p>管理员与代理共用一个入口，系统根据账号身份进入对应页面</p></div>
@@ -236,6 +236,14 @@
       <div class="session-actions"><button class="session-cancel" type="button" data-session-dialog-cancel hidden>继续编辑</button><button class="session-confirm" type="button" data-session-dialog-confirm>重新登录</button></div>
     </div>
   </div>
+  <div class="session-overlay" data-discard-dialog role="alertdialog" aria-modal="true" aria-labelledby="discardDialogTitle">
+    <div class="session-dialog">
+      <div class="session-icon" aria-hidden="true">!</div>
+      <h3 id="discardDialogTitle">放弃未保存的修改？</h3>
+      <p>当前状态、备注或批量选择尚未保存。离开后这些修改将会丢失。</p>
+      <div class="session-actions"><button class="session-cancel" type="button" data-discard-cancel>继续编辑</button><button class="session-confirm" type="button" data-discard-confirm>放弃并离开</button></div>
+    </div>
+  </div>
   <div class="admin-toast" id="adminToast">原型演示：操作已确认，示例数据未改变</div>
 
   <template id="admin-form-add-school"><div class="form-stack"><div class="form-field"><label>学校名称</label><input value="苏州大学新校区" aria-label="学校名称"></div><div class="field-help">创建后会出现在管理员基础数据中；代理能否进入仍由学校授权决定。</div></div></template>
@@ -295,9 +303,18 @@
       skeleton.hidden=state!=='loading';icon.hidden=state==='loading';offline.hidden=state!=='error';action.hidden=true;if(state==='loading'){title.textContent=config.loading;message.textContent='正在获取最新数据，请稍候。'}if(state==='empty'){icon.textContent=config.emptyIcon;title.textContent=config.emptyTitle;message.textContent=config.emptyMessage;if(config.emptyAction){action.hidden=false;action.textContent=config.emptyAction;action.dataset.stateAction=config.emptyTarget}}if(state==='error'){icon.textContent='!';title.textContent='加载失败';message.textContent='请检查网络后重新加载，当前页面不会展示旧的离线数据。';action.hidden=false;action.textContent='重新加载';action.dataset.stateAction='retry'}
     }
     function wireAgentViewStates(initialPage='',initialState=''){
-      document.querySelectorAll('[data-view-state-action]').forEach(action=>action.addEventListener('click',()=>{const root=action.closest('[data-view-page]'),page=root.dataset.viewPage,target=action.dataset.stateAction;if(target==='retry'){setAgentViewState(page,'loading');setTimeout(()=>setAgentViewState(page,'ready'),700);return}showScene(target)}));if(agentViewConfigs[initialPage]&&['loading','empty','error'].includes(initialState))setAgentViewState(initialPage,initialState);
+      document.querySelectorAll('[data-view-state-action]').forEach(action=>action.addEventListener('click',()=>{const root=action.closest('[data-view-page]'),page=root.dataset.viewPage,target=action.dataset.stateAction;if(target==='retry'){setAgentViewState(page,'loading');setTimeout(()=>setAgentViewState(page,'ready'),700);return}requestSceneChange(target)}));if(agentViewConfigs[initialPage]&&['loading','empty','error'].includes(initialState))setAgentViewState(initialPage,initialState);
     }
     window.hasUnsavedRecordChanges=false;
+    const discardDialog=document.querySelector('[data-discard-dialog]');
+    let pendingSceneTarget='';
+    function openDiscardDialog(target){pendingSceneTarget=target;sessionMenu.removeAttribute('open');discardDialog.classList.add('open')}
+    function closeDiscardDialog(){discardDialog.classList.remove('open');pendingSceneTarget=''}
+    function requestSceneChange(target){if(window.hasUnsavedRecordChanges){openDiscardDialog(target);return}showScene(target)}
+    function wireDiscardDialog(){
+      discardDialog.querySelector('[data-discard-cancel]').addEventListener('click',closeDiscardDialog);
+      discardDialog.querySelector('[data-discard-confirm]').addEventListener('click',()=>{const target=pendingSceneTarget||'matrix';window.hasUnsavedRecordChanges=false;closeDiscardDialog();showScene(target)});
+    }
     function setSaveState(flow,state='idle'){
       const editor=document.querySelector(`[data-record-editor="${flow}"]`);if(!editor)return;
       const button=editor.querySelector('[data-save-flow]'),feedback=editor.querySelector('[data-save-feedback]'),isBatch=flow==='batch';
@@ -314,11 +331,11 @@
       window.addEventListener('beforeunload',event=>{if(!window.hasUnsavedRecordChanges)return;event.preventDefault();event.returnValue=''});
     }
     function showScene(id){const navId=id==='building'?'school':id==='history'?'detail':id;document.body.dataset.scene=id;document.querySelectorAll('.scene').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.scene===navId));sessionMenu.hidden=id==='login';sessionMenu.removeAttribute('open');window.scrollTo({top:0,behavior:'smooth'})}
-    document.querySelectorAll('[data-scene]').forEach(button=>{button.onclick=()=>showScene(button.dataset.scene)});
-    document.querySelectorAll('[data-jump]').forEach(button=>{button.onclick=()=>{if(!button.disabled)showScene(button.dataset.jump)}});
+    document.querySelectorAll('.nav [data-scene]').forEach(button=>{button.onclick=()=>requestSceneChange(button.dataset.scene)});
+    document.querySelectorAll('[data-jump]').forEach(button=>{button.onclick=()=>{if(!button.disabled)requestSceneChange(button.dataset.jump)}});
     const roomsWithoutMyRecord=new Set(['202']);
-    document.querySelectorAll('#matrix .room').forEach(room=>{room.style.cursor='pointer';room.addEventListener('click',()=>showScene(roomsWithoutMyRecord.has(room.textContent.trim())?'single':'detail'))});
-    document.querySelectorAll('#detail .record.mine').forEach(entry=>{entry.style.cursor='pointer';entry.addEventListener('click',()=>showScene('edit'))});
+    document.querySelectorAll('#matrix .room').forEach(room=>{room.style.cursor='pointer';room.addEventListener('click',()=>requestSceneChange(roomsWithoutMyRecord.has(room.textContent.trim())?'single':'detail'))});
+    document.querySelectorAll('#detail .record.mine').forEach(entry=>{entry.style.cursor='pointer';entry.addEventListener('click',()=>requestSceneChange('edit'))});
     const wireSelect=(selectId,dropdownId,valueId)=>{const select=document.getElementById(selectId),drop=document.getElementById(dropdownId),value=document.getElementById(valueId);select.addEventListener('click',()=>drop.classList.toggle('open'));drop.querySelectorAll('.note-option').forEach(o=>o.addEventListener('click',()=>{drop.querySelectorAll('.note-option').forEach(x=>x.classList.remove('on'));o.classList.add('on');value.textContent=o.textContent;drop.classList.remove('open')}))};
     wireSelect('noteSelect','noteDropdown','noteValue');
     wireSelect('singleNoteSelect','singleNoteDropdown','singleNoteValue');
@@ -438,6 +455,7 @@
     document.addEventListener('click',event=>{if(!event.target.closest('.menu-shell'))closeContextMenus()});
     document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeContextMenus();closeAdminModal();closeBlueprint()}});
     const searchParams=new URLSearchParams(window.location.search);
+    wireDiscardDialog();
     const loginState=searchParams.get('loginState');
     wireLogin(loginState==='error'?'credentials':loginState==='disabled'?'disabled':'');
     const sessionState=searchParams.get('sessionState'),sessionRole=searchParams.get('userRole')==='admin'||searchParams.get('scene')==='admin'?'admin':'agent';
@@ -453,6 +471,8 @@
     wireSweepDataTabs(dataView==='audit'?'audit':'records');
     const initialScene=searchParams.get('scene');
     if(initialScene&&document.getElementById(initialScene))showScene(initialScene);
+    const navigationState=searchParams.get('navigationState');
+    if(navigationState==='discard'){window.hasUnsavedRecordChanges=true;openDiscardDialog(searchParams.get('navigationTarget')||'matrix')}
     const initialMenu=searchParams.get('menu');
     const initialMenuTrigger=initialMenu?document.querySelector(`[data-menu-trigger="${initialMenu}"]`):null;
     if(initialMenuTrigger)initialMenuTrigger.closest('.menu-shell').setAttribute('open','');
