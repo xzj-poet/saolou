@@ -70,6 +70,12 @@ Assert-Contains 'setAgentViewState\(' 'School, building, and matrix states must 
 Assert-Contains 'wireAgentViewStates\(' 'Retry behavior must be wired for all agent data pages.'
 Assert-Contains "searchParams\.get\('viewPage'\)" 'The prototype must support direct review of a state on a selected page.'
 Assert-Contains "searchParams\.get\('viewState'\)" 'The prototype must support direct review of loading, empty, and error states.'
+Assert-Contains 'id="history"' 'Dormitory history must be an independent page instead of a second phone inside details.'
+Assert-Contains 'data-jump="history"' 'The dormitory detail page must provide a full-row history entry.'
+Assert-Contains '<button class="linkrow"[^>]*data-jump="history"' 'The full-row history entry must be an accessible button.'
+Assert-Contains 'data-history-latest-only="true"' 'Agent history must show only each agent current latest result, never status trajectories.'
+Assert-Contains 'id="history"[\s\S]*data-jump="detail"' 'The history page must provide a large return action to the dormitory detail page.'
+Assert-Contains 'data-detail-records="mine-only"' 'The dormitory detail page must keep only the current agent record.'
 
 Assert-Contains 'id="building"' 'A dedicated building selection page is required.'
 Assert-Contains 'class="building-card"[^>]*data-jump="matrix"' 'A full building card must open the matrix.'
