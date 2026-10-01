@@ -47,11 +47,14 @@
     @media(max-width:780px){.sweep-data-filters{grid-template-columns:1fr 1fr}.data-table-wrap{overflow:auto}.sweep-table{min-width:760px}}
     @media(max-width:640px){.admin-modal,.blueprint-modal{padding:10px}.blueprint-floor{grid-template-columns:1fr}.blueprint-floor-label{min-height:58px}.batch-fields,.manager-room-grid{grid-template-columns:1fr}.dorm-manager-tab{font-size:10px;padding:0 4px}.agent-card{grid-template-columns:1fr;gap:9px}.agent-access{padding-right:20px}.quick-note-row{grid-template-columns:28px 1fr auto;padding-right:56px}.quick-note-row>.pill{display:none}.note-moves{grid-column:2/4}.sweep-data-filters{grid-template-columns:1fr}.audit-change{grid-template-columns:1fr}.audit-arrow{transform:rotate(90deg)}}
   </style>
+  <style>
+    .top-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0}.session-menu{position:relative;flex:0 0 auto}.session-menu[hidden]{display:none}.session-summary{list-style:none;min-height:40px;display:flex;align-items:center;gap:7px;padding:0 11px;border:1px solid #dce3eb;border-radius:12px;background:#fff;color:#26344a;cursor:pointer;font-weight:900}.session-summary::-webkit-details-marker{display:none}.session-summary small{padding:3px 6px;border-radius:999px;background:#e5f5ed;color:#176b50;font-size:9px}.session-popover{position:absolute;right:0;top:calc(100% + 7px);z-index:30;width:150px;padding:7px;border:1px solid #dce3eb;border-radius:12px;background:#fff;box-shadow:0 14px 32px rgba(15,23,42,.17)}.session-popover button{width:100%;min-height:42px;border:0;border-radius:9px;background:#fff0f0;color:#a23b3b;font-weight:900;cursor:pointer}.session-overlay{display:none;position:fixed;inset:0;z-index:120;padding:20px;background:rgba(15,23,42,.52);place-items:center}.session-overlay.open{display:grid}.session-dialog{width:min(390px,100%);padding:24px;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.3)}.session-icon{width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:#eef1f4;font-size:22px}.session-dialog h3{margin:16px 0 8px;font-size:20px}.session-dialog p{margin:0;color:#667386;font-size:12px;line-height:1.7}.session-dialog [data-session-state][hidden]{display:none}.session-actions{display:flex;gap:9px;margin-top:20px}.session-actions button{min-height:46px;flex:1;border-radius:11px;font-weight:900;cursor:pointer}.session-cancel{border:1px solid #d6dee7;background:#fff;color:#526075}.session-confirm{border:0;background:var(--green);color:#fff}@media(max-width:900px){.top-actions{width:100%;align-items:flex-start}.nav{flex:1}.session-summary{min-height:38px}}@media(max-width:520px){.session-summary small{display:none}.session-summary{padding:0 9px}.session-popover{width:132px}}
+  </style>
 </head>
 <body data-scene="login">
-  <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><nav class="nav"><button class="active" data-scene="login">登录</button><button data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav></header>
+  <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><div class="top-actions"><nav class="nav"><button class="active" data-scene="login">登录</button><button data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav><details class="session-menu" data-session-menu hidden><summary class="session-summary"><span data-session-name>张三</span><small data-session-role>代理</small><span aria-hidden="true">⌄</span></summary><div class="session-popover"><button type="button" data-session-logout>退出登录</button></div></details></div></header>
   <main class="wrap">
-    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v17</p></div>
+    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v18</p></div>
 
     <section class="scene active" id="login">
       <div class="scene-title"><h2>登录入口</h2><p>管理员与代理共用一个入口，系统根据账号身份进入对应页面</p></div>
@@ -89,7 +92,7 @@
     <section class="scene" id="single">
       <div class="scene-title"><h2>单独记录</h2><p>楼栋矩阵点宿舍；没有自己的记录时，直接进入记录编辑器</p></div>
       <div class="phones two" style="grid-template-columns:minmax(280px,340px)"><div class="phone" data-record-editor="single"><div class="statusbar">19:44</div><div class="appbar"><div class="back" data-jump="matrix">‹ 返回3号楼 · 2楼</div><h3>记录 202</h3></div><div class="panel"><h4>状态</h4><div class="choices"><button class="choice">🟡 待补扫</button><button class="choice">🟢 已覆盖</button></div><h4>快捷备注 <span class="small">（可不选）</span></h4><div class="selectbox" id="singleNoteSelect"><span id="singleNoteValue">请选择快捷备注</span><span>⌄</span></div><div class="dropdown" id="singleNoteDropdown"><div class="note-option">已加种子</div><div class="note-option">已注册</div><div class="note-option">已成交</div><div class="note-option">已充分沟通</div><div class="note-option">有人可帮忙传达</div><div class="note-option">明确没需求</div><div class="note-option">＋ 自定义备注</div></div></div><div class="bottom"><div class="save-feedback" data-save-feedback aria-live="polite" hidden></div><button class="primary" data-save-flow="single">保存并返回楼栋矩阵</button></div></div></div>
-      <div class="help"><b>单独记录：</b>状态和备注为空，保存时新建“当前代理 × 603”记录与审计日志，然后返回原楼层矩阵。</div>
+      <div class="help"><b>单独记录：</b>状态和备注为空，保存时新建“当前代理 × 202”记录与审计日志，然后返回原楼层矩阵。</div>
     </section>
 
     <section class="scene" id="edit">
@@ -216,6 +219,17 @@
       </div>
     </div>
   </div>
+  <div class="session-overlay" data-session-dialog role="alertdialog" aria-modal="true" aria-labelledby="sessionDialogTitle">
+    <div class="session-dialog">
+      <div class="session-icon" aria-hidden="true">↪</div>
+      <h3 id="sessionDialogTitle" data-session-dialog-title>登录已失效</h3>
+      <p data-session-state="expired">当前登录状态已经失效，请重新登录后继续使用。</p>
+      <p data-session-state="disabled" hidden>当前账号已被管理员停用，无法继续使用。若有疑问，请联系管理员。</p>
+      <p data-session-state="access-revoked" hidden>你已没有当前学校的查看和记录权限，系统将返回学校选择页面并刷新授权状态。</p>
+      <p data-session-state="logout-dirty" hidden>当前修改尚未保存。退出后这些状态、备注或批量选择将会丢失。</p>
+      <div class="session-actions"><button class="session-cancel" type="button" data-session-dialog-cancel hidden>继续编辑</button><button class="session-confirm" type="button" data-session-dialog-confirm>重新登录</button></div>
+    </div>
+  </div>
   <div class="admin-toast" id="adminToast">原型演示：操作已确认，示例数据未改变</div>
 
   <template id="admin-form-add-school"><div class="form-stack"><div class="form-field"><label>学校名称</label><input value="苏州大学新校区" aria-label="学校名称"></div><div class="field-help">创建后会出现在管理员基础数据中；代理能否进入仍由学校授权决定。</div></div></template>
@@ -252,8 +266,21 @@
     function wireLogin(initialState=''){
       const username=document.querySelector('[data-login-username]'),password=document.querySelector('[data-login-password]'),toggle=document.querySelector('[data-login-password-toggle]'),submit=document.querySelector('[data-login-submit]');
       toggle.addEventListener('click',()=>{const showing=password.type==='text';password.type=showing?'password':'text';toggle.textContent=showing?'显示':'隐藏'});
-      submit.addEventListener('click',()=>{setLoginState();const role=username.value.trim().toLowerCase()==='admin'?'admin':'agent';showScene(routeAfterLogin(role))});
+      submit.addEventListener('click',()=>{setLoginState();const role=username.value.trim().toLowerCase()==='admin'?'admin':'agent';setSessionIdentity(role);showScene(routeAfterLogin(role))});
       [username,password].forEach(input=>input.addEventListener('keydown',event=>{if(event.key==='Enter')submit.click()}));setLoginState(initialState);
+    }
+    const sessionMenu=document.querySelector('[data-session-menu]'),sessionDialog=document.querySelector('[data-session-dialog]');
+    function setSessionIdentity(role='agent'){
+      window.currentUserRole=role;sessionMenu.querySelector('[data-session-name]').textContent=role==='admin'?'管理员':'张三';sessionMenu.querySelector('[data-session-role]').textContent=role==='admin'?'管理员':'代理';
+    }
+    function openSessionDialog(state){
+      const titles={expired:'登录已失效',disabled:'账号已停用','access-revoked':'学校权限已取消','logout-dirty':'放弃未保存的修改并退出？'},confirmLabels={expired:'重新登录',disabled:'返回登录','access-revoked':'返回学校选择','logout-dirty':'放弃并退出'};
+      sessionDialog.dataset.activeSessionState=state;sessionDialog.querySelector('[data-session-dialog-title]').textContent=titles[state]||titles.expired;sessionDialog.querySelectorAll('[data-session-state]').forEach(message=>message.hidden=message.dataset.sessionState!==state);sessionDialog.querySelector('[data-session-dialog-cancel]').hidden=state!=='logout-dirty';sessionDialog.querySelector('[data-session-dialog-confirm]').textContent=confirmLabels[state]||'重新登录';sessionMenu.removeAttribute('open');sessionDialog.classList.add('open');
+    }
+    function closeSessionDialog(){sessionDialog.classList.remove('open')}
+    function returnToLogin(){window.hasUnsavedRecordChanges=false;document.querySelector('[data-login-password]').value='';closeSessionDialog();showScene('login')}
+    function wireSessionControls(initialState='',initialRole='agent'){
+      setSessionIdentity(initialRole);sessionMenu.querySelector('[data-session-logout]').addEventListener('click',()=>{window.hasUnsavedRecordChanges?openSessionDialog('logout-dirty'):returnToLogin()});sessionDialog.querySelector('[data-session-dialog-cancel]').addEventListener('click',closeSessionDialog);sessionDialog.querySelector('[data-session-dialog-confirm]').addEventListener('click',()=>{const state=sessionDialog.dataset.activeSessionState;if(state==='access-revoked'){window.hasUnsavedRecordChanges=false;closeSessionDialog();showScene('school');return}returnToLogin()});if(['expired','disabled','access-revoked','logout-dirty'].includes(initialState))openSessionDialog(initialState);
     }
     window.hasUnsavedRecordChanges=false;
     function setSaveState(flow,state='idle'){
@@ -271,7 +298,7 @@
       if(initialFlow&&['saving','success','error'].includes(initialState))setSaveState(initialFlow,initialState);
       window.addEventListener('beforeunload',event=>{if(!window.hasUnsavedRecordChanges)return;event.preventDefault();event.returnValue=''});
     }
-    function showScene(id){const navId=id==='building'?'school':id;document.body.dataset.scene=id;document.querySelectorAll('.scene').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.scene===navId));window.scrollTo({top:0,behavior:'smooth'})}
+    function showScene(id){const navId=id==='building'?'school':id;document.body.dataset.scene=id;document.querySelectorAll('.scene').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.scene===navId));sessionMenu.hidden=id==='login';sessionMenu.removeAttribute('open');window.scrollTo({top:0,behavior:'smooth'})}
     document.querySelectorAll('[data-scene]').forEach(button=>{button.onclick=()=>showScene(button.dataset.scene)});
     document.querySelectorAll('[data-jump]').forEach(button=>{button.onclick=()=>{if(!button.disabled)showScene(button.dataset.jump)}});
     const roomsWithoutMyRecord=new Set(['202']);
@@ -398,6 +425,8 @@
     const searchParams=new URLSearchParams(window.location.search);
     const loginState=searchParams.get('loginState');
     wireLogin(loginState==='error'?'credentials':loginState==='disabled'?'disabled':'');
+    const sessionState=searchParams.get('sessionState'),sessionRole=searchParams.get('userRole')==='admin'||searchParams.get('scene')==='admin'?'admin':'agent';
+    wireSessionControls(sessionState,sessionRole);
     const saveFlow=searchParams.get('saveFlow'),saveState=searchParams.get('saveState');
     wireSaveFeedback(saveFlow,saveState);
     window.requestedManagerTab=searchParams.get('managerTab');
