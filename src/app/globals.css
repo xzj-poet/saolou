@@ -687,6 +687,107 @@ h1 {
   opacity: 0.55;
 }
 
+.agent-list {
+  display: grid;
+  gap: 12px;
+}
+
+.agent-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(160px, 0.8fr) auto minmax(240px, 1.6fr) 48px;
+  align-items: center;
+  gap: 18px;
+  min-height: 92px;
+  padding: 18px 16px 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+
+.agent-row.is-disabled {
+  background: #f4f6f8;
+}
+
+.agent-identity {
+  display: grid;
+  gap: 5px;
+}
+
+.agent-identity strong {
+  font-size: 18px;
+}
+
+.agent-identity span,
+.school-tags em {
+  color: var(--muted);
+  font-size: 14px;
+  font-style: normal;
+}
+
+.school-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.school-tags > span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--gray-soft);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.school-access-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.school-access-list label {
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.school-access-list small {
+  color: var(--muted);
+}
+
+.password-result {
+  display: grid;
+  gap: 14px;
+}
+
+.password-result p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff5d8;
+  color: #775100;
+}
+
+.password-result code {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: white;
+  font-size: 18px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.full-button {
+  width: 100%;
+  padding-inline: 18px;
+}
+
 @media (max-width: 480px) {
   .landing-shell {
     padding: 16px;
@@ -757,5 +858,13 @@ h1 {
 
   .range-form {
     grid-template-columns: 1fr;
+  }
+
+  .agent-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .school-tags {
+    grid-column: 1 / -1;
   }
 }
