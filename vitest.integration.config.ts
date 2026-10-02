@@ -19,5 +19,6 @@ export default defineConfig({
       "src/**/*.integration.test.ts",
       "src/**/*.integration.test.tsx",
     ],
+    setupFiles: ["./src/test/integration-setup.ts"],
   },
 });
