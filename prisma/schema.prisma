@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum SweepStatus {
+  PENDING
+  COVERED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model User {
+  id                  String              @id @default(uuid()) @db.Uuid
+  name                String
+  username            String              @unique
+  passwordHash        String              @map("password_hash")
+  role                UserRole
+  status              UserStatus          @default(ACTIVE)
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  schoolAccess        AgentSchoolAccess[] @relation("AgentAccess")
+  grantedSchoolAccess AgentSchoolAccess[] @relation("GrantedAccess")
+  sweepRecords        SweepRecord[]
+  auditSubjects       SweepAudit[]        @relation("AuditAgent")
+  operatedAudits      SweepAudit[]        @relation("AuditOperator")
+  sessions            Session[]
+
+  @@map("users")
+}
+
+model AgentSchoolAccess {
+  id        String   @id @default(uuid()) @db.Uuid
+  agentId   String   @map("agent_id") @db.Uuid
+  schoolId  String   @map("school_id") @db.Uuid
+  grantedBy String   @map("granted_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  agent     User     @relation("AgentAccess", fields: [agentId], references: [id], onDelete: Restrict)
+  granter   User     @relation("GrantedAccess", fields: [grantedBy], references: [id], onDelete: Restrict)
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+
+  @@unique([agentId, schoolId])
+  @@map("agent_school_access")
+}
+
+model School {
+  id            String              @id @default(uuid()) @db.Uuid
+  name          String              @unique
+  sortOrder     Int                 @default(0) @map("sort_order")
+  isActive      Boolean             @default(true) @map("is_active")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  buildings     Building[]
+  agentAccesses AgentSchoolAccess[]
+
+  @@map("schools")
+}
+
+model Building {
+  id          String      @id @default(uuid()) @db.Uuid
+  schoolId    String      @map("school_id") @db.Uuid
+  name        String
+  note        String?
+  sortOrder   Int         @default(0) @map("sort_order")
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  dormitories Dormitory[]
+
+  @@unique([schoolId, name])
+  @@map("buildings")
+}
+
+model Dormitory {
+  id           String        @id @default(uuid()) @db.Uuid
+  buildingId   String        @map("building_id") @db.Uuid
+  roomNo       String        @map("room_no")
+  floor        String
+  sortOrder    Int           @default(0) @map("sort_order")
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  building     Building      @relation(fields: [buildingId], references: [id], onDelete: Restrict)
+  sweepRecords SweepRecord[]
+  audits       SweepAudit[]
+
+  @@unique([buildingId, roomNo])
+  @@map("dormitories")
+}
+
+model QuickNote {
+  id        String      @id @default(uuid()) @db.Uuid
+  status    SweepStatus
+  content   String
+  sortOrder Int         @default(0) @map("sort_order")
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@map("quick_notes")
+}
+
+model SweepRecord {
+  id            String      @id @default(uuid()) @db.Uuid
+  dormitoryId   String      @map("dormitory_id") @db.Uuid
+  agentId       String      @map("agent_id") @db.Uuid
+  status        SweepStatus
+  note          String?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  dormitory     Dormitory   @relation(fields: [dormitoryId], references: [id], onDelete: Restrict)
+  agent         User        @relation(fields: [agentId], references: [id], onDelete: Restrict)
+
+  @@unique([agentId, dormitoryId])
+  @@map("sweep_records")
+}
+
+model SweepAudit {
+  id           String       @id @default(uuid()) @db.Uuid
+  recordId     String       @map("record_id") @db.Uuid
+  dormitoryId  String       @map("dormitory_id") @db.Uuid
+  agentId      String       @map("agent_id") @db.Uuid
+  operatorId   String       @map("operator_id") @db.Uuid
+  action       AuditAction
+  beforeStatus SweepStatus? @map("before_status")
+  afterStatus  SweepStatus? @map("after_status")
+  beforeNote   String?      @map("before_note")
+  afterNote    String?      @map("after_note")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  dormitory    Dormitory    @relation(fields: [dormitoryId], references: [id], onDelete: Restrict)
+  agent        User         @relation("AuditAgent", fields: [agentId], references: [id], onDelete: Restrict)
+  operator     User         @relation("AuditOperator", fields: [operatorId], references: [id], onDelete: Restrict)
+
+  @@index([recordId])
+  @@map("sweep_audits")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("sessions")
+}
