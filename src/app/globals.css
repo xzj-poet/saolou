@@ -339,6 +339,354 @@ h1 {
   padding: 28px 18px;
 }
 
+.admin-content main {
+  max-width: none;
+}
+
+.manager-toolbar,
+.school-card-header,
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.manager-toolbar .primary-button {
+  min-width: 150px;
+  padding: 0 20px;
+}
+
+.sr-announcement {
+  min-height: 22px;
+  margin: 8px 0;
+  color: var(--green);
+}
+
+.school-list {
+  display: grid;
+  gap: 14px;
+}
+
+.school-card,
+.building-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.school-card.is-disabled,
+.building-card.is-disabled {
+  background: #f4f6f8;
+}
+
+.school-card-header {
+  position: relative;
+  padding: 8px 10px 8px 0;
+}
+
+.school-toggle {
+  flex: 1;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px 10px 22px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.school-toggle > span:first-child,
+.building-card-body {
+  display: grid;
+  gap: 6px;
+}
+
+.school-toggle strong,
+.building-card strong {
+  font-size: 20px;
+}
+
+.school-toggle small,
+.building-card span,
+.building-card small {
+  color: var(--muted);
+}
+
+.status-pill {
+  width: max-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.building-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  padding: 18px;
+  border-top: 1px solid var(--line);
+  background: #f8fafb;
+}
+
+.building-card {
+  position: relative;
+  min-height: 150px;
+  overflow: visible;
+}
+
+.building-card-body {
+  width: 100%;
+  min-height: 148px;
+  padding: 24px 70px 22px 22px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.building-card > .status-pill {
+  position: absolute;
+  top: 18px;
+  right: 66px;
+}
+
+.more-menu {
+  position: relative;
+  z-index: 4;
+}
+
+.building-card > .more-menu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.more-button,
+.icon-button {
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--gray-soft);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.context-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: 190px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 14px 34px rgb(23 34 56 / 18%);
+}
+
+.context-menu button {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.context-menu button:hover {
+  background: var(--gray-soft);
+}
+
+.danger-action,
+.context-menu .danger-action {
+  color: var(--danger);
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(23 34 56 / 48%);
+}
+
+.campus-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 24%);
+}
+
+.campus-dialog-wide {
+  width: min(1120px, 96vw);
+  height: min(820px, calc(100vh - 48px));
+}
+
+.dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+  background: white;
+}
+
+.dialog-header h2 {
+  margin: 0;
+}
+
+.dialog-body {
+  padding: 24px;
+}
+
+.building-blueprint {
+  display: grid;
+  gap: 18px;
+}
+
+.blueprint-floor {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.blueprint-floor h3 {
+  margin: 12px 0;
+}
+
+.blueprint-rooms {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.blueprint-room {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+.blueprint-room.is-disabled {
+  background: var(--gray-soft);
+  color: var(--muted);
+}
+
+.admin-form,
+.range-form,
+.batch-preview,
+.retire-list {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-form label,
+.range-form label {
+  display: grid;
+  gap: 7px;
+  font-weight: 750;
+}
+
+.admin-form .primary-button,
+.range-form button,
+.batch-preview button,
+.danger-button {
+  padding: 0 18px;
+}
+
+.range-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.range-form button {
+  grid-column: 1 / -1;
+}
+
+.dialog-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.dialog-tabs button {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--gray-soft);
+  cursor: pointer;
+}
+
+.dialog-tabs button[aria-selected="true"] {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--green);
+  font-weight: 850;
+}
+
+.batch-preview {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--gray-soft);
+}
+
+.retire-list label {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.retire-list small {
+  color: var(--muted);
+}
+
+.danger-button {
+  min-height: var(--tap-min);
+  border: 1px solid #e6b7b7;
+  border-radius: 12px;
+  background: #fff2f2;
+  color: var(--danger);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (max-width: 480px) {
   .landing-shell {
     padding: 16px;
@@ -382,5 +730,32 @@ h1 {
 
   .admin-content {
     padding: 24px 16px;
+  }
+
+  .manager-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .building-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-backdrop {
+    padding: 10px;
+  }
+
+  .campus-dialog-wide {
+    width: 100%;
+    height: calc(100vh - 20px);
+  }
+
+  .blueprint-floor {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .range-form {
+    grid-template-columns: 1fr;
   }
 }
