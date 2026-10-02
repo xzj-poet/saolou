@@ -1,0 +1,13 @@
+.git
+.github
+.next
+.superpowers
+backups
+coverage
+docs
+node_modules
+playwright-report
+test-results
+.env
+.env.*
+!.env.example
