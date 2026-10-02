@@ -57,11 +57,15 @@
   <style>
     .choice{cursor:pointer}.choice[data-status="pending"].on{background:var(--yellow-bg);color:var(--yellow);border-color:#e2b73d}.choice[data-status="covered"].on{background:var(--green-bg);color:#137347;border-color:#48b480}.selectbox.disabled{cursor:not-allowed;background:#eef1f4;color:#8994a3}.note-option{width:100%;border:0;background:#fff;color:inherit;font:inherit;text-align:left}.custom-note{display:grid;gap:7px;margin-top:10px}.custom-note[hidden]{display:none}.custom-note label{font-size:11px;font-weight:900;color:#445167}.custom-note input{width:100%;min-height:50px;border:1px solid #cfd8e5;border-radius:12px;background:#fff;padding:0 13px;color:#26344a;font:inherit}.custom-note input:focus{outline:3px solid rgba(23,107,80,.12);border-color:#48a47f}
   </style>
+  <style>
+    .desktop{overflow:visible}.window{border-radius:18px 18px 0 0}.admin-shell{align-items:start;border-radius:0 0 18px 18px}.sidebar{position:sticky;top:82px;align-self:start;max-height:calc(100vh - 96px);overflow:auto;border-radius:0 0 0 18px}.side-item{display:block;width:100%;border:0;background:transparent;color:#dbe3ec;text-align:left;font:inherit;cursor:pointer}.side-item:hover{background:#25344d;color:#fff}.side-item.on{background:var(--green);color:#fff}.module[id]{scroll-margin-top:90px}
+    @media(max-width:900px){.sidebar{display:flex;position:static;max-height:none;overflow-x:auto;gap:6px;padding:10px;border-radius:0}.side-brand{display:none}.side-item{flex:0 0 auto;width:auto;margin:0;padding:10px 12px;white-space:nowrap}.admin-content{padding-top:16px}.module[id]{scroll-margin-top:138px}}
+  </style>
 </head>
 <body data-scene="login">
   <header class="top"><div class="brand">校园扫楼记录系统 · 极简原型</div><div class="top-actions"><nav class="nav"><button class="active" data-scene="login">登录</button><button data-scene="school">学校/楼栋</button><button data-scene="matrix">楼栋矩阵</button><button data-scene="single">单独记录</button><button data-scene="edit">编辑记录</button><button data-scene="batch">批量标记</button><button data-scene="detail">宿舍详情</button><button data-scene="admin">管理员后台</button></nav><details class="session-menu" data-session-menu hidden><summary class="session-summary"><span data-session-name>张三</span><small data-session-role>代理</small><span aria-hidden="true">⌄</span></summary><div class="session-popover"><button type="button" data-session-logout>退出登录</button></div></details></div></header>
   <main class="wrap">
-    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v30</p></div>
+    <div class="intro"><h1>只回答：下一扇门应该敲哪里？</h1><p>单团队 · 在线使用 · 响应式 Web SaaS · 原型版本 v31</p></div>
 
     <section class="scene active" id="login">
       <div class="scene-title"><h2>登录入口</h2><p>管理员与代理共用一个入口，系统根据账号身份进入对应页面</p></div>
@@ -124,11 +128,11 @@
       <div class="desktop">
         <div class="window"></div>
         <div class="admin-shell">
-          <aside class="sidebar"><div class="side-brand">校园扫楼</div><div class="side-item on">基础数据</div><div class="side-item">代理与学校权限</div><div class="side-item">快捷备注</div><div class="side-item">扫楼数据</div></aside>
+          <aside class="sidebar" aria-label="管理员功能分区"><div class="side-brand">校园扫楼</div><button class="side-item on" type="button" data-admin-section="campus" aria-current="page">基础数据</button><button class="side-item" type="button" data-admin-section="agents">代理与学校权限</button><button class="side-item" type="button" data-admin-section="quick-notes">快捷备注</button><button class="side-item" type="button" data-admin-section="sweep-data">扫楼数据</button></aside>
           <div class="admin-content">
-            <div class="admin-head"><div><span class="small">管理后台</span><h3 style="margin:3px 0 0">基础数据与权限</h3></div><span class="pill">管理员</span></div>
+            <div class="admin-head"><div><span class="small">管理后台</span><h3 style="margin:3px 0 0" data-admin-section-title>基础数据</h3></div><span class="pill">管理员</span></div>
             <div class="modules">
-              <section class="module wide">
+              <section class="module wide" id="admin-campus">
                 <div class="tree-toolbar"><div><h4>学校、楼栋与宿舍</h4><span class="small" data-campus-summary>学校可展开 · 楼栋点开看蓝图 · 2所学校 · 10栋楼 · 1082间宿舍</span></div><button class="admin-action primary" data-action="add-school">＋ 添加学校</button></div>
                 <div class="admin-data-tree">
                   <details class="tree-node school-node" open data-school-id="school-main" data-delete-policy="children-disable">
@@ -314,6 +318,12 @@
     }
     function canSaveRecord(state){return Boolean(state.status)}
     /* record-editor-state:end */
+    /* admin-section-state:start */
+    const adminSectionIds={campus:'admin-campus',agents:'admin-agents','quick-notes':'admin-quick-notes','sweep-data':'admin-sweep-data'};
+    function resolveAdminSectionFromHash(hash=''){const entry=Object.entries(adminSectionIds).find(([,id])=>`#${id}`===hash);return entry?.[0]||'campus'}
+    function createAdminSectionState(hash=''){const activeSection=resolveAdminSectionFromHash(hash);return {activeSection,hash:`#${adminSectionIds[activeSection]}`}}
+    function selectAdminSection(state,section){return adminSectionIds[section]?{activeSection:section,hash:`#${adminSectionIds[section]}`}:{...state}}
+    /* admin-section-state:end */
     /* sweep-state:start */
     function createInitialSweepState(){
       return {'201':{myRecord:{agent:'张三',status:'covered',note:'已加种子',modified:'9月29日 20:16'},otherRecords:[{agent:'李四',status:'pending',note:'只有1-2人在',modified:'9月28日 19:42'}]},'202':{myRecord:null,otherRecords:[]}};
@@ -576,7 +586,7 @@
     function showScene(id){const navId=id==='building'?'school':id==='history'?'detail':id;document.body.dataset.scene=id;document.querySelectorAll('.scene').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.scene===navId));sessionMenu.hidden=id==='login';sessionMenu.removeAttribute('open');window.scrollTo({top:0,behavior:'smooth'})}
     let currentNavigation={scene:'login',room:''};
     function renderSceneRoute(scene,room=''){
-      if(sceneUsesRoom(scene)&&room&&sweepDemoState[room])activeRoomNo=room;if(scene==='single')prepareSingleEditor(activeRoomNo);if(scene==='edit')prepareEditEditor(activeRoomNo);renderSweepDemo();showScene(scene);currentNavigation={scene,room:sceneUsesRoom(scene)?activeRoomNo:''};return currentNavigation;
+      if(sceneUsesRoom(scene)&&room&&sweepDemoState[room])activeRoomNo=room;if(scene==='single')prepareSingleEditor(activeRoomNo);if(scene==='edit')prepareEditEditor(activeRoomNo);renderSweepDemo();showScene(scene);currentNavigation={scene,room:sceneUsesRoom(scene)?activeRoomNo:''};if(scene==='admin'&&window.activateAdminSection)window.activateAdminSection(resolveAdminSectionFromHash(window.location.hash),{scroll:true,updateUrl:true});return currentNavigation;
     }
     function navigateScene(scene,{room='',replace=false}={}){
       const target=renderSceneRoute(supportedScenes.includes(scene)?scene:'login',room),currentDepth=history.state?.campusPrototype?history.state.depth:0,nextState={campusPrototype:true,depth:replace?currentDepth:currentDepth+1},url=buildSceneUrl(window.location.href,target.scene,target.room);history[replace?'replaceState':'pushState'](nextState,'',url);
@@ -714,6 +724,11 @@
       const activate=view=>{window.activeSweepDataView=view;document.querySelectorAll('[data-sweep-data-tab]').forEach(tab=>tab.classList.toggle('on',tab.dataset.sweepDataTab===view));document.querySelectorAll('[data-sweep-data-panel]').forEach(panel=>panel.hidden=panel.dataset.sweepDataPanel!==view)};
       document.querySelectorAll('[data-sweep-data-tab]').forEach(tab=>tab.addEventListener('click',()=>activate(tab.dataset.sweepDataTab)));document.querySelectorAll('[data-record-filter]').forEach(filter=>filter.addEventListener(filter.tagName==='INPUT'?'input':'change',renderSweepDataManagement));renderSweepDataManagement();activate(initialView);
     }
+    function wireAdminSectionNavigation(initialHash=''){
+      const labels={campus:'基础数据',agents:'代理与学校权限','quick-notes':'快捷备注','sweep-data':'扫楼数据'},buttons=[...document.querySelectorAll('[data-admin-section]')],title=document.querySelector('[data-admin-section-title]');let state=createAdminSectionState(initialHash);
+      const activate=(section,{scroll=true,updateUrl=true}={})=>{state=selectAdminSection(state,section);window.adminSectionState=state;buttons.forEach(button=>{const active=button.dataset.adminSection===state.activeSection;button.classList.toggle('on',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});if(title)title.textContent=labels[state.activeSection];if(updateUrl){const url=new URL(window.location.href);url.hash=state.hash;history.replaceState(history.state,'',`${url.pathname}${url.search}${url.hash}`)}if(scroll){const target=document.getElementById(adminSectionIds[state.activeSection]);requestAnimationFrame(()=>target?.scrollIntoView({behavior:'smooth',block:'start'}))}return state};
+      buttons.forEach(button=>button.addEventListener('click',()=>activate(button.dataset.adminSection)));window.activateAdminSection=activate;activate(state.activeSection,{scroll:false,updateUrl:false});
+    }
     function moveQuickNoteRow(button){
       const row=button.closest('.quick-note-row');quickNoteDemoState=moveQuickNote(quickNoteDemoState,row.dataset.noteId,button.dataset.noteMove).state;renderQuickNoteManagement();showAdminToast('快捷备注排序已更新');
     }
@@ -799,6 +814,8 @@
     const dataView=searchParams.get('dataView');
     wireSweepDataTabs(dataView==='audit'?'audit':'records');
     renderSceneRoute(initialScene,initialLocation.room);
+    wireAdminSectionNavigation(window.location.hash);
+    if(initialScene==='admin')window.activateAdminSection(resolveAdminSectionFromHash(window.location.hash),{scroll:Boolean(window.location.hash),updateUrl:true});
     history.replaceState({campusPrototype:true,depth:0},'',buildSceneUrl(window.location.href,currentNavigation.scene,currentNavigation.room));
     window.addEventListener('popstate',()=>{const target=readSceneLocation(window.location.href);if(window.hasUnsavedRecordChanges){const restoredDepth=(history.state?.campusPrototype?history.state.depth:0)+1;history.pushState({campusPrototype:true,depth:restoredDepth},'',buildSceneUrl(window.location.href,currentNavigation.scene,currentNavigation.room));openDiscardDialog(target.scene,target.room);return}renderSceneRoute(target.scene,target.room)});
     const navigationState=searchParams.get('navigationState');
