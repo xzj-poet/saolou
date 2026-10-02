@@ -100,6 +100,13 @@ describe("agent administration service", () => {
       replaceAgentSchoolAccess(agent.id, [activeOne.id, activeTwo.id], admin.id),
     ]);
     expect(await prisma.agentSchoolAccess.findMany({ where: { agentId: agent.id } })).toHaveLength(2);
+    await prisma.school.update({ data: { isActive: false }, where: { id: activeOne.id } });
+    await replaceAgentSchoolAccess(agent.id, [activeOne.id, activeTwo.id], admin.id);
+    expect(await prisma.agentSchoolAccess.findMany({ where: { agentId: agent.id } })).toHaveLength(2);
+    await replaceAgentSchoolAccess(agent.id, [activeTwo.id], admin.id);
+    await expect(prisma.agentSchoolAccess.findUnique({
+      where: { agentId_schoolId: { agentId: agent.id, schoolId: activeOne.id } },
+    })).resolves.toBeNull();
     await replaceAgentSchoolAccess(agent.id, [], admin.id);
     expect(await prisma.agentSchoolAccess.count({ where: { agentId: agent.id } })).toBe(0);
     await expectApiError(replaceAgentSchoolAccess(agent.id, [activeOne.id, activeOne.id], admin.id), 400, "DUPLICATE_SCHOOL_IDS");

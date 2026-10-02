@@ -62,6 +62,25 @@ describe("AgentManager", () => {
     ));
   });
 
+  it("allows removing a retained inactive grant but prevents adding a new inactive school", () => {
+    render(<AgentManager
+      agents={[{
+        ...agents[0],
+        schools: [{ id: "school-inactive-granted", isActive: false, name: "已停用旧授权" }],
+      }]}
+      schools={[
+        { id: "school-inactive-granted", isActive: false, name: "已停用旧授权" },
+        { id: "school-inactive-new", isActive: false, name: "已停用未授权" },
+      ]}
+    />);
+    fireEvent.click(screen.getByRole("button", { name: "张三账号操作" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "配置学校权限" }));
+    const dialog = screen.getByRole("dialog", { name: "配置张三的学校权限" });
+
+    expect(within(dialog).getByRole("checkbox", { name: "已停用旧授权" })).toBeEnabled();
+    expect(within(dialog).getByRole("checkbox", { name: "已停用未授权" })).toBeDisabled();
+  });
+
   it("keeps a generated password only in the current create dialog", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       json: async () => ({ agent: { id: "agent-2" }, temporaryPassword: "Abcd2345!efgh678" }),

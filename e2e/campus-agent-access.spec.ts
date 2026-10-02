@@ -127,19 +127,20 @@ test("administrator builds campus data and controls one agent's school access", 
   await expect(agentPage.getByText("201")).toBeVisible();
   await expect(agentPage.getByText("202")).toBeVisible();
 
-  await page.reload();
-  await page.getByRole("button", { name: `${campusScenario.agentName}账号操作` }).click();
-  await page.getByRole("menuitem", { name: "配置学校权限" }).click();
-  const revokeDialog = page.getByRole("dialog", { name: `配置${campusScenario.agentName}的学校权限` });
+  const adminPage = await page.context().newPage();
+  await adminPage.goto("/admin/agents");
+  await adminPage.getByRole("button", { name: `${campusScenario.agentName}账号操作` }).click();
+  await adminPage.getByRole("menuitem", { name: "配置学校权限" }).click();
+  const revokeDialog = adminPage.getByRole("dialog", { name: `配置${campusScenario.agentName}的学校权限` });
   await revokeDialog.getByLabel(campusScenario.schoolName).uncheck();
   await revokeDialog.getByRole("button", { name: "保存学校权限" }).click();
   await agentPage.goto(buildingUrl);
   await expect(agentPage).toHaveURL(/\/app\/schools\?access=revoked$/);
 
-  await page.goto(`/admin/campus?school=${school.id}`);
-  await page.getByRole("button", { name: `${campusScenario.buildingName}操作` }).click();
-  await page.getByRole("menuitem", { name: "宿舍管理" }).click();
-  const retireDialog = page.getByRole("dialog", { name: `${campusScenario.buildingName}宿舍管理` });
+  await adminPage.goto(`/admin/campus?school=${school.id}`);
+  await adminPage.getByRole("button", { name: `${campusScenario.buildingName}操作` }).click();
+  await adminPage.getByRole("menuitem", { name: "宿舍管理" }).click();
+  const retireDialog = adminPage.getByRole("dialog", { name: `${campusScenario.buildingName}宿舍管理` });
   await retireDialog.getByRole("tab", { name: "删除停用" }).click();
   await retireDialog.getByRole("checkbox", { name: /201/ }).check();
   await retireDialog.getByRole("checkbox", { name: /202/ }).check();

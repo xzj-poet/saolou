@@ -100,18 +100,26 @@ export async function replaceAgentSchoolAccess(
     if (new Set(schoolIds).size !== schoolIds.length) {
       throw new ApiError(400, "DUPLICATE_SCHOOL_IDS", "学校权限列表包含重复项");
     }
-    const schools = await prisma.school.findMany({
-      select: { id: true },
-      where: { id: { in: schoolIds }, isActive: true },
-    });
-    if (schools.length !== schoolIds.length) {
-      throw new ApiError(400, "INVALID_SCHOOL_ACCESS", "所选学校不存在或已停用");
-    }
-
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         await prisma.$transaction(
           async (tx) => {
+            const schools = await tx.school.findMany({
+              select: { id: true, isActive: true },
+              where: { id: { in: schoolIds } },
+            });
+            if (schools.length !== schoolIds.length) {
+              throw new ApiError(400, "INVALID_SCHOOL_ACCESS", "所选学校不存在");
+            }
+            const inactiveIds = schools.filter(({ isActive }) => !isActive).map(({ id }) => id);
+            if (inactiveIds.length > 0) {
+              const retainedInactive = await tx.agentSchoolAccess.count({
+                where: { agentId, schoolId: { in: inactiveIds } },
+              });
+              if (retainedInactive !== inactiveIds.length) {
+                throw new ApiError(400, "INVALID_SCHOOL_ACCESS", "不能新增已停用学校的权限");
+              }
+            }
             await tx.agentSchoolAccess.deleteMany({
               where: { agentId, ...(schoolIds.length ? { schoolId: { notIn: schoolIds } } : {}) },
             });

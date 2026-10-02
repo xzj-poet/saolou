@@ -23,6 +23,12 @@ function isUniqueConstraintError(error: unknown) {
   );
 }
 
+function isRecordNotFoundError(error: unknown) {
+  return Boolean(
+    error && typeof error === "object" && "code" in error && error.code === "P2025",
+  );
+}
+
 async function buildingCounts(
   client: Pick<typeof prisma, "dormitory">,
   buildingId: string,
@@ -65,15 +71,21 @@ export async function updateSchool(id: string, input: SchoolInput) {
     if (isUniqueConstraintError(error)) {
       throw new ApiError(409, "SCHOOL_NAME_CONFLICT", "学校名称已存在");
     }
-    throw new ApiError(404, "SCHOOL_NOT_FOUND", "学校不存在");
+    if (isRecordNotFoundError(error)) {
+      throw new ApiError(404, "SCHOOL_NOT_FOUND", "学校不存在");
+    }
+    throw error;
   }
 }
 
 export async function setSchoolActive(id: string, isActive: boolean) {
   try {
     return await prisma.school.update({ data: { isActive }, where: { id } });
-  } catch {
-    throw new ApiError(404, "SCHOOL_NOT_FOUND", "学校不存在");
+  } catch (error) {
+    if (isRecordNotFoundError(error)) {
+      throw new ApiError(404, "SCHOOL_NOT_FOUND", "学校不存在");
+    }
+    throw error;
   }
 }
 
@@ -125,15 +137,21 @@ export async function updateBuilding(id: string, input: BuildingUpdateInput) {
     if (isUniqueConstraintError(error)) {
       throw new ApiError(409, "BUILDING_NAME_CONFLICT", "该学校已有同名楼栋");
     }
-    throw new ApiError(404, "BUILDING_NOT_FOUND", "楼栋不存在");
+    if (isRecordNotFoundError(error)) {
+      throw new ApiError(404, "BUILDING_NOT_FOUND", "楼栋不存在");
+    }
+    throw error;
   }
 }
 
 export async function setBuildingActive(id: string, isActive: boolean) {
   try {
     return await prisma.building.update({ data: { isActive }, where: { id } });
-  } catch {
-    throw new ApiError(404, "BUILDING_NOT_FOUND", "楼栋不存在");
+  } catch (error) {
+    if (isRecordNotFoundError(error)) {
+      throw new ApiError(404, "BUILDING_NOT_FOUND", "楼栋不存在");
+    }
+    throw error;
   }
 }
 
@@ -227,8 +245,11 @@ export async function addDormitoryBatch(buildingId: string, range: DormitoryRang
 export async function setDormitoryActive(id: string, isActive: boolean) {
   try {
     return await prisma.dormitory.update({ data: { isActive }, where: { id } });
-  } catch {
-    throw new ApiError(404, "DORMITORY_NOT_FOUND", "宿舍不存在");
+  } catch (error) {
+    if (isRecordNotFoundError(error)) {
+      throw new ApiError(404, "DORMITORY_NOT_FOUND", "宿舍不存在");
+    }
+    throw error;
   }
 }
 
