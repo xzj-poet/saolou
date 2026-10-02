@@ -8,7 +8,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
+  const configuredPoolSize = Number.parseInt(process.env.DATABASE_POOL_SIZE ?? "", 10);
+  const adapter = new PrismaPg({
+    connectionString: env.DATABASE_URL,
+    ...(Number.isSafeInteger(configuredPoolSize) && configuredPoolSize > 0
+      ? { max: configuredPoolSize }
+      : {}),
+  });
   return new PrismaClient({ adapter });
 }
 

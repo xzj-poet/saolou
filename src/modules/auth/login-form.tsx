@@ -37,7 +37,6 @@ export function LoginForm() {
       }
 
       router.replace(body.user.role === "ADMIN" ? "/admin" : "/app/schools");
-      router.refresh();
     } catch {
       setError("网络连接失败，请稍后重试");
     } finally {

@@ -14,7 +14,11 @@ export function CampusDialog({
   wide?: boolean;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => closeRef.current?.focus(), []);
+  useEffect(() => {
+    const returnTarget = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeRef.current?.focus();
+    return () => returnTarget?.focus();
+  }, []);
 
   return (
     <div className="dialog-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>

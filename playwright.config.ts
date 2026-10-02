@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+process.env.DATABASE_POOL_SIZE = "1";
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -15,7 +17,7 @@ export default defineConfig({
     { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "npm run dev",
+    command: "npm run dev -- --webpack",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
   },

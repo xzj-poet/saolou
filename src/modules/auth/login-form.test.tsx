@@ -76,6 +76,7 @@ describe("LoginForm", () => {
       ),
     );
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/app/schools"));
+    expect(navigation.refresh).not.toHaveBeenCalled();
   });
 
   it.each([
