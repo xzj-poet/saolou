@@ -1,9 +1,10 @@
 # 校园扫楼记录系统（极简版）产品与技术设计
 
-- 日期：2026-09-29
-- 状态：待用户终审
+- 日期：2026-09-29（2026-10-02 冻结）
+- 状态：用户已确认，交互原型 v31 冻结，进入真实系统实施
 - 产品形态：单团队、在线使用的响应式 Web SaaS
 - 核心用户：管理员、扫楼代理
+- 冻结原型：`docs/prototype/campus-sweep-saas-prototype.html`
 
 ## 1. 产品目标
 
@@ -391,14 +392,17 @@
 
 推荐技术栈：
 
-- Next.js App Router + TypeScript。
+- Node.js 24 LTS。
+- Next.js 16.3.8 App Router + TypeScript 5.9。
 - Next.js Route Handlers 提供 JSON 接口。
-- PostgreSQL 保存业务数据和会话。
-- Prisma ORM 管理模型、复合唯一约束、事务和数据库迁移。
+- PostgreSQL 18 保存业务数据和会话。
+- Prisma ORM 7 管理模型、复合唯一约束、事务和数据库迁移；第一版不采用仍处于候选阶段的 Prisma 8。
 - Zod 或等价 schema 校验库校验请求输入。
 - 响应式组件样式方案，确保移动端优先。
 - Playwright 执行关键端到端流程。
 - Docker Compose 运行应用、PostgreSQL 和 Caddy。
+
+依赖版本必须写入并锁定在 `package-lock.json`，不得在生产构建中使用未锁定的 `latest`。开发和生产统一使用 Node.js 24 LTS；本地、持续集成和部署必须运行相同的类型检查、测试与构建命令。
 
 技术选择依据：
 
