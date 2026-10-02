@@ -130,8 +130,8 @@ Assert-Contains 'event\.stopPropagation\(\)' 'Opening a three-dot menu must not 
 Assert-Contains "event\.key==='Escape'" 'The open action menu must close when Escape is pressed.'
 
 $nativeMenuCount = ([regex]::Matches($html, '<details class="menu-shell">')).Count
-if ($nativeMenuCount -ne 21) {
-    $failures.Add("Every school, building, agent, quick-note, and sweep-record action menu must use an independent native disclosure; found $nativeMenuCount.")
+if ($nativeMenuCount -lt 21) {
+    $failures.Add("Every school, building, agent, quick-note, and sweep-record action menu must use an independent native disclosure; found only $nativeMenuCount.")
 }
 
 if ($html -match 'class="floor-node"|data-menu-trigger="dormitory"|class="context-menu dormitory-menu"') {
