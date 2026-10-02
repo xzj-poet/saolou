@@ -4,13 +4,15 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const html = fs.readFileSync(new URL('../docs/prototype/campus-sweep-saas-prototype.html', import.meta.url), 'utf8');
+const quickNoteModule = html.match(/\/\* quick-note-state:start \*\/([\s\S]*?)\/\* quick-note-state:end \*\//);
 const stateModule = html.match(/\/\* record-editor-state:start \*\/([\s\S]*?)\/\* record-editor-state:end \*\//);
 
+assert.ok(quickNoteModule, 'prototype must expose its quick-note state module');
 assert.ok(stateModule, 'prototype must expose its shared record-editor state module');
 
 const context = {};
 vm.createContext(context);
-vm.runInContext(`${stateModule[1]};this.recordEditorApi={getRecordNoteOptions,recordEditorTransition,canSaveRecord}`, context);
+vm.runInContext(`${quickNoteModule[1]};const quickNoteDemoState=createInitialQuickNoteState();${stateModule[1]};this.recordEditorApi={getRecordNoteOptions,recordEditorTransition,canSaveRecord}`, context);
 const { getRecordNoteOptions, recordEditorTransition, canSaveRecord } = context.recordEditorApi;
 
 test('quick notes change with the selected status', () => {
@@ -19,7 +21,6 @@ test('quick notes change with the selected status', () => {
     '只有1-2人在',
     '正在打游戏/忙',
     '没聊进去',
-    '下次换时间',
   ]);
   assert.deepEqual(Array.from(getRecordNoteOptions('covered')), [
     '已加种子',
