@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { POST as login } from "@/app/api/auth/login/route";
 import { POST as logout } from "@/app/api/auth/logout/route";
 import { GET as me } from "@/app/api/auth/me/route";
+import { GET as clearExpiredSession } from "@/app/api/auth/session-expired/route";
 import { hashPassword } from "@/modules/auth/password";
 
 const origin = "http://localhost";
@@ -171,6 +172,18 @@ describe("authentication routes", () => {
 
     expect(response.status).toBe(200);
     expect(await prisma.session.count()).toBe(beforeCount - 1);
+    expect(response.headers.get("set-cookie")).toMatch(
+      /campus_sweep_session=;.*(?:Expires=Thu, 01 Jan 1970|Max-Age=0)/,
+    );
+  });
+
+  it("clears an invalid protected-session cookie before returning to login", async () => {
+    const response = await clearExpiredSession(
+      new Request(`${origin}/api/auth/session-expired`),
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(`${origin}/login`);
     expect(response.headers.get("set-cookie")).toMatch(
       /campus_sweep_session=;.*(?:Expires=Thu, 01 Jan 1970|Max-Age=0)/,
     );

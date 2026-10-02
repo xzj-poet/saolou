@@ -12,6 +12,18 @@ describe("same-origin protection", () => {
     expect(() => requireSameOrigin(request)).not.toThrow();
   });
 
+  it("uses the public Host header when an application server has an internal URL", () => {
+    const request = new Request("http://localhost:3000/api/auth/login", {
+      headers: {
+        Host: "127.0.0.1:3000",
+        Origin: "http://127.0.0.1:3000",
+      },
+      method: "POST",
+    });
+
+    expect(() => requireSameOrigin(request)).not.toThrow();
+  });
+
   it.each(["https://evil.example.com", "not a url", ""])(
     "rejects an invalid origin: %s",
     (origin) => {

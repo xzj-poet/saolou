@@ -86,11 +86,11 @@ describe("protected route layouts", () => {
     );
   });
 
-  it("clears a disabled user's existing cookie and redirects", async () => {
+  it("sends a disabled user's existing cookie through the clearing route", async () => {
     await sessionFor("layout-disabled", "AGENT", true);
     await expect(ProtectedLayout({ children: "content" })).rejects.toThrow(
-      "REDIRECT:/login",
+      "REDIRECT:/api/auth/session-expired",
     );
-    expect(cookieState.delete).toHaveBeenCalledWith("campus_sweep_session");
+    expect(cookieState.delete).not.toHaveBeenCalled();
   });
 });

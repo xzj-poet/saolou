@@ -8,7 +8,14 @@ export function requireSameOrigin(request: Request): void {
 
   try {
     const parsedOrigin = new URL(origin);
-    const requestOrigin = new URL(request.url).origin;
+    const requestUrl = new URL(request.url);
+    const publicHost =
+      request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+    const publicProtocol =
+      request.headers.get("x-forwarded-proto") ?? requestUrl.protocol.slice(0, -1);
+    const requestOrigin = publicHost
+      ? `${publicProtocol}://${publicHost}`
+      : requestUrl.origin;
     if (parsedOrigin.origin !== requestOrigin || parsedOrigin.origin !== origin) {
       throw new ApiError(403, "ORIGIN_MISMATCH", "请求来源无效");
     }

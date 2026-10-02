@@ -35,17 +35,20 @@ export async function requireUser(): Promise<AuthenticatedUser> {
   const user = token ? await resolveSession(token) : null;
 
   if (!user) {
-    if (token) {
-      try {
-        cookieStore.delete(SESSION_COOKIE_NAME);
-      } catch {
-        // Next.js may expose a read-only cookie store during server rendering.
-      }
-    }
-    throw new ApiError(401, "UNAUTHENTICATED", "请先登录");
+    throw new ApiError(
+      401,
+      token ? "INVALID_SESSION" : "UNAUTHENTICATED",
+      "请先登录",
+    );
   }
 
   return user;
+}
+
+export function authenticationRedirect(error: unknown): string {
+  return error instanceof ApiError && error.code === "INVALID_SESSION"
+    ? "/api/auth/session-expired"
+    : "/login";
 }
 
 export async function requireRole(role: UserRole): Promise<AuthenticatedUser> {

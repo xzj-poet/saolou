@@ -1,12 +1,18 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { requireUser } from "@/modules/auth/current-user";
+import { AppShell } from "@/components/app-shell";
+import {
+  authenticationRedirect,
+  requireUser,
+} from "@/modules/auth/current-user";
 
 export default async function AgentLayout({ children }: { children: ReactNode }) {
-  const user = await requireUser();
+  const user = await requireUser().catch((error) =>
+    redirect(authenticationRedirect(error)),
+  );
   if (user.role !== "AGENT") {
     redirect("/admin");
   }
-  return children;
+  return <AppShell user={user}>{children}</AppShell>;
 }
