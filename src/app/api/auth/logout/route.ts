@@ -35,4 +35,3 @@ export async function POST(request: Request): Promise<NextResponse> {
     return apiErrorResponse(error);
   }
 }
-
