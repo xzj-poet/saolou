@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $prototypePath = Join-Path $PSScriptRoot '..\docs\prototype\campus-sweep-saas-prototype.html'
-$html = Get-Content -Raw -LiteralPath $prototypePath
+$html = Get-Content -Raw -Encoding UTF8 -LiteralPath $prototypePath
 $failures = [System.Collections.Generic.List[string]]::new()
 
 function Assert-Contains {
@@ -192,6 +192,14 @@ Assert-Contains 'revealCreatedAgentPassword\(' 'Agent creation must reveal the o
 Assert-Contains "searchParams\.get\('agent'\)" 'The prototype must support direct-open agent dialogs for visual review.'
 Assert-Contains "searchParams\.get\('passwordRevealed'\)" 'The prototype must support direct review of the post-reset password state.'
 Assert-Contains "searchParams\.get\('agentCreated'\)" 'The prototype must support direct review of the post-create password state.'
+Assert-Contains 'data-agent-summary' 'The agent module must expose a live account summary.'
+Assert-Contains 'data-agent-name-input' 'Agent creation and rename forms must expose state-backed name inputs.'
+Assert-Contains 'data-agent-login-input' 'Agent creation must expose a state-backed login input.'
+Assert-Contains 'renderAgentManagement\(' 'Agent cards must render from the shared agent state.'
+Assert-Contains 'applyAgentManagement\(' 'Agent dialog confirmation must update shared agent state.'
+Assert-Contains 'renderSchoolAccessChoices\(' 'School permission choices must render from current campus data.'
+Assert-Contains 'authenticateSession\(agentDemoState' 'The login form must authenticate against shared agent state.'
+Assert-Contains 'listSchoolAccess\(agentDemoState,campusDemoState,currentAgentId\)' 'The agent school list must derive authorization from the signed-in agent.'
 Assert-Contains 'class="module wide quick-note-module"' 'Quick notes must use a full-width admin module.'
 Assert-Contains 'data-quick-note-tab="pending"' 'Quick-note management must separate pending notes.'
 Assert-Contains 'data-quick-note-tab="covered"' 'Quick-note management must separate covered notes.'
