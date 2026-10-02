@@ -42,7 +42,7 @@ compose() {
 }
 
 compose config --quiet
-existing_db=$(compose ps -q db 2>/dev/null || true)
+existing_db=$(compose ps -a -q db 2>/dev/null || true)
 compose up -d db
 
 attempt=0
@@ -64,7 +64,7 @@ fi
 
 compose build app provision
 compose run --rm provision
-compose up -d app caddy --remove-orphans
+compose up -d app caddy --no-deps --remove-orphans
 
 app_container=$(compose ps -q app)
 attempt=0

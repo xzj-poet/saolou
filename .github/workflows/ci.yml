@@ -32,6 +32,9 @@ jobs:
       ADMIN_PASSWORD: ci-administrator-password
       ADMIN_USERNAME: admin
       DATABASE_URL: postgresql://campus_sweep_test:campus_sweep_test@127.0.0.1:5432/campus_sweep_test?schema=public
+      POSTGRES_DB: campus_sweep_test
+      POSTGRES_PASSWORD: campus_sweep_test
+      POSTGRES_USER: campus_sweep_test
 
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +52,7 @@ jobs:
       - run: npm run test:integration
       - run: npm run build
       - run: npm run test:deployment
+      - run: docker compose config --quiet
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: docker build --target app --tag campus-sweep-saas:${{ github.sha }} .

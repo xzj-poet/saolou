@@ -40,8 +40,9 @@ test("the one-command entry validates configuration and provisions the app", asy
   assert.match(deploy, /\.env\.production/);
   assert.match(deploy, /docker compose/);
   assert.match(deploy, /config --quiet/);
+  assert.match(deploy, /ps -a -q db/);
   assert.match(deploy, /run --rm provision/);
-  assert.match(deploy, /up -d app caddy/);
+  assert.match(deploy, /up -d app caddy --no-deps/);
   assert.match(readme, /\.\/deploy\.sh/);
   assert.equal(JSON.parse(packageJson).scripts["test:deployment"], "node --test tests/deployment/*.test.mjs");
 });
