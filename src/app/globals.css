@@ -339,6 +339,116 @@ h1 {
   padding: 28px 18px;
 }
 
+.mobile-back-button {
+  min-height: var(--tap-min);
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: var(--gray-soft);
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.agent-choice-list,
+.building-choice-list,
+.dormitory-directory {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.agent-choice-row,
+.building-choice-card {
+  min-height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.agent-choice-row strong,
+.building-choice-card strong {
+  font-size: 19px;
+}
+
+.agent-choice-row.is-disabled {
+  background: var(--gray-soft);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.authorization-pill {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.agent-choice-row.is-disabled .authorization-pill {
+  background: #e2e7eb;
+  color: var(--muted);
+}
+
+.building-choice-card {
+  min-height: 108px;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.building-choice-card span,
+.building-choice-card small {
+  color: var(--muted);
+}
+
+.access-warning {
+  padding: 12px 14px;
+  border: 1px solid #e9c85e;
+  border-radius: 12px;
+  background: #fff6d8;
+  color: #765100;
+}
+
+.directory-floor {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+
+.directory-floor h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.directory-rooms {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.directory-room {
+  min-height: 64px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8fafb;
+  font-weight: 850;
+}
+
 .admin-content main {
   max-width: none;
 }
