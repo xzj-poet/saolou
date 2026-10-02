@@ -124,8 +124,8 @@ test("administrator builds campus data and controls one agent's school access", 
   const buildingUrl = `/app/buildings/${building.id}`;
   await agentPage.goto(buildingUrl);
   await expect(agentPage.getByRole("heading", { name: campusScenario.buildingName })).toBeVisible();
-  await expect(agentPage.getByText("201")).toBeVisible();
-  await expect(agentPage.getByText("202")).toBeVisible();
+  await expect(agentPage.getByText("201", { exact: true })).toBeVisible();
+  await expect(agentPage.getByText("202", { exact: true })).toBeVisible();
 
   const adminPage = await page.context().newPage();
   await adminPage.goto("/admin/agents");
