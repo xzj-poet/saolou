@@ -898,6 +898,85 @@ h1 {
   padding-inline: 18px;
 }
 
+.quick-note-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--gray-soft);
+}
+
+.quick-note-tabs button {
+  min-height: var(--tap-min);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.quick-note-tabs button[aria-selected="true"] {
+  background: white;
+  color: var(--green);
+  box-shadow: 0 3px 12px rgb(23 34 56 / 9%);
+}
+
+.quick-note-list {
+  display: grid;
+  gap: 10px;
+}
+
+.quick-note-row {
+  position: relative;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 34px minmax(160px, 1fr) auto auto 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+}
+
+.quick-note-row.is-disabled {
+  background: #f4f6f8;
+  color: var(--muted);
+}
+
+.note-order {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--gray-soft);
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.note-move-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.note-move-buttons button {
+  width: 40px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+}
+
+.note-move-buttons button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
 @media (max-width: 480px) {
   .landing-shell {
     padding: 16px;
