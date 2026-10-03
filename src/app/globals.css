@@ -1035,6 +1035,28 @@ h1 {
 .batch-back { margin: 28px 18px 0; }
 .batch-back + .record-editor .mobile-back-button { display: none; }
 
+.sweep-data-manager { margin-top: 28px; }
+.sweep-filters { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.sweep-filters label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weight: 750; }
+.sweep-filters input,
+.sweep-filters select,
+.admin-form textarea { min-height: 46px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--ink); }
+.admin-form textarea { min-height: 100px; resize: vertical; }
+.sweep-data-list { display: grid; gap: 10px; }
+.sweep-data-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+.sweep-data-row > div:first-child { display: grid; gap: 5px; }
+.sweep-data-row span,
+.sweep-data-row time,
+.sweep-data-row small { color: var(--muted); }
+.sweep-data-row p { margin: 4px 0; }
+.row-actions { display: flex; gap: 8px; }
+.row-actions button { padding-inline: 14px; }
+.audit-row { align-items: stretch; }
+
+@media (max-width: 900px) {
+  .sweep-filters { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 480px) {
   .landing-shell {
     padding: 16px;
@@ -1114,4 +1136,9 @@ h1 {
   .school-tags {
     grid-column: 1 / -1;
   }
+
+  .sweep-filters { grid-template-columns: 1fr; }
+  .sweep-data-row { align-items: stretch; flex-direction: column; }
+  .row-actions { width: 100%; }
+  .row-actions button { flex: 1; }
 }
