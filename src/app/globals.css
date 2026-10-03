@@ -414,6 +414,7 @@ h1 {
 }
 .building-sweep-counts { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .building-sweep-counts b { padding: 7px; border-radius: 8px; background: var(--gray-soft); font-size: 12px; text-align: center; }
+.matrix-stats,.matrix-floors,.matrix-rooms{display:grid;gap:9px;margin:18px 0}.matrix-stats{grid-template-columns:repeat(3,1fr)}.matrix-stats b{padding:12px;border-radius:10px;background:white;text-align:center}.matrix-floors{display:flex;overflow:auto}.matrix-floors a{padding:8px 13px;border-radius:999px;background:var(--gray-soft);color:var(--ink);text-decoration:none}.matrix-floors a[aria-current="page"]{background:var(--ink);color:white}.matrix-rooms{grid-template-columns:repeat(4,1fr)}.matrix-room{position:relative;min-height:76px;display:grid;place-items:center;border:2px solid transparent;border-radius:13px;color:var(--ink);text-decoration:none;font-weight:850}.matrix-room small{font-size:10px}.matrix-room i{position:absolute;right:5px;top:3px;color:#2563eb;font-style:normal}.matrix-room.is-unvisited{background:var(--gray-soft)}.matrix-room.is-pending{background:#fff4ce;color:var(--yellow)}.matrix-room.is-covered{background:var(--green-soft);color:var(--green)}.matrix-room[aria-pressed="true"]{border-color:#2563eb}
 
 .access-warning {
   padding: 12px 14px;
