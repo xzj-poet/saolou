@@ -1,6 +1,8 @@
 import {fireEvent,render,screen} from "@testing-library/react";
-import {describe,expect,it} from "vitest";
+import {describe,expect,it,vi} from "vitest";
 import {BatchSelector,BuildingMatrix} from "@/modules/sweep/agent/building-matrix";
+
+vi.mock("next/navigation",()=>({useRouter:()=>({replace:vi.fn()})}));
 
 const matrix={building:{id:"b1",name:"3号楼",note:null},counts:{covered:1,pending:1,unvisited:1},floors:[{floor:"1",dormitories:[{floor:"1",hasMyRecord:false,id:"d1",overallStatus:"UNVISITED" as const,roomNo:"101",sortOrder:101},{floor:"1",hasMyRecord:false,id:"d2",overallStatus:"PENDING" as const,roomNo:"102",sortOrder:102},{floor:"1",hasMyRecord:true,id:"d3",overallStatus:"COVERED" as const,roomNo:"103",sortOrder:103}]}],school:{id:"s1",name:"本部"}};
 describe("BuildingMatrix",()=>{

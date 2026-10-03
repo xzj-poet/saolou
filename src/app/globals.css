@@ -980,6 +980,61 @@ h1 {
   opacity: 0.35;
 }
 
+.record-status-tabs,
+.note-mode-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin: 22px 0;
+}
+
+.record-status-tabs button,
+.note-mode-actions button,
+.quick-note-picker button {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.record-status-tabs button[aria-pressed="true"],
+.note-mode-actions button[aria-pressed="true"],
+.quick-note-picker button[aria-pressed="true"] {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--green);
+  font-weight: 850;
+}
+
+.record-note-panel {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+
+.record-note-panel h2 { margin: 0 0 12px; }
+.quick-note-picker { max-height: 250px; display: grid; gap: 8px; overflow: auto; }
+.record-note-panel textarea { min-height: 100px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; resize: vertical; }
+.save-message { min-height: 24px; color: var(--green); }
+.record-summary { display: grid; gap: 10px; margin: 22px 0; padding: 20px; border-radius: 16px; background: white; }
+.record-summary.is-covered { border-left: 5px solid var(--green); }
+.record-summary.is-pending { border-left: 5px solid #d49a00; }
+.record-summary span,
+.record-summary time,
+.history-card time { color: var(--muted); }
+.detail-actions { display: grid; gap: 10px; }
+.detail-actions .mobile-back-button { width: 100%; justify-content: center; margin: 0; }
+.history-list { display: grid; gap: 12px; margin-top: 22px; }
+.history-card { padding: 18px; border: 1px solid var(--line); border-radius: 15px; background: white; }
+.history-card div { display: flex; justify-content: space-between; gap: 12px; }
+.history-card p { margin: 12px 0; }
+.batch-back { margin: 28px 18px 0; }
+.batch-back + .record-editor .mobile-back-button { display: none; }
+
 @media (max-width: 480px) {
   .landing-shell {
     padding: 16px;
