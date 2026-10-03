@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/http/api-error";
 import { quickNoteContentSchema } from "@/modules/quick-notes/quick-note-schema";
 
 const orderBy = [{ sortOrder: "asc" as const }, { createdAt: "asc" as const }];
+type QuickNoteReader = Pick<typeof prisma, "quickNote">;
 
 function validatedContent(content: string) {
   const parsed = quickNoteContentSchema.safeParse(content);
@@ -76,8 +77,8 @@ export async function reorderQuickNotes(status: SweepStatus, orderedIds: string[
   return prisma.quickNote.findMany({ orderBy, where: { status } });
 }
 
-export async function resolveQuickNoteSnapshot(input: { quickNoteId: string; status: SweepStatus }) {
-  const note = await prisma.quickNote.findFirst({ select: { content: true }, where: { id: input.quickNoteId, isActive: true, status: input.status } });
+export async function resolveQuickNoteSnapshot(input: { quickNoteId: string; status: SweepStatus }, db: QuickNoteReader = prisma) {
+  const note = await db.quickNote.findFirst({ select: { content: true }, where: { id: input.quickNoteId, isActive: true, status: input.status } });
   if (!note) throw new ApiError(400, "QUICK_NOTE_INVALID", "快捷备注已失效或与当前状态不匹配");
   return note.content;
 }
