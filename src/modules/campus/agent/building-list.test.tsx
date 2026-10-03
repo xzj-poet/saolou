@@ -7,14 +7,16 @@ import { DormitoryDirectory } from "@/modules/campus/agent/dormitory-directory";
 describe("BuildingList", () => {
   it("renders a separate building-selection page with exact derived counts", () => {
     render(<BuildingList page={{
-      buildings: [{ dormitoryCount: 2, floorCount: 1, id: "building-3", name: "3号楼", note: "备注99层", sortOrder: 1 }],
+      buildings: [{ counts: { covered: 1, pending: 0, unvisited: 1 }, dormitoryCount: 2, floorCount: 1, id: "building-3", name: "3号楼", note: "备注99层", sortOrder: 1 }],
       school: { id: "school-1", name: "苏州大学本部" },
     }} />);
 
     expect(screen.getByRole("heading", { name: "选择楼栋" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /3号楼.*1层.*2间宿舍/ })).toHaveAttribute("href", "/app/buildings/building-3");
     expect(screen.getByRole("link", { name: "返回学校选择" })).toHaveClass("mobile-back-button");
-    expect(screen.queryByText(/已覆盖|待补扫|未扫|★/)).not.toBeInTheDocument();
+    expect(screen.getByText("1 已覆盖")).toBeInTheDocument();
+    expect(screen.getByText("0 待补扫")).toBeInTheDocument();
+    expect(screen.getByText("1 未扫")).toBeInTheDocument();
   });
 
   it("renders a neutral floor-grouped dormitory directory without record actions", () => {

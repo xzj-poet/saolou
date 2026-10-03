@@ -412,6 +412,8 @@ h1 {
 .building-choice-card small {
   color: var(--muted);
 }
+.building-sweep-counts { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.building-sweep-counts b { padding: 7px; border-radius: 8px; background: var(--gray-soft); font-size: 12px; text-align: center; }
 
 .access-warning {
   padding: 12px 14px;

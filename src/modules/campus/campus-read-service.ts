@@ -7,6 +7,7 @@ import type {
   AgentDormitoryDirectory,
   AgentSchoolRow,
 } from "@/modules/campus/campus-types";
+import { deriveOverallStatus } from "@/modules/sweep/sweep-status";
 
 const campusOrder = [{ sortOrder: "asc" as const }, { name: "asc" as const }];
 const dormitoryOrder = [{ sortOrder: "asc" as const }, { roomNo: "asc" as const }];
@@ -104,7 +105,7 @@ export async function listBuildingsForAgent(
       buildings: {
         include: {
           dormitories: {
-            select: { floor: true },
+            select: { floor: true, sweepRecords: { select: { status: true } } },
             where: { isActive: true },
           },
         },
@@ -121,14 +122,14 @@ export async function listBuildingsForAgent(
   await assertAgentSchoolAccess(agentId, school.id);
 
   return {
-    buildings: school.buildings.map((building) => ({
-      dormitoryCount: building.dormitories.length,
-      floorCount: new Set(building.dormitories.map(({ floor }) => floor)).size,
-      id: building.id,
-      name: building.name,
-      note: building.note,
-      sortOrder: building.sortOrder,
-    })),
+    buildings: school.buildings.map((building) => {
+      const counts = { covered: 0, pending: 0, unvisited: 0 };
+      for (const dormitory of building.dormitories) {
+        const status = deriveOverallStatus(dormitory.sweepRecords.map(({ status }) => status));
+        counts[status === "COVERED" ? "covered" : status === "PENDING" ? "pending" : "unvisited"] += 1;
+      }
+      return { counts, dormitoryCount: building.dormitories.length, floorCount: new Set(building.dormitories.map(({ floor }) => floor)).size, id: building.id, name: building.name, note: building.note, sortOrder: building.sortOrder };
+    }),
     school: { id: school.id, name: school.name },
   };
 }

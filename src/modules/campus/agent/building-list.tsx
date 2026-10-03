@@ -13,6 +13,7 @@ export function BuildingList({ page }: { page: AgentBuildingPage }) {
         <Link className="building-choice-card" href={`/app/buildings/${building.id}`} key={building.id}>
           <strong>{building.name}</strong>
           <span>{building.floorCount}层 · {building.dormitoryCount}间宿舍</span>
+          <span className="building-sweep-counts"><b>{building.counts.covered} 已覆盖</b><b>{building.counts.pending} 待补扫</b><b>{building.counts.unvisited} 未扫</b></span>
           {building.note ? <small>{building.note}</small> : null}
         </Link>
       ))}</div> : <section className="empty-panel compact"><strong>该学校还没有楼栋</strong><span>请联系管理员添加楼栋。</span></section>}

@@ -37,6 +37,7 @@ export type AgentSchoolRow = {
 };
 
 export type AgentBuildingSummary = {
+  counts: { covered: number; pending: number; unvisited: number };
   dormitoryCount: number;
   floorCount: number;
   id: string;
