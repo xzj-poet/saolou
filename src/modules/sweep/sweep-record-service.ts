@@ -7,6 +7,11 @@ import { sweepRecordInputSchema } from "@/modules/sweep/sweep-schema";
 import { deriveOverallStatus } from "@/modules/sweep/sweep-status";
 import type { SweepOperator, SweepRecordInput } from "@/modules/sweep/sweep-types";
 
+export type SweepBatchInput = Omit<SweepRecordInput, "dormitoryId"> & {
+  buildingId: string;
+  dormitoryIds: string[];
+};
+
 async function validateTarget(input: SweepRecordInput, operator: SweepOperator) {
   const parsed = sweepRecordInputSchema.safeParse(input);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", parsed.error.issues[0]?.message ?? "请检查扫楼记录");
@@ -65,4 +70,35 @@ export async function upsertAgentRecord(input: SweepRecordInput, operator: Sweep
   const validated = await validateTarget(input, operator);
   const result = await prisma.$transaction((tx) => upsertRecordInTransaction(tx, validated, operator.id));
   return { ...result, overallStatus: await getDormitoryOverallStatus(validated.dormitoryId) };
+}
+
+export async function upsertAgentRecordsBatch(input: SweepBatchInput, operator: SweepOperator) {
+  if (operator.role !== "AGENT" || operator.id !== input.agentId) throw new ApiError(403, "RECORD_OWNERSHIP_DENIED", "代理只能修改自己的记录");
+  const dormitoryIds = [...new Set(input.dormitoryIds)];
+  if (!dormitoryIds.length || dormitoryIds.length > 100) throw new ApiError(400, "VALIDATION_ERROR", "批量宿舍数量无效");
+
+  return prisma.$transaction(async (tx) => {
+    const building = await tx.building.findFirst({ select: { id: true, school: { select: { id: true, isActive: true } } }, where: { id: input.buildingId, isActive: true } });
+    if (!building?.school.isActive) throw new ApiError(404, "BUILDING_NOT_FOUND", "楼栋不存在或已停用");
+    const access = await tx.agentSchoolAccess.findUnique({ select: { id: true }, where: { agentId_schoolId: { agentId: input.agentId, schoolId: building.school.id } } });
+    if (!access) throw new ApiError(403, "SCHOOL_ACCESS_DENIED", "你没有访问该学校的权限");
+    const targets = await tx.dormitory.findMany({ select: { id: true }, where: { buildingId: input.buildingId, id: { in: dormitoryIds }, isActive: true } });
+    if (targets.length !== dormitoryIds.length) throw new ApiError(400, "BATCH_TARGET_INVALID", "批量宿舍必须全部属于当前楼栋且处于启用状态");
+
+    const changes: Array<Awaited<ReturnType<typeof upsertRecordInTransaction>>> = [];
+    for (const dormitoryId of dormitoryIds) {
+      changes.push(await upsertRecordInTransaction(tx, { agentId: input.agentId, customNote: input.customNote, dormitoryId, quickNoteId: input.quickNoteId, status: input.status }, operator.id));
+    }
+    const dormitories = await tx.dormitory.findMany({
+      select: { id: true, sweepRecords: { select: { status: true } } },
+      where: { buildingId: input.buildingId, isActive: true },
+    });
+    const statusById = new Map(dormitories.map((row) => [row.id, deriveOverallStatus(row.sweepRecords.map(({ status }) => status))]));
+    const counts = { covered: 0, pending: 0, unvisited: 0 };
+    for (const status of statusById.values()) counts[status === "COVERED" ? "covered" : status === "PENDING" ? "pending" : "unvisited"] += 1;
+    return {
+      counts,
+      results: dormitoryIds.map((dormitoryId, index) => ({ changed: changes[index].changed, dormitoryId, overallStatus: statusById.get(dormitoryId) })),
+    };
+  });
 }
