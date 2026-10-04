@@ -33,7 +33,7 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
     setMessage("");
     const noteInput = editor.noteMode === "quick"
       ? { quickNoteId: editor.quickNoteId }
-      : { note: editor.noteMode === "custom" && editor.customNote.trim() ? editor.customNote.trim() : null };
+      : { customNote: editor.noteMode === "custom" && editor.customNote.trim() ? editor.customNote.trim() : null };
     const isBatch = mode === "batch";
     const body = isBatch
       ? { buildingId, dormitoryIds: dormitories.map(({ id }) => id), ...noteInput, status: editor.status }
