@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider";
 import { type EditorStatus, useRecordEditor } from "@/modules/sweep/agent/use-record-editor";
@@ -46,6 +46,8 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
   const [message, setMessage] = useState("");
   const [conflicts, setConflicts] = useState<RecordConflict[]>([]);
   const availableNotes = quickNotes.filter((note) => note.status === editor.status);
+
+  useEffect(() => { setTargets(dormitories); }, [dormitories]);
 
   async function save() {
     if (!editor.status) return;
@@ -103,6 +105,12 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
     setMessage("已加载最新记录，请确认后重新保存");
   }
 
+  function refreshBatch() {
+    setConflicts([]);
+    setMessage("正在刷新最新记录，请确认后重新保存");
+    router.refresh();
+  }
+
   return <main className="agent-page record-editor">
     <button aria-label="返回" className="mobile-back-button" onClick={() => confirmNavigation(() => router.push(backHref))} type="button">‹ 返回</button>
     <h1>{title}</h1>
@@ -128,7 +136,9 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
           ? <p>{conflict.currentRecord.status === "COVERED" ? "已覆盖" : "待补扫"} · {conflict.currentRecord.note || "无备注"} · 版本 {conflict.currentRecord.version}</p>
           : <p>该记录已被删除</p>}
       </div>)}
-      {mode !== "batch" ? <button className="quiet-button" onClick={loadLatest} type="button">加载最新记录</button> : null}
+      {mode !== "batch"
+        ? <button className="quiet-button" onClick={loadLatest} type="button">加载最新记录</button>
+        : <button className="quiet-button" onClick={refreshBatch} type="button">刷新最新记录</button>}
     </section> : null}
     <p aria-live="polite" className={message === "已保存" || message.startsWith("已加载") ? "save-message" : "form-error"}>{message}</p>
     <button className="primary-button full-button" disabled={saving || !targets.length || !editor.status} onClick={save} type="button">{saving ? "保存中…" : failed ? "重新保存" : mode === "batch" ? `保存${targets.length}间宿舍` : "保存记录"}</button>

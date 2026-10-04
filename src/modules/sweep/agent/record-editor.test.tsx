@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UnsavedChangesProvider } from "@/components/unsaved-changes-provider";
 import { RecordEditor } from "@/modules/sweep/agent/record-editor";
 
-const navigation = { push: vi.fn(), replace: vi.fn() };
+const navigation = { push: vi.fn(), refresh: vi.fn(), replace: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 
 const notes = [
@@ -36,6 +36,7 @@ function renderEditor(props: Partial<React.ComponentProps<typeof RecordEditor>> 
 describe("RecordEditor", () => {
   beforeEach(() => {
     navigation.push.mockReset();
+    navigation.refresh.mockReset();
     navigation.replace.mockReset();
     vi.restoreAllMocks();
   });
@@ -148,5 +149,24 @@ describe("RecordEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "保存2间宿舍" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/sweep-records/batch", expect.objectContaining({ method: "POST" })));
     expect(submittedBody(fetchMock)).toEqual({ buildingId: "b1", targets: [{ dormitoryId: "d1", expectedRecordId: null, expectedVersion: null }, { dormitoryId: "d2", expectedRecordId: "r2", expectedVersion: 4 }], customNote: null, status: "PENDING" });
+  });
+
+  it("lists every batch conflict and refreshes without discarding the draft", async () => {
+    const conflict = { error: { code: "RECORD_CONFLICT", fields: { conflicts: [
+      { currentRecord: { id: "r1", note: "新 101", status: "COVERED", version: 2 }, dormitoryId: "d1", reason: "CREATED", roomNo: "101" },
+      { currentRecord: { id: "r2", note: "新 102", status: "PENDING", version: 5 }, dormitoryId: "d2", reason: "UPDATED", roomNo: "102" },
+    ] }, message: "记录已被其他操作更新" } };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(conflict), { status: 409 }));
+    renderEditor({ dormitories: [{ ...createDormitory }, { ...editDormitory, id: "d2", roomNo: "102" }], mode: "batch", title: "标记 101、102" });
+    fireEvent.click(screen.getByRole("button", { name: "待补扫" }));
+    fireEvent.click(screen.getByRole("button", { name: "自定义备注" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "备注" }), { target: { value: "批量草稿" } });
+    fireEvent.click(screen.getByRole("button", { name: "保存2间宿舍" }));
+    await screen.findByText(/101 最新记录/);
+    expect(screen.getByText(/102 最新记录/)).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "备注" })).toHaveValue("批量草稿");
+    fireEvent.click(screen.getByRole("button", { name: "刷新最新记录" }));
+    expect(navigation.refresh).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("textbox", { name: "备注" })).toHaveValue("批量草稿");
   });
 });
