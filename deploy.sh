@@ -24,17 +24,40 @@ random_secret() {
 
 if [ ! -f "$env_file" ]; then
   postgres_password=$(random_secret)
+  app_password=$(random_secret)
   admin_password=$(random_secret)
   umask 077
   printf '%s\n' \
     'POSTGRES_DB=campus_sweep' \
     'POSTGRES_USER=campus_sweep' \
     "POSTGRES_PASSWORD=$postgres_password" \
-    "DATABASE_URL=postgresql://campus_sweep:$postgres_password@db:5432/campus_sweep?schema=public" \
+    'POSTGRES_APP_USER=campus_sweep_app' \
+    "POSTGRES_APP_PASSWORD=$app_password" \
+    "DATABASE_ADMIN_URL=postgresql://campus_sweep:$postgres_password@db:5432/campus_sweep?schema=public" \
+    "DATABASE_URL=postgresql://campus_sweep_app:$app_password@db:5432/campus_sweep?schema=public" \
     'ADMIN_USERNAME=admin' \
     "ADMIN_PASSWORD=$admin_password" \
     'SITE_ADDRESS=:80' > "$env_file"
   generated_env=1
+fi
+
+set -a
+# shellcheck disable=SC1090
+. "$env_file"
+set +a
+
+if [ -z "${POSTGRES_APP_PASSWORD:-}" ]; then
+  app_password=$(random_secret)
+  database_admin_url=${DATABASE_ADMIN_URL:-${DATABASE_URL:?DATABASE_URL is required for upgrade}}
+  temporary_env=$(mktemp "$root_dir/.env.production.XXXXXX")
+  grep -Ev '^(POSTGRES_APP_USER|POSTGRES_APP_PASSWORD|DATABASE_ADMIN_URL|DATABASE_URL)=' "$env_file" > "$temporary_env"
+  printf '%s\n' \
+    'POSTGRES_APP_USER=campus_sweep_app' \
+    "POSTGRES_APP_PASSWORD=$app_password" \
+    "DATABASE_ADMIN_URL=$database_admin_url" \
+    "DATABASE_URL=postgresql://campus_sweep_app:$app_password@db:5432/${POSTGRES_DB}?schema=public" >> "$temporary_env"
+  chmod 600 "$temporary_env"
+  mv "$temporary_env" "$env_file"
 fi
 
 compose() {

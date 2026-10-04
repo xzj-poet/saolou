@@ -15,6 +15,8 @@ docker compose -f compose.dev.yaml up -d db
 npm ci
 npm run db:generate
 npm run db:migrate:deploy
+npm run db:provision:app
+npm run db:verify:app-role
 npm run bootstrap:admin
 npm run dev
 ```
@@ -29,6 +31,8 @@ docker compose -f compose.dev.yaml up -d db
 npm ci
 npm run db:generate
 npm run db:migrate:deploy
+npm run db:provision:app
+npm run db:verify:app-role
 npm run bootstrap:admin
 npm run dev
 ```
@@ -90,6 +94,8 @@ npm run test:e2e -- e2e/sweep-core.spec.ts
 本地执行数据库驱动的完整套件时，优先使用 `compose.dev.yaml` 中的 PostgreSQL；若使用 `prisma dev`，请在长时间测试前通过 `npx prisma dev ls` 确认服务状态为 `running`。
 
 本项目固定使用 Node.js 24。若机器上存在多个 Node.js 版本，请先确认 `node -v` 显示 `v24.x`，再启动 Prisma 本地数据库和执行测试。
+
+本地 `.env.example` 同时给出迁移账号 `DATABASE_ADMIN_URL` 与运行账号 `DATABASE_URL`。迁移完成后先执行 `db:provision:app`，再运行 `db:verify:app-role`；后者会在事务内验证业务表增删改查，并确认运行账号执行 `CREATE TABLE` 时收到 PostgreSQL 权限错误 `42501`。如需维持旧的单账号本地开发方式，可省略 `DATABASE_ADMIN_URL`，Prisma 会回退使用 `DATABASE_URL`，但生产部署必须使用两个账号。
 
 ## 依赖审计基线（2026-10-04）
 

@@ -27,6 +27,7 @@ test("production deployment is pinned, persistent, and health checked", async ()
   assert.match(compose, /\/api\/health/);
   assert.doesNotMatch(compose, /:latest\b/);
   assert.match(caddyfile, /reverse_proxy app:3000/);
+  assert.doesNotMatch(compose.match(/^  app:[\s\S]*?(?=^  caddy:)/m)?.[0] ?? "", /DATABASE_ADMIN_URL/);
 });
 
 test("the one-command entry validates configuration and provisions the app", async () => {
@@ -56,6 +57,8 @@ test("continuous verification uses Node 24 and PostgreSQL 18", async () => {
     "npm ci",
     "npm run db:generate",
     "npm run db:migrate:deploy",
+    "npm run db:provision:app",
+    "npm run db:verify:app-role",
     "npm run lint",
     "npm run typecheck",
     "npm test",

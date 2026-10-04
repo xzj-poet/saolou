@@ -21,6 +21,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:provision:app": "tsx scripts/provision-app-role.ts",
+    "db:verify:app-role": "tsx scripts/verify-app-role.ts",
     "bootstrap:admin": "tsx scripts/bootstrap-admin.ts"
   },
   "dependencies": {

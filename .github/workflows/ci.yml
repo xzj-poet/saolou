@@ -31,8 +31,11 @@ jobs:
     env:
       ADMIN_PASSWORD: ci-administrator-password
       ADMIN_USERNAME: admin
-      DATABASE_URL: postgresql://campus_sweep_test:campus_sweep_test@127.0.0.1:5432/campus_sweep_test?schema=public
+      DATABASE_ADMIN_URL: postgresql://campus_sweep_test:campus_sweep_test@127.0.0.1:5432/campus_sweep_test?schema=public
+      DATABASE_URL: postgresql://campus_sweep_app:campus_sweep_app_test@127.0.0.1:5432/campus_sweep_test?schema=public
       POSTGRES_DB: campus_sweep_test
+      POSTGRES_APP_PASSWORD: campus_sweep_app_test
+      POSTGRES_APP_USER: campus_sweep_app
       POSTGRES_PASSWORD: campus_sweep_test
       POSTGRES_USER: campus_sweep_test
 
@@ -45,6 +48,8 @@ jobs:
       - run: npm ci
       - run: npm run db:generate
       - run: npm run db:migrate:deploy
+      - run: npm run db:provision:app
+      - run: npm run db:verify:app-role
       - run: npm run bootstrap:admin
       - run: npm run lint
       - run: npm run typecheck
