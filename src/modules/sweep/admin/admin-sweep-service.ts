@@ -1,7 +1,8 @@
 import type { AuditAction, Prisma, SweepStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/http/api-error";
-import { upsertAgentRecord } from "@/modules/sweep/sweep-record-service";
+import { detectRecordConflict, lockSweepRecord, recordConflictError } from "@/modules/sweep/sweep-concurrency";
+import { writeLockedSweepRecord } from "@/modules/sweep/sweep-record-service";
 
 export type SweepRecordFilters = {
   agentId?: string;
@@ -39,23 +40,49 @@ export async function listSweepRecords(filters: SweepRecordFilters = {}) {
   });
 }
 
-export async function updateSweepRecordAsAdmin(recordId: string, input: { customNote?: string | null; status: SweepStatus }, adminId: string) {
-  const record = await prisma.sweepRecord.findUnique({ select: { agentId: true, dormitoryId: true, id: true, version: true }, where: { id: recordId } });
-  if (!record) throw new ApiError(404, "SWEEP_RECORD_NOT_FOUND", "扫楼记录不存在");
-  return upsertAgentRecord({
-    ...input,
-    agentId: record.agentId,
-    dormitoryId: record.dormitoryId,
-    expectedRecordId: record.id,
-    expectedVersion: record.version,
-  }, { id: adminId, role: "ADMIN" });
+type AdminSweepUpdateInput = { customNote?: string | null; expectedRecordId: string; expectedVersion: number; status: SweepStatus };
+type AdminCurrentRecord = Prisma.SweepRecordGetPayload<{ include: { dormitory: { select: { roomNo: true } } } }>;
+
+function deletedAdminRecordConflict(recordId: string) {
+  return new ApiError(409, "RECORD_CONFLICT", "记录已被其他操作删除，请刷新后确认", {
+    conflicts: [{ expectedRecordId: recordId, reason: "DELETED" }],
+  });
 }
 
-export async function deleteSweepRecordAsAdmin(recordId: string, adminId: string) {
+function currentAdminConflict(record: AdminCurrentRecord | null, expectedRecordId: string, expectedVersion: number) {
+  if (!record) return deletedAdminRecordConflict(expectedRecordId);
+  const reason = detectRecordConflict(record, { expectedRecordId, expectedVersion });
+  if (!reason) return null;
+  return recordConflictError([{
+    currentRecord: { id: record.id, note: record.note, status: record.status, updatedAt: record.updatedAt, version: record.version },
+    dormitoryId: record.dormitoryId,
+    reason,
+    roomNo: record.dormitory.roomNo,
+  }]);
+}
+
+export async function updateSweepRecordAsAdmin(recordId: string, input: AdminSweepUpdateInput, adminId: string) {
+  if (input.expectedRecordId !== recordId) throw new ApiError(400, "VALIDATION_ERROR", "记录 ID 与请求路径不一致");
+  const located = await prisma.sweepRecord.findUnique({ select: { agentId: true, dormitoryId: true }, where: { id: recordId } });
+  if (!located) throw deletedAdminRecordConflict(recordId);
   return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${recordId})) IS NULL AS locked`;
-    const record = await tx.sweepRecord.findUnique({ where: { id: recordId } });
-    if (!record) throw new ApiError(404, "SWEEP_RECORD_NOT_FOUND", "扫楼记录不存在");
+    await lockSweepRecord(tx, located.agentId, located.dormitoryId);
+    const current = await tx.sweepRecord.findUnique({ include: { dormitory: { select: { roomNo: true } } }, where: { agentId_dormitoryId: located } });
+    const conflict = currentAdminConflict(current, recordId, input.expectedVersion);
+    if (conflict) throw conflict;
+    return writeLockedSweepRecord(tx, { ...input, agentId: located.agentId, dormitoryId: located.dormitoryId }, adminId);
+  });
+}
+
+export async function deleteSweepRecordAsAdmin(recordId: string, expectedVersion: number, adminId: string) {
+  const located = await prisma.sweepRecord.findUnique({ select: { agentId: true, dormitoryId: true }, where: { id: recordId } });
+  if (!located) throw deletedAdminRecordConflict(recordId);
+  return prisma.$transaction(async (tx) => {
+    await lockSweepRecord(tx, located.agentId, located.dormitoryId);
+    const record = await tx.sweepRecord.findUnique({ include: { dormitory: { select: { roomNo: true } } }, where: { agentId_dormitoryId: located } });
+    const conflict = currentAdminConflict(record, recordId, expectedVersion);
+    if (conflict) throw conflict;
+    if (!record) throw deletedAdminRecordConflict(recordId);
     await tx.sweepAudit.create({ data: {
       action: "DELETE",
       agentId: record.agentId,

@@ -18,5 +18,11 @@ export const sweepAuditFiltersSchema = sweepRecordFiltersSchema.extend({
 
 export const adminSweepUpdateSchema = z.object({
   customNote: z.string().trim().max(60, "备注最多 60 个字").nullable().optional(),
+  expectedRecordId: z.uuid(),
+  expectedVersion: z.number().int().min(1),
   status: z.enum(["PENDING", "COVERED"]),
+}).strict();
+
+export const adminSweepDeleteSchema = z.object({
+  expectedVersion: z.number().int().min(1),
 }).strict();
