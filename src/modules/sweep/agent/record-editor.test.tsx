@@ -156,7 +156,9 @@ describe("RecordEditor", () => {
       { currentRecord: { id: "r1", note: "新 101", status: "COVERED", version: 2 }, dormitoryId: "d1", reason: "CREATED", roomNo: "101" },
       { currentRecord: { id: "r2", note: "新 102", status: "PENDING", version: 5 }, dormitoryId: "d2", reason: "UPDATED", roomNo: "102" },
     ] }, message: "记录已被其他操作更新" } };
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(conflict), { status: 409 }));
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify(conflict), { status: 409 }))
+      .mockResolvedValueOnce(new Response("{}", { status: 200 }));
     renderEditor({ dormitories: [{ ...createDormitory }, { ...editDormitory, id: "d2", roomNo: "102" }], mode: "batch", title: "标记 101、102" });
     fireEvent.click(screen.getByRole("button", { name: "待补扫" }));
     fireEvent.click(screen.getByRole("button", { name: "自定义备注" }));
@@ -168,5 +170,11 @@ describe("RecordEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "刷新最新记录" }));
     expect(navigation.refresh).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("textbox", { name: "备注" })).toHaveValue("批量草稿");
+    fireEvent.click(screen.getByRole("button", { name: "保存2间宿舍" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(submittedBody(fetchMock, 1)).toMatchObject({ targets: [
+      { dormitoryId: "d1", expectedRecordId: "r1", expectedVersion: 2 },
+      { dormitoryId: "d2", expectedRecordId: "r2", expectedVersion: 5 },
+    ] });
   });
 });

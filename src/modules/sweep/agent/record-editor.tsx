@@ -107,6 +107,18 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
   }
 
   function refreshBatch() {
+    setTargetOverrides((currentOverrides) => {
+      const nextOverrides = { ...currentOverrides };
+      for (const conflict of conflicts) {
+        const target = targets.find((candidate) => candidate.id === conflict.dormitoryId);
+        if (target) nextOverrides[target.id] = {
+          ...target,
+          expectedRecordId: conflict.currentRecord?.id ?? null,
+          expectedVersion: conflict.currentRecord?.version ?? null,
+        };
+      }
+      return nextOverrides;
+    });
     setConflicts([]);
     setMessage("正在刷新最新记录，请确认后重新保存");
     router.refresh();

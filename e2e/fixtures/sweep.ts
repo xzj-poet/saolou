@@ -41,17 +41,19 @@ export const test = authTest.extend<{ sweepScenario: SweepScenario }>({
       { content: scenario.coveredNote, status: "COVERED" },
     ] });
 
-    await runScenario(scenario);
-
-    await prisma.session.deleteMany({ where: { userId: secondAgent.id } });
-    await prisma.sweepAudit.deleteMany({ where: { dormitoryId: { in: rooms.map(({ id }) => id) } } });
-    await prisma.sweepRecord.deleteMany({ where: { dormitoryId: { in: rooms.map(({ id }) => id) } } });
-    await prisma.agentSchoolAccess.deleteMany({ where: { schoolId: school.id } });
-    await prisma.dormitory.deleteMany({ where: { buildingId: building.id } });
-    await prisma.building.delete({ where: { id: building.id } });
-    await prisma.school.delete({ where: { id: school.id } });
-    await prisma.quickNote.deleteMany({ where: { content: { in: [scenario.pendingNote, scenario.coveredNote] } } });
-    await prisma.user.delete({ where: { id: secondAgent.id } });
+    try {
+      await runScenario(scenario);
+    } finally {
+      await prisma.session.deleteMany({ where: { userId: secondAgent.id } });
+      await prisma.sweepAudit.deleteMany({ where: { dormitoryId: { in: rooms.map(({ id }) => id) } } });
+      await prisma.sweepRecord.deleteMany({ where: { dormitoryId: { in: rooms.map(({ id }) => id) } } });
+      await prisma.agentSchoolAccess.deleteMany({ where: { schoolId: school.id } });
+      await prisma.dormitory.deleteMany({ where: { buildingId: building.id } });
+      await prisma.building.delete({ where: { id: building.id } });
+      await prisma.school.delete({ where: { id: school.id } });
+      await prisma.quickNote.deleteMany({ where: { content: { in: [scenario.pendingNote, scenario.coveredNote] } } });
+      await prisma.user.delete({ where: { id: secondAgent.id } });
+    }
   },
 });
 
