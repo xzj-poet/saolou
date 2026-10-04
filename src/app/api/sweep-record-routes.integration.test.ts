@@ -1,15 +1,17 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { PUT as putMyRecord } from "@/app/api/dormitories/[dormitoryId]/my-record/route";
 import { GET as getDormitory } from "@/app/api/dormitories/[dormitoryId]/route";
 import { POST as postBatch } from "@/app/api/sweep-records/batch/route";
 import { prisma } from "@/lib/db";
+import { resetRateLimitsForTests } from "@/lib/http/rate-limit";
 import { createSession } from "@/modules/auth/session-repository";
 
 const origin = "http://localhost";
 const prefix = "sweep-route-";
 let cookie = "";
+let secondCookie = "";
 let agentId = "";
 let schoolId = "";
 let buildingId = "";
@@ -17,14 +19,15 @@ let otherBuildingId = "";
 let dormitoryIds: string[] = [];
 let foreignDormitoryId = "";
 
-function request(path: string, body: unknown) {
-  return new Request(`${origin}${path}`, { body: JSON.stringify(body), headers: { Cookie: cookie, "Content-Type": "application/json", Origin: origin }, method: "POST" });
+function request(path: string, body: unknown, sessionCookie = cookie) {
+  return new Request(`${origin}${path}`, { body: JSON.stringify(body), headers: { Cookie: sessionCookie, "Content-Type": "application/json", Origin: origin }, method: "POST" });
 }
 
 beforeAll(async () => {
   const suffix = randomUUID();
   const admin = await prisma.user.create({ data: { name: "管理员", passwordHash: "test", role: "ADMIN", username: `${prefix}admin-${suffix}` } });
   const agent = await prisma.user.create({ data: { name: "代理", passwordHash: "test", role: "AGENT", username: `${prefix}agent-${suffix}` } });
+  const secondAgent = await prisma.user.create({ data: { name: "另一代理", passwordHash: "test", role: "AGENT", username: `${prefix}agent-2-${suffix}` } });
   agentId = agent.id;
   const school = await prisma.school.create({ data: { name: `${prefix}${suffix}` } }); schoolId = school.id;
   const building = await prisma.building.create({ data: { name: "1号楼", schoolId } }); buildingId = building.id;
@@ -32,7 +35,9 @@ beforeAll(async () => {
   dormitoryIds = (await Promise.all(["101", "102"].map((roomNo) => prisma.dormitory.create({ data: { buildingId, floor: "1", roomNo } })))).map(({ id }) => id);
   foreignDormitoryId = (await prisma.dormitory.create({ data: { buildingId: otherBuildingId, floor: "1", roomNo: "201" } })).id;
   await prisma.agentSchoolAccess.create({ data: { agentId, grantedBy: admin.id, schoolId } });
+  await prisma.agentSchoolAccess.create({ data: { agentId: secondAgent.id, grantedBy: admin.id, schoolId } });
   cookie = `campus_sweep_session=${(await createSession(agentId)).token}`;
+  secondCookie = `campus_sweep_session=${(await createSession(secondAgent.id)).token}`;
 });
 
 afterAll(async () => {
@@ -49,6 +54,7 @@ afterAll(async () => {
 });
 
 describe("agent sweep record routes", () => {
+  beforeEach(resetRateLimitsForTests);
   it("derives ownership from the session and upserts one current record", async () => {
     const response = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, { customNote: "稍后再来", expectedRecordId: null, expectedVersion: null, status: "PENDING" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
     expect(response.status).toBe(200);
@@ -85,6 +91,19 @@ describe("agent sweep record routes", () => {
     expect(rejected.status).toBe(400);
     expect(await prisma.sweepAudit.count({ where: { agentId } })).toBe(before);
     expect(await prisma.sweepRecord.findUnique({ where: { agentId_dormitoryId: { agentId, dormitoryId: dormitoryIds[0] } } })).toMatchObject({ status: "COVERED" });
+  });
+
+  it("limits combined sweep writes per agent while keeping another agent independent", async () => {
+    resetRateLimitsForTests();
+    for (let index = 0; index < 120; index += 1) {
+      const response = await postBatch(request("/api/sweep-records/batch", {}));
+      expect(response.status).toBe(400);
+    }
+    const limited = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, {}), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("retry-after")).toMatch(/^\d+$/);
+    const independent = await postBatch(request("/api/sweep-records/batch", {}, secondCookie));
+    expect(independent.status).toBe(400);
   });
 
   it("rejects oversized batches and revoked access before writing", async () => {

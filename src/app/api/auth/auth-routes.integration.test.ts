@@ -6,6 +6,7 @@ import { POST as logout } from "@/app/api/auth/logout/route";
 import { GET as me } from "@/app/api/auth/me/route";
 import { GET as clearExpiredSession } from "@/app/api/auth/session-expired/route";
 import { hashPassword } from "@/modules/auth/password";
+import { resetRateLimitsForTests } from "@/lib/http/rate-limit";
 
 const origin = "http://localhost";
 const username = "route-agent";
@@ -129,6 +130,20 @@ describe("authentication routes", () => {
     expect(await responseJson(disabled)).toEqual({
       error: { code: "ACCOUNT_DISABLED", message: "账号已停用，请联系管理员" },
     });
+  });
+
+  it("rate limits the normalized source and username after exactly ten attempts", async () => {
+    resetRateLimitsForTests();
+    const responses: Response[] = [];
+    for (let index = 0; index < 11; index += 1) {
+      const request = postRequest("/api/auth/login", { password: "wrong", username: "  RATE-LIMITED-USER  " });
+      request.headers.set("x-forwarded-for", "198.51.100.20, 10.0.0.9");
+      responses.push(await login(request));
+    }
+    expect(responses.slice(0, 10).every((response) => response.status === 401)).toBe(true);
+    expect(responses[10].status).toBe(429);
+    expect(responses[10].headers.get("retry-after")).toMatch(/^\d+$/);
+    await expect(responseJson(responses[10])).resolves.toMatchObject({ error: { code: "RATE_LIMITED" } });
   });
 
   it("returns only trusted public user fields from /me", async () => {

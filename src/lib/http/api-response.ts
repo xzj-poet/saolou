@@ -12,7 +12,7 @@ export function apiErrorResponse(error: unknown): NextResponse {
           message: error.message,
         },
       },
-      { status: error.status },
+      { headers: error.responseHeaders, status: error.status },
     );
   }
 
