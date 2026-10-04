@@ -74,22 +74,24 @@ describe("agent sweep record routes", () => {
   });
 
   it("atomically deduplicates and upserts a batch but rolls back mixed-building targets", async () => {
-    const response = await postBatch(request("/api/sweep-records/batch", { buildingId, customNote: "统一完成", dormitoryIds: [dormitoryIds[0], dormitoryIds[1], dormitoryIds[1]], status: "COVERED" }));
+    const existing = await prisma.sweepRecord.findUniqueOrThrow({ where: { agentId_dormitoryId: { agentId, dormitoryId: dormitoryIds[0] } } });
+    const response = await postBatch(request("/api/sweep-records/batch", { buildingId, customNote: "统一完成", targets: [{ dormitoryId: dormitoryIds[0], expectedRecordId: existing.id, expectedVersion: existing.version }, { dormitoryId: dormitoryIds[1], expectedRecordId: null, expectedVersion: null }, { dormitoryId: dormitoryIds[1], expectedRecordId: null, expectedVersion: null }], status: "COVERED" }));
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({ counts: { covered: 2, pending: 0, unvisited: 0 }, results: [{ overallStatus: "COVERED" }, { overallStatus: "COVERED" }] });
 
     const before = await prisma.sweepAudit.count({ where: { agentId } });
-    const rejected = await postBatch(request("/api/sweep-records/batch", { buildingId, dormitoryIds: [dormitoryIds[0], foreignDormitoryId], status: "PENDING" }));
+    const current = await prisma.sweepRecord.findUniqueOrThrow({ where: { agentId_dormitoryId: { agentId, dormitoryId: dormitoryIds[0] } } });
+    const rejected = await postBatch(request("/api/sweep-records/batch", { buildingId, targets: [{ dormitoryId: dormitoryIds[0], expectedRecordId: current.id, expectedVersion: current.version }, { dormitoryId: foreignDormitoryId, expectedRecordId: null, expectedVersion: null }], status: "PENDING" }));
     expect(rejected.status).toBe(400);
     expect(await prisma.sweepAudit.count({ where: { agentId } })).toBe(before);
     expect(await prisma.sweepRecord.findUnique({ where: { agentId_dormitoryId: { agentId, dormitoryId: dormitoryIds[0] } } })).toMatchObject({ status: "COVERED" });
   });
 
   it("rejects oversized batches and revoked access before writing", async () => {
-    const tooMany = await postBatch(request("/api/sweep-records/batch", { buildingId, dormitoryIds: Array.from({ length: 101 }, () => randomUUID()), status: "PENDING" }));
+    const tooMany = await postBatch(request("/api/sweep-records/batch", { buildingId, targets: Array.from({ length: 101 }, () => ({ dormitoryId: randomUUID(), expectedRecordId: null, expectedVersion: null })), status: "PENDING" }));
     expect(tooMany.status).toBe(400);
     await prisma.agentSchoolAccess.delete({ where: { agentId_schoolId: { agentId, schoolId } } });
-    const denied = await postBatch(request("/api/sweep-records/batch", { buildingId, dormitoryIds: [dormitoryIds[1]], status: "PENDING" }));
+    const denied = await postBatch(request("/api/sweep-records/batch", { buildingId, targets: [{ dormitoryId: dormitoryIds[1], expectedRecordId: null, expectedVersion: null }], status: "PENDING" }));
     expect(denied.status).toBe(403);
   });
 });

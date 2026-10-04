@@ -7,7 +7,7 @@ import { useState } from "react";
 import { type EditorStatus, useRecordEditor } from "@/modules/sweep/agent/use-record-editor";
 
 type QuickNote = { content: string; id: string; status: EditorStatus };
-type Dormitory = { id: string; roomNo: string };
+type Dormitory = { expectedRecordId: string | null; expectedVersion: number | null; id: string; roomNo: string };
 
 type Props = {
   backHref: string;
@@ -36,8 +36,8 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
       : { customNote: editor.noteMode === "custom" && editor.customNote.trim() ? editor.customNote.trim() : null };
     const isBatch = mode === "batch";
     const body = isBatch
-      ? { buildingId, dormitoryIds: dormitories.map(({ id }) => id), ...noteInput, status: editor.status }
-      : { ...noteInput, status: editor.status };
+      ? { buildingId, targets: dormitories.map(({ expectedRecordId, expectedVersion, id }) => ({ dormitoryId: id, expectedRecordId, expectedVersion })), ...noteInput, status: editor.status }
+      : { expectedRecordId: dormitories[0]?.expectedRecordId ?? null, expectedVersion: dormitories[0]?.expectedVersion ?? null, ...noteInput, status: editor.status };
     try {
       const response = await fetch(isBatch ? "/api/sweep-records/batch" : `/api/dormitories/${dormitories[0]?.id}/my-record`, {
         body: JSON.stringify(body),

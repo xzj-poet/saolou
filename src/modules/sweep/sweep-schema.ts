@@ -46,7 +46,13 @@ export const sweepBatchBodySchema = z.object({
   quickNoteId: writeFields.quickNoteId,
   status: writeFields.status,
   buildingId: z.uuid(),
-  dormitoryIds: z.array(z.uuid()).min(1, "至少选择一间宿舍").max(100, "一次最多标记 100 间宿舍"),
+  targets: z.array(z.object({
+    dormitoryId: z.uuid(),
+    ...expectationFields,
+  }).strict().refine(hasPairedExpectation, {
+    message: "记录 ID 和版本必须同时提供或同时为空",
+    path: ["expectedVersion"],
+  })).min(1, "至少选择一间宿舍").max(100, "一次最多标记 100 间宿舍"),
 }).strict().refine(
   (value) => !(value.quickNoteId && value.customNote !== undefined && value.customNote !== null),
   { message: "快捷备注和自定义备注只能选择一种" },

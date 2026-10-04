@@ -12,5 +12,5 @@ export default async function RecordPage({ params, searchParams }: { params: Pro
   const [user, { dormitoryId }, query, pending, covered] = await Promise.all([requireUser(), params, searchParams, listActiveQuickNotes("PENDING"), listActiveQuickNotes("COVERED")]);
   const detail = await load(user.id, dormitoryId);
   const floor = query.floor ?? detail.dormitory.floor;
-  return <RecordEditor backHref={`/app/buildings/${detail.building.id}?floor=${encodeURIComponent(floor)}`} buildingId={detail.building.id} dormitories={[detail.dormitory]} floor={floor} initialNote={detail.myRecord?.note} initialStatus={detail.myRecord?.status} mode={detail.myRecord ? "edit" : "create"} quickNotes={[...pending, ...covered]} title={`${detail.myRecord ? "编辑" : "记录"} ${detail.dormitory.roomNo}`} />;
+  return <RecordEditor backHref={`/app/buildings/${detail.building.id}?floor=${encodeURIComponent(floor)}`} buildingId={detail.building.id} dormitories={[{ ...detail.dormitory, expectedRecordId: detail.myRecord?.id ?? null, expectedVersion: detail.myRecord?.version ?? null }]} floor={floor} initialNote={detail.myRecord?.note} initialStatus={detail.myRecord?.status} mode={detail.myRecord ? "edit" : "create"} quickNotes={[...pending, ...covered]} title={`${detail.myRecord ? "编辑" : "记录"} ${detail.dormitory.roomNo}`} />;
 }

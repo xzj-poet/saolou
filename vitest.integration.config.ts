@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-process.env.DATABASE_POOL_SIZE = "1";
+process.env.DATABASE_POOL_SIZE = "5";
 
 export default defineConfig({
   plugins: [react()],

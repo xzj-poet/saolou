@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/http/api-error";
 import { createQuickNote, setQuickNoteActive, updateQuickNote } from "@/modules/quick-notes/quick-note-service";
-import { getDormitoryOverallStatus, upsertAgentRecord } from "@/modules/sweep/sweep-record-service";
+import { getDormitoryOverallStatus, upsertAgentRecord, upsertAgentRecordsBatch } from "@/modules/sweep/sweep-record-service";
 
 const prefix = "sweep-core-";
 
@@ -34,11 +34,13 @@ async function fixture() {
   const school = await prisma.school.create({ data: { name: `${prefix}${suffix}` } });
   const building = await prisma.building.create({ data: { name: "3号楼", schoolId: school.id } });
   const dormitory = await prisma.dormitory.create({ data: { buildingId: building.id, floor: "2", roomNo: "201" } });
+  const otherDormitory = await prisma.dormitory.create({ data: { buildingId: building.id, floor: "2", roomNo: "202" } });
+  const thirdDormitory = await prisma.dormitory.create({ data: { buildingId: building.id, floor: "2", roomNo: "203" } });
   await prisma.agentSchoolAccess.createMany({ data: [
     { agentId: agent.id, grantedBy: admin.id, schoolId: school.id },
     { agentId: otherAgent.id, grantedBy: admin.id, schoolId: school.id },
   ] });
-  return { admin, agent, building, dormitory, otherAgent, school };
+  return { admin, agent, building, dormitory, otherAgent, otherDormitory, school, thirdDormitory };
 }
 
 async function expectApiError(promise: Promise<unknown>, status: number, code: string) {
@@ -123,5 +125,74 @@ describe("sweep record service", () => {
     expect(results.filter((result) => result.status === "rejected")[0]).toMatchObject({ reason: { code: "RECORD_CONFLICT", status: 409 } });
     expect(await prisma.sweepRecord.count({ where: { agentId: agent.id, dormitoryId: dormitory.id } })).toBe(1);
     expect(await prisma.sweepAudit.count({ where: { agentId: agent.id, dormitoryId: dormitory.id, action: "CREATE" } })).toBe(1);
+  });
+
+  it("rolls back every batch write and audit when one target is stale", async () => {
+    const { agent, building, dormitory, otherDormitory, thirdDormitory } = await fixture();
+    const operator = { id: agent.id, role: "AGENT" as const };
+    const existing = await upsertAgentRecord({ agentId: agent.id, dormitoryId: otherDormitory.id, expectedRecordId: null, expectedVersion: null, status: "PENDING" }, operator);
+    const otherExisting = await upsertAgentRecord({ agentId: agent.id, dormitoryId: thirdDormitory.id, expectedRecordId: null, expectedVersion: null, status: "PENDING" }, operator);
+    const auditsBefore = await prisma.sweepAudit.count({ where: { agentId: agent.id } });
+
+    try {
+      await upsertAgentRecordsBatch({
+        agentId: agent.id,
+        buildingId: building.id,
+        status: "COVERED",
+        targets: [
+          { dormitoryId: dormitory.id, expectedRecordId: null, expectedVersion: null },
+          { dormitoryId: otherDormitory.id, expectedRecordId: existing.record.id, expectedVersion: 2 },
+          { dormitoryId: thirdDormitory.id, expectedRecordId: otherExisting.record.id, expectedVersion: 2 },
+        ],
+      }, operator);
+      throw new Error("Expected aggregate batch conflict.");
+    } catch (error) {
+      expect(error).toMatchObject({ code: "RECORD_CONFLICT", status: 409 });
+      const conflicts = (error as ApiError).fields?.conflicts as Array<{ dormitoryId: string }>;
+      expect(conflicts.map(({ dormitoryId }) => dormitoryId).sort()).toEqual([otherDormitory.id, thirdDormitory.id].sort());
+    }
+
+    expect(await prisma.sweepRecord.findUnique({ where: { agentId_dormitoryId: { agentId: agent.id, dormitoryId: dormitory.id } } })).toBeNull();
+    expect(await prisma.sweepRecord.findUniqueOrThrow({ where: { id: existing.record.id } })).toMatchObject({ status: "PENDING", version: 1 });
+    expect(await prisma.sweepRecord.findUniqueOrThrow({ where: { id: otherExisting.record.id } })).toMatchObject({ status: "PENDING", version: 1 });
+    expect(await prisma.sweepAudit.count({ where: { agentId: agent.id } })).toBe(auditsBefore);
+  });
+
+  it("deduplicates identical targets and rejects contradictory duplicates", async () => {
+    const { agent, building, dormitory } = await fixture();
+    const operator = { id: agent.id, role: "AGENT" as const };
+    const target = { dormitoryId: dormitory.id, expectedRecordId: null, expectedVersion: null };
+
+    const result = await upsertAgentRecordsBatch({ agentId: agent.id, buildingId: building.id, status: "PENDING", targets: [target, target] }, operator);
+    expect(result.results).toHaveLength(1);
+    const created = await prisma.sweepRecord.findUniqueOrThrow({ where: { agentId_dormitoryId: { agentId: agent.id, dormitoryId: dormitory.id } } });
+
+    await expect(upsertAgentRecordsBatch({
+      agentId: agent.id,
+      buildingId: building.id,
+      status: "COVERED",
+      targets: [
+        { dormitoryId: dormitory.id, expectedRecordId: null, expectedVersion: null },
+        { dormitoryId: dormitory.id, expectedRecordId: created.id, expectedVersion: 1 },
+      ],
+    }, operator)).rejects.toMatchObject({ code: "BATCH_TARGET_CONTRADICTORY", status: 400 });
+    expect(await prisma.sweepAudit.count({ where: { agentId: agent.id, dormitoryId: dormitory.id } })).toBe(1);
+  });
+
+  it("locks reversed overlapping batches without deadlock", async () => {
+    const { agent, building, dormitory, otherDormitory } = await fixture();
+    const operator = { id: agent.id, role: "AGENT" as const };
+    const first = { dormitoryId: dormitory.id, expectedRecordId: null, expectedVersion: null };
+    const second = { dormitoryId: otherDormitory.id, expectedRecordId: null, expectedVersion: null };
+
+    const outcomes = await Promise.allSettled([
+      upsertAgentRecordsBatch({ agentId: agent.id, buildingId: building.id, status: "PENDING", targets: [first, second] }, operator),
+      upsertAgentRecordsBatch({ agentId: agent.id, buildingId: building.id, status: "COVERED", targets: [second, first] }, operator),
+    ]);
+
+    expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
+    expect(outcomes.filter((outcome) => outcome.status === "rejected")[0]).toMatchObject({ reason: { code: "RECORD_CONFLICT", status: 409 } });
+    expect(await prisma.sweepRecord.count({ where: { agentId: agent.id, dormitoryId: { in: [dormitory.id, otherDormitory.id] } } })).toBe(2);
+    expect(await prisma.sweepAudit.count({ where: { agentId: agent.id, action: "CREATE", dormitoryId: { in: [dormitory.id, otherDormitory.id] } } })).toBe(2);
   });
 });

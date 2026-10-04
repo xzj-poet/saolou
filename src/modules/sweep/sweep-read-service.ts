@@ -63,7 +63,7 @@ export async function getBuildingMatrixForAgent(agentId: string, buildingId: str
   const building = await prisma.building.findFirst({
     include: {
       dormitories: {
-        include: { sweepRecords: { select: { agentId: true, status: true } } },
+        include: { sweepRecords: { select: { agentId: true, id: true, status: true, version: true } } },
         orderBy: [{ sortOrder: "asc" }, { roomNo: "asc" }],
         where: { isActive: true },
       },
@@ -76,8 +76,9 @@ export async function getBuildingMatrixForAgent(agentId: string, buildingId: str
   const counts = { covered: 0, pending: 0, unvisited: 0 };
   const rows = building.dormitories.map((dormitory) => {
     const overallStatus = deriveOverallStatus(dormitory.sweepRecords.map(({ status }) => status));
+    const myRecord = dormitory.sweepRecords.find((record) => record.agentId === agentId);
     counts[overallStatus === "COVERED" ? "covered" : overallStatus === "PENDING" ? "pending" : "unvisited"] += 1;
-    return { floor: dormitory.floor, hasMyRecord: dormitory.sweepRecords.some((record) => record.agentId === agentId), id: dormitory.id, overallStatus, roomNo: dormitory.roomNo, sortOrder: dormitory.sortOrder };
+    return { floor: dormitory.floor, hasMyRecord: Boolean(myRecord), id: dormitory.id, myRecordId: myRecord?.id ?? null, myRecordVersion: myRecord?.version ?? null, overallStatus, roomNo: dormitory.roomNo, sortOrder: dormitory.sortOrder };
   });
   const floors = new Map<string, typeof rows>();
   for (const row of rows) { if (floor && row.floor !== floor) continue; const values = floors.get(row.floor) ?? []; values.push(row); floors.set(row.floor, values); }

@@ -7,14 +7,18 @@ import {
   detectRecordConflict,
   lockSweepRecord,
   recordConflictError,
+  sortRecordTargets,
+  type RecordExpectation,
 } from "@/modules/sweep/sweep-concurrency";
 import { sweepRecordInputSchema } from "@/modules/sweep/sweep-schema";
 import { deriveOverallStatus } from "@/modules/sweep/sweep-status";
 import type { SweepOperator, SweepRecordInput } from "@/modules/sweep/sweep-types";
 
+export type SweepBatchTarget = RecordExpectation & { dormitoryId: string };
+
 export type SweepBatchInput = Omit<SweepRecordInput, "dormitoryId" | "expectedRecordId" | "expectedVersion"> & {
   buildingId: string;
-  dormitoryIds: string[];
+  targets: SweepBatchTarget[];
 };
 
 async function validateTarget(input: SweepRecordInput, operator: SweepOperator) {
@@ -77,27 +81,6 @@ export async function writeLockedSweepRecord(
   return { changed: true, record };
 }
 
-async function upsertRecordInTransaction(
-  tx: Prisma.TransactionClient,
-  input: Omit<SweepRecordInput, "expectedRecordId" | "expectedVersion">,
-  operatorId: string,
-) {
-  await lockSweepRecord(tx, input.agentId, input.dormitoryId);
-  const current = await tx.sweepRecord.findUnique({
-    select: { id: true, version: true },
-    where: { agentId_dormitoryId: { agentId: input.agentId, dormitoryId: input.dormitoryId } },
-  });
-  return writeLockedSweepRecord(
-    tx,
-    {
-      ...input,
-      expectedRecordId: current?.id ?? null,
-      expectedVersion: current?.version ?? null,
-    },
-    operatorId,
-  );
-}
-
 export async function getDormitoryOverallStatus(dormitoryId: string) {
   const records = await prisma.sweepRecord.findMany({ select: { status: true }, where: { dormitoryId } });
   return deriveOverallStatus(records.map(({ status }) => status));
@@ -114,31 +97,61 @@ export async function upsertAgentRecord(input: SweepRecordInput, operator: Sweep
 
 export async function upsertAgentRecordsBatch(input: SweepBatchInput, operator: SweepOperator) {
   if (operator.role !== "AGENT" || operator.id !== input.agentId) throw new ApiError(403, "RECORD_OWNERSHIP_DENIED", "代理只能修改自己的记录");
-  const dormitoryIds = [...new Set(input.dormitoryIds)];
-  if (!dormitoryIds.length || dormitoryIds.length > 100) throw new ApiError(400, "VALIDATION_ERROR", "批量宿舍数量无效");
+  if (!input.targets.length || input.targets.length > 100) throw new ApiError(400, "VALIDATION_ERROR", "批量宿舍数量无效");
+  const targetByDormitory = new Map<string, SweepBatchTarget>();
+  for (const target of input.targets) {
+    if ((target.expectedRecordId === null) !== (target.expectedVersion === null)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "记录 ID 和版本必须同时提供或同时为空");
+    }
+    const existing = targetByDormitory.get(target.dormitoryId);
+    if (existing && (existing.expectedRecordId !== target.expectedRecordId || existing.expectedVersion !== target.expectedVersion)) {
+      throw new ApiError(400, "BATCH_TARGET_CONTRADICTORY", "同一宿舍不能提交互相矛盾的版本预期");
+    }
+    targetByDormitory.set(target.dormitoryId, target);
+  }
+  const targets = sortRecordTargets([...targetByDormitory.values()]);
+  const dormitoryIds = targets.map(({ dormitoryId }) => dormitoryId);
 
   return prisma.$transaction(async (tx) => {
     const building = await tx.building.findFirst({ select: { id: true, school: { select: { id: true, isActive: true } } }, where: { id: input.buildingId, isActive: true } });
     if (!building?.school.isActive) throw new ApiError(404, "BUILDING_NOT_FOUND", "楼栋不存在或已停用");
     const access = await tx.agentSchoolAccess.findUnique({ select: { id: true }, where: { agentId_schoolId: { agentId: input.agentId, schoolId: building.school.id } } });
     if (!access) throw new ApiError(403, "SCHOOL_ACCESS_DENIED", "你没有访问该学校的权限");
-    const targets = await tx.dormitory.findMany({ select: { id: true }, where: { buildingId: input.buildingId, id: { in: dormitoryIds }, isActive: true } });
-    if (targets.length !== dormitoryIds.length) throw new ApiError(400, "BATCH_TARGET_INVALID", "批量宿舍必须全部属于当前楼栋且处于启用状态");
+    const dormitories = await tx.dormitory.findMany({ select: { id: true, roomNo: true }, where: { buildingId: input.buildingId, id: { in: dormitoryIds }, isActive: true } });
+    if (dormitories.length !== dormitoryIds.length) throw new ApiError(400, "BATCH_TARGET_INVALID", "批量宿舍必须全部属于当前楼栋且处于启用状态");
+    const roomNoById = new Map(dormitories.map((dormitory) => [dormitory.id, dormitory.roomNo]));
 
-    const changes: Array<Awaited<ReturnType<typeof upsertRecordInTransaction>>> = [];
-    for (const dormitoryId of dormitoryIds) {
-      changes.push(await upsertRecordInTransaction(tx, { agentId: input.agentId, customNote: input.customNote, dormitoryId, quickNoteId: input.quickNoteId, status: input.status }, operator.id));
+    for (const target of targets) await lockSweepRecord(tx, input.agentId, target.dormitoryId);
+    const currentRecords = await tx.sweepRecord.findMany({
+      where: { agentId: input.agentId, dormitoryId: { in: dormitoryIds } },
+    });
+    const currentByDormitory = new Map(currentRecords.map((record) => [record.dormitoryId, record]));
+    const conflicts = targets.flatMap((target) => {
+      const current = currentByDormitory.get(target.dormitoryId) ?? null;
+      const reason = detectRecordConflict(current, target);
+      return reason ? [{
+        ...(current ? { currentRecord: { id: current.id, note: current.note, status: current.status, updatedAt: current.updatedAt, version: current.version } } : {}),
+        dormitoryId: target.dormitoryId,
+        reason,
+        roomNo: roomNoById.get(target.dormitoryId)!,
+      }] : [];
+    });
+    if (conflicts.length) throw recordConflictError(conflicts);
+
+    const changes: Array<Awaited<ReturnType<typeof writeLockedSweepRecord>>> = [];
+    for (const target of targets) {
+      changes.push(await writeLockedSweepRecord(tx, { agentId: input.agentId, customNote: input.customNote, ...target, quickNoteId: input.quickNoteId, status: input.status }, operator.id));
     }
-    const dormitories = await tx.dormitory.findMany({
+    const buildingDormitories = await tx.dormitory.findMany({
       select: { id: true, sweepRecords: { select: { status: true } } },
       where: { buildingId: input.buildingId, isActive: true },
     });
-    const statusById = new Map(dormitories.map((row) => [row.id, deriveOverallStatus(row.sweepRecords.map(({ status }) => status))]));
+    const statusById = new Map(buildingDormitories.map((row) => [row.id, deriveOverallStatus(row.sweepRecords.map(({ status }) => status))]));
     const counts = { covered: 0, pending: 0, unvisited: 0 };
     for (const status of statusById.values()) counts[status === "COVERED" ? "covered" : status === "PENDING" ? "pending" : "unvisited"] += 1;
     return {
       counts,
-      results: dormitoryIds.map((dormitoryId, index) => ({ changed: changes[index].changed, dormitoryId, overallStatus: statusById.get(dormitoryId) })),
+      results: targets.map(({ dormitoryId }, index) => ({ changed: changes[index].changed, dormitoryId, overallStatus: statusById.get(dormitoryId) })),
     };
   });
 }
