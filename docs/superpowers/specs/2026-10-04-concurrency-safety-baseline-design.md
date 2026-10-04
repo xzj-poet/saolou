@@ -46,20 +46,22 @@
 
 服务端必须先检查版本预期，再判断是否为无语义变化；旧版本请求即使提交了与当前数据库相同的内容，也必须返回冲突，不能借无变化分支绕过过期检测。
 
-所有读取当前记录的接口都返回 `version`。所有修改和删除请求都必须提交读取时获得的 `expectedVersion`。
+所有读取当前记录的接口都返回记录 ID 和 `version`。所有修改和删除请求都必须成对提交读取时获得的 `expectedRecordId` 与 `expectedVersion`，避免记录被删除并重新创建后版本从 `1` 开始造成 ABA 误判。
 
 ### 3.2 预期状态
 
 服务端把每次写入解释为对当前状态的明确预期：
 
-- 新建：`expectedVersion: null`，表示预期记录不存在。
-- 修改：`expectedVersion: number`，表示预期记录存在且版本相同。
-- 删除：必须提供现有版本，且记录必须仍然存在。
+- 新建：`expectedRecordId: null`、`expectedVersion: null`，表示预期记录不存在。
+- 修改：`expectedRecordId: string`、`expectedVersion: number`，表示预期同一条记录存在且版本相同。
+- 删除：路径中的记录 ID 是预期记录 ID，同时必须提供现有版本，且记录必须仍然存在。
+
+记录 ID 与版本必须同时为空或同时存在，混合状态按 `400 VALIDATION_ERROR` 拒绝。
 
 加锁后发现预期不成立时返回 `409 RECORD_CONFLICT`，不写当前记录和审计。冲突原因区分：
 
 - `CREATED`：预期不存在，但记录已经出现。
-- `UPDATED`：记录仍存在，但版本已经变化。
+- `UPDATED`：记录仍存在，但记录 ID 或版本已经变化。
 - `DELETED`：预期存在，但记录已经删除。
 
 冲突响应只返回当前操作者有权查看的最小数据：记录 ID、状态、备注、版本和更新时间。代理接口绝不返回其他代理的记录内容。
@@ -91,10 +93,11 @@ agentId:dormitoryId
 `PUT /api/dormitories/:id/my-record` 请求增加：
 
 ```ts
+expectedRecordId: string | null
 expectedVersion: number | null
 ```
 
-代理 ID 仍只取自服务端会话。编辑页从自己的记录读模型取得当前版本；新增页提交 `null`。
+代理 ID 仍只取自服务端会话。编辑页从自己的记录读模型取得当前记录 ID 和版本；新增页为两个字段都提交 `null`。
 
 ### 4.2 批量代理写入
 
@@ -103,15 +106,16 @@ expectedVersion: number | null
 ```ts
 targets: Array<{
   dormitoryId: string;
+  expectedRecordId: string | null;
   expectedVersion: number | null;
 }>
 ```
 
-矩阵读模型为每间宿舍返回当前代理的 `myRecordVersion: number | null`。批量选择时把该版本作为选择快照保存在会话状态中。发生冲突时，响应列出冲突宿舍 ID 和房号，但不提交任何一间。
+矩阵读模型为每间宿舍返回当前代理的 `myRecordId: string | null` 和 `myRecordVersion: number | null`。批量选择时把该并发令牌作为选择快照保存在会话状态中。发生冲突时，响应列出冲突宿舍 ID 和房号，但不提交任何一间。
 
 ### 4.3 管理员修改与删除
 
-管理员修改和删除请求均增加 `expectedVersion`。后台当前记录列表返回版本，并在打开编辑或删除确认框时保存该版本。
+管理员修改请求增加 `expectedRecordId` 和 `expectedVersion`；删除请求从路径取得预期记录 ID，并在请求体提交 `expectedVersion`。后台当前记录列表返回版本，并在打开编辑或删除确认框时保存记录 ID 和版本。
 
 管理员修改必须更新指定记录，不能继续使用“找不到就创建”的通用 upsert 语义。管理员删除在统一锁内重新读取记录；记录或版本变化时返回冲突，不删除新版记录。
 
