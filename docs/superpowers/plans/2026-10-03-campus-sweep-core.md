@@ -237,4 +237,3 @@
 - [ ] **Step 4: 更新 `docs/development.md`**：记录快捷备注、代理矩阵/单条/批量和管理员纠错的本地冒烟步骤，不写入真实凭据。
 - [ ] **Step 5: 运行全量验收**：`npm run lint && npm run typecheck && npm test && npm run test:integration && npm run build && npm run test:deployment && npm run test:e2e && node --test tests/*.test.mjs && pwsh -NoProfile -File tests/prototype-contract.ps1`；预期所有命令退出 0，仅保留既有设备条件跳过。
 - [ ] **Step 6: 提交**：`git commit -m "test: cover real sweep core workflows"`。
-
