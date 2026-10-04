@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { PUT as putMyRecord } from "@/app/api/dormitories/[dormitoryId]/my-record/route";
+import { GET as getDormitory } from "@/app/api/dormitories/[dormitoryId]/route";
 import { POST as postBatch } from "@/app/api/sweep-records/batch/route";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/modules/auth/session-repository";
@@ -49,11 +50,25 @@ afterAll(async () => {
 
 describe("agent sweep record routes", () => {
   it("derives ownership from the session and upserts one current record", async () => {
-    const response = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, { customNote: "稍后再来", status: "PENDING" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
+    const response = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, { customNote: "稍后再来", expectedRecordId: null, expectedVersion: null, status: "PENDING" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ changed: true, overallStatus: "PENDING", record: { agentId, note: "稍后再来" } });
+    const created = await response.json();
+    expect(created).toMatchObject({ changed: true, overallStatus: "PENDING", record: { agentId, note: "稍后再来", version: 1 } });
 
-    const forged = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, { agentId: randomUUID(), status: "COVERED" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
+    const detail = await getDormitory(new Request(`${origin}/api/dormitories/${dormitoryIds[0]}`, { headers: { Cookie: cookie } }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
+    expect(detail.status).toBe(200);
+    await expect(detail.json()).resolves.toMatchObject({ myRecord: { id: created.record.id, version: 1 } });
+
+    const updated = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, { customNote: "已经更新", expectedRecordId: created.record.id, expectedVersion: 1, status: "COVERED" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
+    expect(updated.status).toBe(200);
+    const conflict = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, { customNote: "已经更新", expectedRecordId: created.record.id, expectedVersion: 1, status: "COVERED" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
+    expect(conflict.status).toBe(409);
+    await expect(conflict.json()).resolves.toMatchObject({ error: { code: "RECORD_CONFLICT", fields: { conflicts: [{ dormitoryId: dormitoryIds[0], reason: "UPDATED" }] } } });
+
+    const halfNull = await putMyRecord(request(`/api/dormitories/${dormitoryIds[1]}/my-record`, { expectedRecordId: null, expectedVersion: 1, status: "PENDING" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[1] }) });
+    expect(halfNull.status).toBe(400);
+
+    const forged = await putMyRecord(request(`/api/dormitories/${dormitoryIds[0]}/my-record`, { agentId: randomUUID(), expectedRecordId: created.record.id, expectedVersion: 2, status: "COVERED" }), { params: Promise.resolve({ dormitoryId: dormitoryIds[0] }) });
     expect(forged.status).toBe(400);
     expect(await prisma.sweepRecord.count({ where: { dormitoryId: dormitoryIds[0] } })).toBe(1);
   });

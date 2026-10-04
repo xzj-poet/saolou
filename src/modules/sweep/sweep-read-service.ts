@@ -39,7 +39,7 @@ export async function getDormitoryDetailForAgent(agentId: string, dormitoryId: s
     ...dormitoryMetadata(dormitory),
     hasMyRecord: Boolean(myRecord),
     myRecord: myRecord
-      ? { agentId: myRecord.agentId, id: myRecord.id, note: myRecord.note, status: myRecord.status, updatedAt: myRecord.updatedAt }
+      ? { agentId: myRecord.agentId, id: myRecord.id, note: myRecord.note, status: myRecord.status, updatedAt: myRecord.updatedAt, version: myRecord.version }
       : null,
   };
 }
@@ -54,6 +54,7 @@ export async function getDormitoryLatestRecordsForAgent(agentId: string, dormito
       note: record.note,
       status: record.status,
       updatedAt: record.updatedAt,
+      version: record.version,
     })),
   };
 }

@@ -40,9 +40,15 @@ export async function listSweepRecords(filters: SweepRecordFilters = {}) {
 }
 
 export async function updateSweepRecordAsAdmin(recordId: string, input: { customNote?: string | null; status: SweepStatus }, adminId: string) {
-  const record = await prisma.sweepRecord.findUnique({ select: { agentId: true, dormitoryId: true }, where: { id: recordId } });
+  const record = await prisma.sweepRecord.findUnique({ select: { agentId: true, dormitoryId: true, id: true, version: true }, where: { id: recordId } });
   if (!record) throw new ApiError(404, "SWEEP_RECORD_NOT_FOUND", "扫楼记录不存在");
-  return upsertAgentRecord({ ...input, ...record }, { id: adminId, role: "ADMIN" });
+  return upsertAgentRecord({
+    ...input,
+    agentId: record.agentId,
+    dormitoryId: record.dormitoryId,
+    expectedRecordId: record.id,
+    expectedVersion: record.version,
+  }, { id: adminId, role: "ADMIN" });
 }
 
 export async function deleteSweepRecordAsAdmin(recordId: string, adminId: string) {

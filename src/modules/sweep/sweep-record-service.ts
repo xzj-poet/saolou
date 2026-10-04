@@ -3,11 +3,16 @@ import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/http/api-error";
 import { assertAgentSchoolAccess } from "@/modules/campus/campus-read-service";
 import { resolveQuickNoteSnapshot } from "@/modules/quick-notes/quick-note-service";
+import {
+  detectRecordConflict,
+  lockSweepRecord,
+  recordConflictError,
+} from "@/modules/sweep/sweep-concurrency";
 import { sweepRecordInputSchema } from "@/modules/sweep/sweep-schema";
 import { deriveOverallStatus } from "@/modules/sweep/sweep-status";
 import type { SweepOperator, SweepRecordInput } from "@/modules/sweep/sweep-types";
 
-export type SweepBatchInput = Omit<SweepRecordInput, "dormitoryId"> & {
+export type SweepBatchInput = Omit<SweepRecordInput, "dormitoryId" | "expectedRecordId" | "expectedVersion"> & {
   buildingId: string;
   dormitoryIds: string[];
 };
@@ -39,15 +44,26 @@ async function noteSnapshot(tx: Prisma.TransactionClient, input: SweepRecordInpu
   return normalized.length ? normalized : null;
 }
 
-export async function upsertRecordInTransaction(
+export async function writeLockedSweepRecord(
   tx: Prisma.TransactionClient,
   input: SweepRecordInput,
   operatorId: string,
 ) {
-  const lockKey = `${input.agentId}:${input.dormitoryId}`;
-  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey})) IS NULL AS locked`;
+  const current = await tx.sweepRecord.findUnique({
+    where: { agentId_dormitoryId: { agentId: input.agentId, dormitoryId: input.dormitoryId } },
+  });
+  const conflict = detectRecordConflict(current, input);
+  if (conflict) {
+    const { roomNo } = await tx.dormitory.findUniqueOrThrow({ select: { roomNo: true }, where: { id: input.dormitoryId } });
+    throw recordConflictError([{
+      ...(current ? { currentRecord: { id: current.id, note: current.note, status: current.status, updatedAt: current.updatedAt, version: current.version } } : {}),
+      dormitoryId: input.dormitoryId,
+      reason: conflict,
+      roomNo,
+    }]);
+  }
+
   const note = await noteSnapshot(tx, input);
-  const current = await tx.sweepRecord.findUnique({ where: { agentId_dormitoryId: { agentId: input.agentId, dormitoryId: input.dormitoryId } } });
 
   if (!current) {
     const record = await tx.sweepRecord.create({ data: { agentId: input.agentId, dormitoryId: input.dormitoryId, note, status: input.status } });
@@ -56,9 +72,30 @@ export async function upsertRecordInTransaction(
   }
   if (current.status === input.status && current.note === note) return { changed: false, record: current };
 
-  const record = await tx.sweepRecord.update({ data: { note, status: input.status }, where: { id: current.id } });
+  const record = await tx.sweepRecord.update({ data: { note, status: input.status, version: { increment: 1 } }, where: { id: current.id } });
   await tx.sweepAudit.create({ data: { action: "UPDATE", afterNote: note, afterStatus: input.status, agentId: current.agentId, beforeNote: current.note, beforeStatus: current.status, dormitoryId: current.dormitoryId, operatorId, recordId: current.id } });
   return { changed: true, record };
+}
+
+async function upsertRecordInTransaction(
+  tx: Prisma.TransactionClient,
+  input: Omit<SweepRecordInput, "expectedRecordId" | "expectedVersion">,
+  operatorId: string,
+) {
+  await lockSweepRecord(tx, input.agentId, input.dormitoryId);
+  const current = await tx.sweepRecord.findUnique({
+    select: { id: true, version: true },
+    where: { agentId_dormitoryId: { agentId: input.agentId, dormitoryId: input.dormitoryId } },
+  });
+  return writeLockedSweepRecord(
+    tx,
+    {
+      ...input,
+      expectedRecordId: current?.id ?? null,
+      expectedVersion: current?.version ?? null,
+    },
+    operatorId,
+  );
 }
 
 export async function getDormitoryOverallStatus(dormitoryId: string) {
@@ -68,7 +105,10 @@ export async function getDormitoryOverallStatus(dormitoryId: string) {
 
 export async function upsertAgentRecord(input: SweepRecordInput, operator: SweepOperator) {
   const validated = await validateTarget(input, operator);
-  const result = await prisma.$transaction((tx) => upsertRecordInTransaction(tx, validated, operator.id));
+  const result = await prisma.$transaction(async (tx) => {
+    await lockSweepRecord(tx, validated.agentId, validated.dormitoryId);
+    return writeLockedSweepRecord(tx, validated, operator.id);
+  });
   return { ...result, overallStatus: await getDormitoryOverallStatus(validated.dormitoryId) };
 }
 

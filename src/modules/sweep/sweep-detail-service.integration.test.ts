@@ -47,7 +47,7 @@ describe("dormitory detail read models", () => {
     ] });
 
     const detail = await getDormitoryDetailForAgent(me.id, dormitory.id);
-    expect(detail).toMatchObject({ hasMyRecord: true, overallStatus: "COVERED", myRecord: { agentId: me.id, note: null, status: "PENDING" } });
+    expect(detail).toMatchObject({ hasMyRecord: true, overallStatus: "COVERED", myRecord: { agentId: me.id, note: null, status: "PENDING", version: 1 } });
     expect(JSON.stringify(detail)).not.toContain("其他代理备注");
   });
 
