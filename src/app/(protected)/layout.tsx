@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { UnsavedChangesProvider } from "@/components/unsaved-changes-provider";
 import {
   authenticationRedirect,
   requireUser,
@@ -12,5 +13,5 @@ export default async function ProtectedLayout({ children }: { children: ReactNod
   } catch (error) {
     redirect(authenticationRedirect(error));
   }
-  return children;
+  return <UnsavedChangesProvider>{children}</UnsavedChangesProvider>;
 }

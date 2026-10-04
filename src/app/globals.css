@@ -351,6 +351,8 @@ h1 {
   color: var(--ink);
   font-weight: 800;
   text-decoration: none;
+  border: 0;
+  cursor: pointer;
 }
 
 .agent-choice-list,
@@ -1020,6 +1022,9 @@ h1 {
 .quick-note-picker { max-height: 250px; display: grid; gap: 8px; overflow: auto; }
 .record-note-panel textarea { min-height: 100px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; resize: vertical; }
 .save-message { min-height: 24px; color: var(--green); }
+.record-conflict-panel { display: grid; gap: 12px; margin: 16px 0; padding: 16px; border: 1px solid #e9c85e; border-radius: 14px; background: #fff6d8; color: #765100; }
+.record-conflict-panel p { margin: 5px 0 0; }
+.record-conflict-panel .quiet-button { width: max-content; }
 .record-summary { display: grid; gap: 10px; margin: 22px 0; padding: 20px; border-radius: 16px; background: white; }
 .record-summary.is-covered { border-left: 5px solid var(--green); }
 .record-summary.is-pending { border-left: 5px solid #d49a00; }

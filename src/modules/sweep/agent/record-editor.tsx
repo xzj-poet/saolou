@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useUnsavedChanges } from "@/components/unsaved-changes-provider";
 import { type EditorStatus, useRecordEditor } from "@/modules/sweep/agent/use-record-editor";
 
 type QuickNote = { content: string; id: string; status: EditorStatus };
@@ -15,52 +15,96 @@ type Props = {
   dormitories: Dormitory[];
   floor: string;
   initialNote?: string | null;
-  initialStatus?: EditorStatus;
+  initialStatus?: EditorStatus | null;
   mode: "create" | "edit" | "batch";
   quickNotes: QuickNote[];
   title: string;
 };
 
-export function RecordEditor({ backHref, buildingId, dormitories, floor, initialNote = null, initialStatus = "PENDING", mode, quickNotes, title }: Props) {
+type CurrentRecord = {
+  id: string;
+  note: string | null;
+  status: EditorStatus;
+  updatedAt: string;
+  version: number;
+};
+
+type RecordConflict = {
+  currentRecord?: CurrentRecord | null;
+  dormitoryId: string;
+  reason: "UPDATED" | "DELETED" | "CREATED";
+  roomNo?: string;
+};
+
+export function RecordEditor({ backHref, buildingId, dormitories, floor, initialNote = null, initialStatus = null, mode, quickNotes, title }: Props) {
   const router = useRouter();
   const editor = useRecordEditor(initialStatus, initialNote);
+  const confirmNavigation = useUnsavedChanges(editor.dirty);
+  const [targets, setTargets] = useState(dormitories);
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [message, setMessage] = useState("");
+  const [conflicts, setConflicts] = useState<RecordConflict[]>([]);
   const availableNotes = quickNotes.filter((note) => note.status === editor.status);
 
   async function save() {
+    if (!editor.status) return;
     setSaving(true);
+    setFailed(false);
     setMessage("");
+    setConflicts([]);
     const noteInput = editor.noteMode === "quick"
       ? { quickNoteId: editor.quickNoteId }
       : { customNote: editor.noteMode === "custom" && editor.customNote.trim() ? editor.customNote.trim() : null };
     const isBatch = mode === "batch";
     const body = isBatch
-      ? { buildingId, targets: dormitories.map(({ expectedRecordId, expectedVersion, id }) => ({ dormitoryId: id, expectedRecordId, expectedVersion })), ...noteInput, status: editor.status }
-      : { expectedRecordId: dormitories[0]?.expectedRecordId ?? null, expectedVersion: dormitories[0]?.expectedVersion ?? null, ...noteInput, status: editor.status };
+      ? { buildingId, targets: targets.map(({ expectedRecordId, expectedVersion, id }) => ({ dormitoryId: id, expectedRecordId, expectedVersion })), ...noteInput, status: editor.status }
+      : { expectedRecordId: targets[0]?.expectedRecordId ?? null, expectedVersion: targets[0]?.expectedVersion ?? null, ...noteInput, status: editor.status };
     try {
-      const response = await fetch(isBatch ? "/api/sweep-records/batch" : `/api/dormitories/${dormitories[0]?.id}/my-record`, {
+      const response = await fetch(isBatch ? "/api/sweep-records/batch" : `/api/dormitories/${targets[0]?.id}/my-record`, {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" },
         method: isBatch ? "POST" : "PUT",
       });
       if (!response.ok) {
-        const result = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+        const result = await response.json().catch(() => null) as { error?: { code?: string; fields?: { conflicts?: RecordConflict[] }; message?: string } } | null;
+        if (response.status === 409 && result?.error?.code === "RECORD_CONFLICT") {
+          setConflicts(result.error.fields?.conflicts ?? []);
+          setMessage("记录已被其他操作更新，请加载最新内容后确认");
+          return;
+        }
         throw new Error(result?.error?.message ?? "保存失败，请稍后重试");
       }
       editor.actions.markSaved();
-      setMessage("保存成功");
+      setMessage("已保存");
       sessionStorage.removeItem(`sweep-batch:${buildingId}:${floor}`);
-      router.replace(`/app/buildings/${buildingId}?floor=${encodeURIComponent(floor)}`);
+      window.setTimeout(() => router.replace(`/app/buildings/${buildingId}?floor=${encodeURIComponent(floor)}`), 800);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "保存失败，请稍后重试");
+      if (error instanceof TypeError) {
+        setFailed(true);
+        setMessage("尚未保存，请检查网络后重新保存");
+      } else {
+        setMessage(error instanceof Error ? error.message : "保存失败，请稍后重试");
+      }
     } finally {
       setSaving(false);
     }
   }
 
+  function loadLatest() {
+    const conflict = conflicts[0];
+    if (!conflict || mode === "batch") return;
+    const current = conflict.currentRecord ?? null;
+    setTargets((currentTargets) => currentTargets.map((target) => target.id === conflict.dormitoryId
+      ? { ...target, expectedRecordId: current?.id ?? null, expectedVersion: current?.version ?? null }
+      : target));
+    editor.actions.loadLatest({ note: current?.note ?? null, status: current?.status ?? null });
+    setConflicts([]);
+    setMessage("已加载最新记录，请确认后重新保存");
+  }
+
   return <main className="agent-page record-editor">
-    <Link className="mobile-back-button" href={backHref}>‹ 返回</Link>
+    <button aria-label="返回" className="mobile-back-button" onClick={() => confirmNavigation(() => router.push(backHref))} type="button">‹ 返回</button>
     <h1>{title}</h1>
     <div aria-label="扫楼状态" className="record-status-tabs" role="group">
       <button aria-pressed={editor.status === "PENDING"} onClick={() => editor.actions.changeStatus("PENDING")} type="button">待补扫</button>
@@ -77,7 +121,16 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
       </div>
       {editor.noteMode === "custom" ? <label className="field-label" htmlFor="record-note">备注<textarea aria-label="备注" id="record-note" maxLength={60} onChange={(event) => editor.actions.changeCustom(event.target.value)} value={editor.customNote} /></label> : null}
     </section>
-    <p aria-live="polite" className={message.includes("成功") ? "save-message" : "form-error"}>{message}</p>
-    <button className="primary-button full-button" disabled={saving || !dormitories.length} onClick={save} type="button">{saving ? "保存中…" : mode === "batch" ? `保存${dormitories.length}间宿舍` : "保存记录"}</button>
+    {conflicts.length ? <section className="record-conflict-panel">
+      {conflicts.map((conflict) => <div key={conflict.dormitoryId}>
+        <strong>{conflict.roomNo ? `${conflict.roomNo} 最新记录` : "最新记录"}</strong>
+        {conflict.currentRecord
+          ? <p>{conflict.currentRecord.status === "COVERED" ? "已覆盖" : "待补扫"} · {conflict.currentRecord.note || "无备注"} · 版本 {conflict.currentRecord.version}</p>
+          : <p>该记录已被删除</p>}
+      </div>)}
+      {mode !== "batch" ? <button className="quiet-button" onClick={loadLatest} type="button">加载最新记录</button> : null}
+    </section> : null}
+    <p aria-live="polite" className={message === "已保存" || message.startsWith("已加载") ? "save-message" : "form-error"}>{message}</p>
+    <button className="primary-button full-button" disabled={saving || !targets.length || !editor.status} onClick={save} type="button">{saving ? "保存中…" : failed ? "重新保存" : mode === "batch" ? `保存${targets.length}间宿舍` : "保存记录"}</button>
   </main>;
 }

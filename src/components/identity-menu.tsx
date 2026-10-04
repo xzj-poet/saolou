@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useConfirmNavigation } from "@/components/unsaved-changes-provider";
 import type { AuthenticatedUser } from "@/modules/auth/auth-service";
 
 export function IdentityMenu({ user }: { user: AuthenticatedUser }) {
   const router = useRouter();
+  const confirmNavigation = useConfirmNavigation();
   const [loading, setLoading] = useState(false);
 
-  async function logout() {
+  async function performLogout() {
     if (loading) {
       return;
     }
@@ -20,6 +22,10 @@ export function IdentityMenu({ user }: { user: AuthenticatedUser }) {
       router.replace("/login");
       router.refresh();
     }
+  }
+
+  function logout() {
+    confirmNavigation(() => void performLogout());
   }
 
   return (
