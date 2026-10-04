@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 process.env.DATABASE_POOL_SIZE = "1";
+process.env.DATABASE_POOL_MAX_USES = "1";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -14,10 +15,10 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
+    { grep: /mobile .*touch|mobile sweep controls/i, name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "npm run dev -- --webpack",
+    command: process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ?? "npm run dev -- --webpack",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
   },

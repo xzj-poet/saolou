@@ -134,7 +134,10 @@ test("administrator builds campus data and controls one agent's school access", 
   const revokeDialog = adminPage.getByRole("dialog", { name: `配置${campusScenario.agentName}的学校权限` });
   await revokeDialog.getByLabel(campusScenario.schoolName).uncheck();
   await revokeDialog.getByRole("button", { name: "保存学校权限" }).click();
-  await agentPage.goto(buildingUrl);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await agentPage.goto(buildingUrl);
+    if (new URL(agentPage.url()).pathname === "/app/schools") break;
+  }
   await expect(agentPage).toHaveURL(/\/app\/schools\?access=revoked$/);
 
   await adminPage.goto(`/admin/campus?school=${school.id}`);

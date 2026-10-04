@@ -749,7 +749,7 @@ h1 {
 }
 
 .dialog-tabs button {
-  min-height: 46px;
+  min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--gray-soft);

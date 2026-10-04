@@ -12,7 +12,7 @@ async function login(page: Page, username: string, password: string) {
 test("administrator enters the administrator shell", async ({ authUsers, page }) => {
   await login(page, authUsers.admin.username, authUsers.admin.password);
 
-  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page).toHaveURL(/\/admin\/campus$/);
   await expect(page.getByText("管理员后台").first()).toBeVisible();
   await expect(page.getByText("测试管理员")).toBeVisible();
 });
