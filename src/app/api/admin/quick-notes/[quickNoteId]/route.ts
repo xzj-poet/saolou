@@ -14,7 +14,7 @@ export async function PATCH(request: Request, { params }: Context) {
     await requireAdminRequest(request);
     const input = await parseJson(request, quickNoteUpdateSchema);
     return NextResponse.json({ quickNote: await updateQuickNote((await params).quickNoteId, input) });
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }
 
 export async function DELETE(request: Request, { params }: Context) {
@@ -22,5 +22,5 @@ export async function DELETE(request: Request, { params }: Context) {
     requireSameOrigin(request);
     await requireAdminRequest(request);
     return NextResponse.json(await deleteQuickNote((await params).quickNoteId));
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

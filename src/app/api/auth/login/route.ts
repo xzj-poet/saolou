@@ -49,8 +49,9 @@ export async function POST(request: Request): Promise<NextResponse> {
         error.code === "ACCOUNT_DISABLED"
           ? new ApiError(403, error.code, "账号已停用，请联系管理员")
           : new ApiError(401, error.code, "账号或密码错误"),
+        request,
       );
     }
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

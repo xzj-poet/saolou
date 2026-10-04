@@ -14,7 +14,7 @@ export async function PUT(request: Request, { params }: Context) {
     const admin = await requireAdminRequest(request);
     const input = await parseJson(request, adminSweepUpdateSchema);
     return NextResponse.json(await updateSweepRecordAsAdmin((await params).recordId, input, admin.id));
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }
 
 export async function DELETE(request: Request, { params }: Context) {
@@ -23,5 +23,5 @@ export async function DELETE(request: Request, { params }: Context) {
     const admin = await requireAdminRequest(request);
     const input = await parseJson(request, adminSweepDeleteSchema);
     return NextResponse.json(await deleteSweepRecordAsAdmin((await params).recordId, input.expectedVersion, admin.id));
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

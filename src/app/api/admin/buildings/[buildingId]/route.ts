@@ -21,7 +21,7 @@ export async function PATCH(request: Request, { params }: Context) {
     const input = await parseJson(request, buildingUpdateSchema);
     return NextResponse.json({ building: await updateBuilding(buildingId, input) });
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }
 
@@ -31,6 +31,6 @@ export async function DELETE(request: Request, { params }: Context) {
     await requireAdminRequest(request);
     return NextResponse.json(await retireBuilding((await params).buildingId));
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

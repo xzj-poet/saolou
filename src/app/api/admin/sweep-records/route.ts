@@ -12,5 +12,5 @@ export async function GET(request: Request) {
     const parsed = sweepRecordFiltersSchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
     if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "筛选条件无效");
     return NextResponse.json(await listSweepRecords(parsed.data));
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

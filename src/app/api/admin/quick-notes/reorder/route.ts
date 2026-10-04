@@ -12,5 +12,5 @@ export async function PUT(request: Request) {
     await requireAdminRequest(request);
     const input = await parseJson(request, quickNoteReorderSchema);
     return NextResponse.json({ quickNotes: await reorderQuickNotes(input.status, input.orderedIds) });
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

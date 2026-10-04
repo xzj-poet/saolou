@@ -15,5 +15,5 @@ export async function PUT(request: Request, { params }: Context) {
     requireRateLimit(`sweep-write:${agent.id}`, { limit: 120, windowMs: 60_000 });
     const input = await parseJson(request, sweepWriteBodySchema);
     return NextResponse.json(await upsertAgentRecord({ ...input, agentId: agent.id, dormitoryId: (await params).dormitoryId }, agent));
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

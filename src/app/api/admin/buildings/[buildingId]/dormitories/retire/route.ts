@@ -17,6 +17,6 @@ export async function POST(request: Request, { params }: Context) {
       await retireDormitories((await params).buildingId, input.dormitoryIds),
     );
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

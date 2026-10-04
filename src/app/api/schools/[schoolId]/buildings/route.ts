@@ -10,5 +10,5 @@ export async function GET(request: Request, { params }: Context) {
   try {
     const agent = await requireAgentRequest(request);
     return NextResponse.json(await listBuildingsForAgent(agent.id, (await params).schoolId));
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

@@ -17,6 +17,6 @@ export async function PATCH(request: Request, { params }: Context) {
       dormitory: await setDormitoryActive((await params).dormitoryId, input.isActive),
     });
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

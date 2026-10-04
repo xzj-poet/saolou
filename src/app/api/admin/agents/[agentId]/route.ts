@@ -20,5 +20,5 @@ export async function PATCH(request: Request, { params }: Context) {
     }
     const input = await parseJson(request, agentRenameSchema);
     return NextResponse.json({ agent: await renameAgent(agentId, input) });
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

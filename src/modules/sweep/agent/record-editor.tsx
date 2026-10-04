@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider";
 import { type EditorStatus, useRecordEditor } from "@/modules/sweep/agent/use-record-editor";
@@ -40,14 +40,13 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
   const router = useRouter();
   const editor = useRecordEditor(initialStatus, initialNote);
   const confirmNavigation = useUnsavedChanges(editor.dirty);
-  const [targets, setTargets] = useState(dormitories);
+  const [targetOverrides, setTargetOverrides] = useState<Record<string, Dormitory>>({});
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
   const [message, setMessage] = useState("");
   const [conflicts, setConflicts] = useState<RecordConflict[]>([]);
+  const targets = dormitories.map((target) => targetOverrides[target.id] ?? target);
   const availableNotes = quickNotes.filter((note) => note.status === editor.status);
-
-  useEffect(() => { setTargets(dormitories); }, [dormitories]);
 
   async function save() {
     if (!editor.status) return;
@@ -97,9 +96,11 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
     const conflict = conflicts[0];
     if (!conflict || mode === "batch") return;
     const current = conflict.currentRecord ?? null;
-    setTargets((currentTargets) => currentTargets.map((target) => target.id === conflict.dormitoryId
-      ? { ...target, expectedRecordId: current?.id ?? null, expectedVersion: current?.version ?? null }
-      : target));
+    const target = targets.find((candidate) => candidate.id === conflict.dormitoryId);
+    if (target) setTargetOverrides((currentOverrides) => ({
+      ...currentOverrides,
+      [target.id]: { ...target, expectedRecordId: current?.id ?? null, expectedVersion: current?.version ?? null },
+    }));
     editor.actions.loadLatest({ note: current?.note ?? null, status: current?.status ?? null });
     setConflicts([]);
     setMessage("已加载最新记录，请确认后重新保存");

@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     await requireAdminRequest(request);
     return NextResponse.json({ schools: await listCampusTreeForAdmin() });
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }
 
@@ -23,6 +23,6 @@ export async function POST(request: Request) {
     const input = await parseJson(request, schoolCreateSchema);
     return NextResponse.json({ school: await createSchool(input) }, { status: 201 });
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

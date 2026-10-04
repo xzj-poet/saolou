@@ -13,6 +13,6 @@ export async function POST(request: Request) {
     const input = await parseJson(request, buildingCreateSchema);
     return NextResponse.json({ building: await createBuilding(input) }, { status: 201 });
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

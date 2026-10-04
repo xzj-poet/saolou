@@ -91,6 +91,15 @@ npm run test:e2e -- e2e/sweep-core.spec.ts
 
 本项目固定使用 Node.js 24。若机器上存在多个 Node.js 版本，请先确认 `node -v` 显示 `v24.x`，再启动 Prisma 本地数据库和执行测试。
 
+## 依赖审计基线（2026-10-04）
+
+执行了 `npm audit --json` 和 `npm audit --omit=dev --json`，未使用 `npm audit fix --force`。当前报告为 0 个 critical、9 个 high；其中直接依赖项为 `prisma` 和 `eslint-config-next`。
+
+- `eslint-config-next` 链路中的 `fast-glob` / `micromatch` / `braces` 只在代码检查阶段处理仓库内固定模式，不进入生产服务。审计建议降级到 Next 14 的配置包，属于不兼容的大版本变化，因此本阶段不采用；等待 Next 16 兼容修复后再升级。
+- `prisma` 7.10.0 的报告来自 CLI/config 链路中的 `deepmerge-ts`，以及未被本项目使用的 MySQL 驱动 `mysql2`。生产应用使用 PostgreSQL `@prisma/adapter-pg`，不连接 MySQL，也不接收外部 Prisma 配置对象。审计建议降级到 Prisma 6.19.3，属于不兼容的大版本变化；保留当前锁定版本，待 Prisma 7 的兼容补丁发布后升级并重新运行完整迁移、集成和部署测试。
+
+这些是已记录、暂时接受的构建/未使用驱动暴露，不代表可以忽略后续升级。每次依赖升级和正式部署前都应重新执行审计。
+
 ## 生产部署与升级
 
 ```sh

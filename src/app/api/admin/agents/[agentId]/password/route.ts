@@ -14,5 +14,5 @@ export async function POST(request: Request, { params }: Context) {
     const admin = await requireAdminRequest(request);
     requireRateLimit(`password-reset:${admin.id}`, { limit: 10, windowMs: 60 * 60_000 });
     return NextResponse.json(await resetAgentPassword((await params).agentId));
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

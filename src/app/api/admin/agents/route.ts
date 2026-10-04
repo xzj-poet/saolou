@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     await requireAdminRequest(request);
     return NextResponse.json({ agents: await listAgentsForAdmin() });
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }
 
 export async function POST(request: Request) {
@@ -19,5 +19,5 @@ export async function POST(request: Request) {
     const administrator = await requireAdminRequest(request);
     const input = await parseJson(request, agentCreateSchema);
     return NextResponse.json(await createAgent(administrator.id, input), { status: 201 });
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

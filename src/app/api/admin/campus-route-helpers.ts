@@ -1,11 +1,13 @@
 import type { z } from "zod";
 
 import { ApiError } from "@/lib/http/api-error";
+import { setRequestActor } from "@/lib/http/request-context";
 import { userFromRequest } from "@/modules/auth/current-user";
 
 export async function requireAdminRequest(request: Request) {
   const user = await userFromRequest(request);
   if (!user) throw new ApiError(401, "UNAUTHENTICATED", "请先登录");
+  setRequestActor(request, user.id);
   if (user.role !== "ADMIN") throw new ApiError(403, "FORBIDDEN", "无权执行此操作");
   return user;
 }

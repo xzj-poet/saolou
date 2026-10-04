@@ -29,6 +29,6 @@ export async function POST(request: Request, { params }: Context) {
     }
     return NextResponse.json({ dormitory: await addDormitory(input) }, { status: 201 });
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

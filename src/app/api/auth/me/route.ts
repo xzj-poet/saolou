@@ -12,6 +12,6 @@ export async function GET(request: Request): Promise<NextResponse> {
     }
     return NextResponse.json({ user });
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

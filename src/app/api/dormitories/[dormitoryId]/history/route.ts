@@ -13,6 +13,6 @@ export async function GET(request: Request, { params }: Context) {
       await getDormitoryLatestRecordsForAgent(agent.id, (await params).dormitoryId),
     );
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }

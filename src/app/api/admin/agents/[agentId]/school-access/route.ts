@@ -15,5 +15,5 @@ export async function PUT(request: Request, { params }: Context) {
     const input = await parseJson(request, agentSchoolAccessSchema);
     await replaceAgentSchoolAccess((await params).agentId, input.schoolIds, administrator.id);
     return NextResponse.json({ ok: true });
-  } catch (error) { return apiErrorResponse(error); }
+  } catch (error) { return apiErrorResponse(error, request); }
 }

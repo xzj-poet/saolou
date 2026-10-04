@@ -32,6 +32,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
     return response;
   } catch (error) {
-    return apiErrorResponse(error);
+    return apiErrorResponse(error, request);
   }
 }
