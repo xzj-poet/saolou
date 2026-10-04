@@ -54,6 +54,23 @@ async function createFixture() {
 afterEach(resetDatabase);
 
 describe("core schema constraints", () => {
+  it("existing sweep records expose version one", async () => {
+    const { agent, dormitory } = await createFixture();
+    const record = await prisma.sweepRecord.create({
+      data: {
+        agentId: agent.id,
+        dormitoryId: dormitory.id,
+        status: "PENDING",
+      },
+    });
+
+    const rows = await prisma.$queryRaw<Array<{ version: number }>>`
+      SELECT version FROM sweep_records WHERE id = ${record.id}::uuid
+    `;
+
+    expect(rows[0]?.version).toBe(1);
+  });
+
   it("rejects duplicate agent dormitory records and school grants", async () => {
     const { admin, agent, dormitory, school } = await createFixture();
 

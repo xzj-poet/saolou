@@ -125,6 +125,7 @@ model SweepRecord {
   agentId       String      @map("agent_id") @db.Uuid
   status        SweepStatus
   note          String?
+  version       Int         @default(1)
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
   dormitory     Dormitory   @relation(fields: [dormitoryId], references: [id], onDelete: Restrict)

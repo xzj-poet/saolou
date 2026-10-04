@@ -1,0 +1,2 @@
+ALTER TABLE "sweep_records"
+ADD COLUMN "version" INTEGER NOT NULL DEFAULT 1;

@@ -1,4 +1,4 @@
-export type ApiErrorFields = Record<string, string[]>;
+export type ApiErrorFields = Record<string, unknown>;
 
 export class ApiError extends Error {
   constructor(
