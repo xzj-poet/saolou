@@ -70,3 +70,28 @@ test("continuous verification uses Node 24 and PostgreSQL 18", async () => {
     assert.match(workflow, new RegExp(command.replaceAll(" ", "\\s+")));
   }
 });
+
+test("production backups are atomic, encrypted, locked, and path constrained", async () => {
+  const [backup, library, gitignore] = await Promise.all([
+    read("ops/server/backup.sh"),
+    read("ops/server/backup-lib.sh"),
+    read(".gitignore"),
+  ]);
+
+  assert.match(backup, /set -Eeuo pipefail/);
+  assert.match(backup, /flock/);
+  assert.match(backup, /date -u/);
+  assert.match(backup, /\.dump\.enc/);
+  assert.match(backup, /\.manifest\.json/);
+  assert.match(backup, /\.dump\.enc\.sha256/);
+  assert.match(backup, /-aes-256-cbc/);
+  assert.match(backup, /-pbkdf2/);
+  assert.match(backup, /-iter 200000/);
+  assert.match(backup, /--snapshot/);
+  assert.match(library, /validate_backup_stem/);
+  assert.match(library, /readlink -f/);
+  assert.match(library, /manifest\.json/);
+  assert.match(gitignore, /backups\//);
+  assert.match(gitignore, /quarantine/);
+  assert.match(gitignore, /restore-reports/);
+});
