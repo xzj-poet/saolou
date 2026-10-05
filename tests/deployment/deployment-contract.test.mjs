@@ -139,3 +139,26 @@ test("restore verification is isolated and CI exercises the PostgreSQL 18 round 
   assert.match(workflow, /npm run test:backup:integration/);
   assert.equal(JSON.parse(packageJson).scripts["test:backup:integration"], "node --test tests/deployment/backup-restore.integration.test.mjs");
 });
+
+test("Windows offsite client uses SSH, SFTP, DPAPI, and a mutex without a cloud vendor", async () => {
+  const [module, setup, pull, install, workflow, packageJson] = await Promise.all([
+    read("ops/windows/CampusSweepBackup.psm1"),
+    read("ops/windows/setup-backup-client.ps1"),
+    read("ops/windows/pull-backups.ps1"),
+    read("ops/windows/install-backup-task.ps1"),
+    read(".github/workflows/ci.yml"),
+    read("package.json"),
+  ]);
+  for (const symbol of ["Test-BackupStem", "Get-CompleteBackupSet", "Test-BackupSet", "Sync-BackupSets", "Remove-ExpiredBackupSets", "Read-BackupClientState", "Write-BackupClientState"]) {
+    assert.match(module, new RegExp(`function ${symbol}`));
+  }
+  assert.match(setup, /ConvertFrom-SecureString/);
+  assert.match(pull, /\bssh\b/);
+  assert.match(pull, /\bsftp\b/);
+  assert.match(pull, /Enter-BackupMutex/);
+  assert.match(install, /New-ScheduledTaskTrigger/);
+  assert.match(install, /StartWhenAvailable/);
+  assert.match(workflow, /npm run test:backup:windows/);
+  assert.equal(JSON.parse(packageJson).scripts["test:backup:windows"], "pwsh -NoProfile -File tests/deployment/windows-backup-client.test.ps1");
+  assert.doesNotMatch(`${module}${setup}${pull}${install}`, /amazon|aliyun|tencent|azure/i);
+});
