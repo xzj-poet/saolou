@@ -48,6 +48,10 @@ set -a
 . "$env_file"
 set +a
 
+deployment_commit=$(git -C "$root_dir" rev-parse --verify HEAD 2>/dev/null || printf '%s' unknown)
+APP_GIT_COMMIT=$deployment_commit
+export APP_GIT_COMMIT
+
 if [ -z "${BACKUP_ENCRYPTION_PASSWORD:-}" ]; then
   backup_password=$(random_secret)
   temporary_env=$(mktemp "$root_dir/.env.production.XXXXXX")

@@ -46,6 +46,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: find ops -name '*.sh' -print0 | xargs -0 -r bash -n
       - run: npm run db:generate
       - run: npm run db:migrate:deploy
       - run: npm run db:provision:app

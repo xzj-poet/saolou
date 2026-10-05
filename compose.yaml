@@ -37,6 +37,8 @@ services:
     build:
       context: .
       target: app
+      args:
+        GIT_COMMIT: ${APP_GIT_COMMIT:-unknown}
     restart: unless-stopped
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}

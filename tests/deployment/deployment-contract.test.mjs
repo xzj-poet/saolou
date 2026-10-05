@@ -5,15 +5,17 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../../${path}`, import.meta.url), "utf8");
 
 test("production deployment is pinned, persistent, and health checked", async () => {
-  const [dockerfile, compose, caddyfile] = await Promise.all([
+  const [dockerfile, compose, caddyfile, deploy] = await Promise.all([
     read("Dockerfile"),
     read("compose.yaml"),
     read("Caddyfile"),
+    read("deploy.sh"),
   ]);
 
   assert.match(dockerfile, /FROM node:24-alpine AS deps/);
   assert.match(dockerfile, /npm ci/);
   assert.match(dockerfile, /FROM node:24-alpine AS app/);
+  assert.match(dockerfile, /org\.opencontainers\.image\.revision/);
   assert.doesNotMatch(dockerfile, /:latest\b/);
 
   for (const service of ["db", "provision", "app", "caddy"]) {
@@ -23,10 +25,12 @@ test("production deployment is pinned, persistent, and health checked", async ()
   assert.match(compose, /condition: service_healthy/);
   assert.match(compose, /condition: service_completed_successfully/);
   assert.match(compose, /campus_sweep_pgdata:/);
+  assert.match(compose, /GIT_COMMIT: \$\{APP_GIT_COMMIT:-unknown\}/);
   assert.match(compose, /caddy_data:/);
   assert.match(compose, /\/api\/health/);
   assert.doesNotMatch(compose, /:latest\b/);
   assert.match(caddyfile, /reverse_proxy app:3000/);
+  assert.match(deploy, /APP_GIT_COMMIT/);
   assert.doesNotMatch(compose.match(/^  app:[\s\S]*?(?=^  caddy:)/m)?.[0] ?? "", /DATABASE_ADMIN_URL/);
 });
 
