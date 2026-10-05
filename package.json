@@ -16,6 +16,7 @@
     "test": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:deployment": "node --test tests/deployment/*.test.mjs",
+    "test:backup:integration": "node --test tests/deployment/backup-restore.integration.test.mjs",
     "test:e2e": "playwright test",
     "db:dev": "prisma dev --name campus-sweep-foundation",
     "db:generate": "prisma generate",

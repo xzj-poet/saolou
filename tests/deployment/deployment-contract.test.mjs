@@ -117,3 +117,25 @@ test("deployment reuses encrypted backups and installs the daily timer after hea
   assert.match(status, /--json/);
   assert.doesNotMatch(`${deploy}${service}${timer}${status}`, /amazon|aliyun|tencent|azure/i);
 });
+
+test("restore verification is isolated and CI exercises the PostgreSQL 18 round trip", async () => {
+  const [restore, verify, fixture, workflow, packageJson] = await Promise.all([
+    read("ops/server/restore-backup.sh"),
+    read("ops/server/verify-restored-data.sh"),
+    read("tests/deployment/fixtures/backup-compose.yaml"),
+    read(".github/workflows/ci.yml"),
+    read("package.json"),
+  ]);
+  assert.match(restore, /disaster-recovery/);
+  assert.match(restore, /--confirm-empty-server/);
+  assert.match(restore, /postgres:18-alpine/);
+  assert.match(restore, /docker volume create/);
+  assert.match(restore, /docker rm -f/);
+  assert.match(restore, /docker volume rm -f/);
+  assert.doesNotMatch(restore, /campus_sweep_pgdata:\/var\/lib\/postgresql\/data/);
+  assert.match(verify, /SweepRecord/);
+  assert.match(verify, /SweepAudit/);
+  assert.match(fixture, /postgres:18-alpine/);
+  assert.match(workflow, /npm run test:backup:integration/);
+  assert.equal(JSON.parse(packageJson).scripts["test:backup:integration"], "node --test tests/deployment/backup-restore.integration.test.mjs");
+});
