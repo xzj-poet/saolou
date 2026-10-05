@@ -17,8 +17,10 @@ ENV ADMIN_PASSWORD=build-only-password
 RUN npm run build
 
 FROM node:24-alpine AS app
+ARG GIT_COMMIT=unknown
 WORKDIR /app
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.revision=$GIT_COMMIT
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 

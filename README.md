@@ -16,7 +16,7 @@
 
 默认监听 HTTP 80。要启用自动 HTTPS，把 `.env.production` 中的 `SITE_ADDRESS=:80` 改为已解析到服务器的域名（例如 `sweep.example.com`），再执行一次 `./deploy.sh`。
 
-> `.env.production` 和 `backups/` 不进入 Git。生产环境还应把每日备份同步到异机存储，并定期实际恢复验证。
+> `.env.production`、`backups/` 和验收证据不进入 Git。Windows 异机备份、每月恢复演练、迁移到新服务器和干净服务器验收见[备份、恢复与迁移手册](docs/operations/backup-and-recovery.md)与[干净服务器验收](docs/operations/clean-server-acceptance.md)。
 
 ## 本地开发
 

@@ -98,7 +98,7 @@ npm run test:e2e -- e2e/sweep-core.spec.ts
 3. 代理进入批量模式并选择多个房间，另一会话先修改其中一个房间。批量提交必须整体失败并列出全部冲突房号；刷新后，已选房间与批量草稿保持不变，明确再次提交才会写入。
 4. 运行 `npm run test:integration -- --run src/modules/sweep/sweep-concurrency-load.integration.test.ts`，确认 20 个代理同时写同一栋楼时记录与审计数量正确、组合键无重复、统计正确且不误触发 429。
 
-当前阶段只提供部署前本机备份。自动异机备份、保留期清理和定期恢复演练属于下一子阶段，在完成前不能把本机备份视为完整灾备。
+生产环境已提供服务器 7 天加密备份、Windows 主动拉取 30 天副本和每四周隔离恢复演练。首次配置、状态诊断、灾难恢复和换服务器流程见[备份、恢复与迁移手册](operations/backup-and-recovery.md)，首次与重复部署验收见[干净服务器验收](operations/clean-server-acceptance.md)。
 
 本地执行数据库驱动的完整套件时，优先使用 `compose.dev.yaml` 中的 PostgreSQL；若使用 `prisma dev`，请在长时间测试前通过 `npx prisma dev ls` 确认服务状态为 `running`。
 
@@ -121,7 +121,7 @@ npm run test:e2e -- e2e/sweep-core.spec.ts
 ./deploy.sh
 ```
 
-该命令会校验生产配置、等待数据库、在已有环境中先生成 `backups/pre-deploy-*.sql.gz`、构建应用、执行 Prisma 向前迁移、幂等创建管理员、启动 Caddy，并等待 `/api/health` 通过。部署脚本不会清空数据卷，也不会覆盖已有管理员密码。
+该命令会校验生产配置、等待数据库、在已有环境中先生成一份加密备份、构建带 Git 提交标签的应用镜像、执行 Prisma 向前迁移、幂等创建管理员、启动 Caddy，并等待 `/api/health` 通过。部署脚本不会清空数据卷，也不会覆盖已有管理员密码。
 
 常用诊断：
 
@@ -131,4 +131,4 @@ docker compose --env-file .env.production logs --tail 100 app
 docker compose --env-file .env.production logs --tail 100 caddy
 ```
 
-本机备份只是升级保护，不替代异机备份。生产环境应每天把备份同步到独立存储，设置保留期，并定期恢复到临时 PostgreSQL 实例核对数据。
+不要把备份密码、SSH 私钥、Windows DPAPI 状态、恢复报告或验收证据提交到 Git。按照运维手册至少完成一次 Windows 异机副本和隔离恢复演练后，才能将系统视为生产就绪。

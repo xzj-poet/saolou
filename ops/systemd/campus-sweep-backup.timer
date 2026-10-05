@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Campus Sweep backup every day
+
+[Timer]
+OnCalendar=*-*-* 03:17:00 UTC
+RandomizedDelaySec=30m
+Persistent=true
+Unit=campus-sweep-backup.service
+
+[Install]
+WantedBy=timers.target
