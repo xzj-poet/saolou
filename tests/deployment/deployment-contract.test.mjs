@@ -164,6 +164,7 @@ test("Windows offsite client uses SSH, SFTP, DPAPI, and a mutex without a cloud 
   assert.match(install, /New-ScheduledTaskTrigger/);
   assert.match(install, /Campus Sweep Backup Restore Verification/);
   assert.match(install, /-WeeksInterval 4/);
+  assert.match(install, /-SkipIfUnavailable/);
   assert.match(install, /StartWhenAvailable/);
   assert.match(restore, /Get-CompleteBackupSet/);
   assert.match(restore, /incoming\/\$restoreId/);

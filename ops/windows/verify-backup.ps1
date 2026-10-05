@@ -1,6 +1,7 @@
 param(
   [string]$ConfigPath = (Join-Path $env:LOCALAPPDATA 'CampusSweepBackup/config.json'),
   [string]$Stem,
+  [switch]$SkipIfUnavailable,
   [scriptblock]$UploadSet,
   [scriptblock]$InvokeRemote,
   [scriptblock]$CleanupRemote
@@ -16,7 +17,10 @@ if ($Stem) {
 } else {
   $selected = $validSets | Select-Object -Last 1
 }
-if (-not $selected) { throw '没有可用于恢复演练的完整本地备份。' }
+if (-not $selected) {
+  if ($SkipIfUnavailable) { [pscustomobject]@{ status = 'skipped'; reason = 'no-valid-local-backup' }; exit 0 }
+  throw '没有可用于恢复演练的完整本地备份。'
+}
 
 $restoreId = [guid]::NewGuid().ToString('N')
 if ($restoreId -notmatch '^[a-f0-9]{32}$') { throw '无法生成恢复标识。' }

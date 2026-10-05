@@ -58,6 +58,15 @@ try {
   try { & (Join-Path $repoRoot 'ops/windows/verify-backup.ps1') -ConfigPath $configPath -Stem 'campus-sweep-20261005T010203Z;whoami' -UploadSet $upload -InvokeRemote $invoke -CleanupRemote $cleanup | Out-Null; throw 'expected invalid stem failure' } catch { }
   Assert-Equal $events.Count $eventCount 'command injection stem is rejected before transport'
 
+  $emptyBackups = Join-Path $root 'empty-backups'
+  New-Item -ItemType Directory -Path $emptyBackups | Out-Null
+  $emptyConfigPath = Join-Path $root 'empty-config.json'
+  @{ Server = 'example.internal'; SshUser = 'backup'; IdentityFile = (Join-Path $root 'id_ed25519'); RemoteDirectory = '/srv/campus/backups'; LocalDirectory = $emptyBackups; StatePath = (Join-Path $root 'empty-state.json') } | ConvertTo-Json | Set-Content -LiteralPath $emptyConfigPath
+  $eventCount = $events.Count
+  $skipped = & (Join-Path $repoRoot 'ops/windows/verify-backup.ps1') -ConfigPath $emptyConfigPath -SkipIfUnavailable -UploadSet $upload -InvokeRemote $invoke -CleanupRemote $cleanup
+  Assert-Equal $skipped.status 'skipped' 'scheduled drill skips instead of failing when no valid local set exists'
+  Assert-Equal $events.Count $eventCount 'scheduled skip does not start remote transport'
+
   Write-Output "PASS $script:tests assertions"
 } finally {
   Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
