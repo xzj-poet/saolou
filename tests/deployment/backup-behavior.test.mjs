@@ -393,4 +393,3 @@ test("backup status distinguishes absent, fresh, overdue, and corrupt sets", asy
   assert.equal(JSON.parse(result.stdout).status, "overdue");
   assert.doesNotMatch(`${result.stdout}${result.stderr}`, /BACKUP_ENCRYPTION_PASSWORD/);
 });
-

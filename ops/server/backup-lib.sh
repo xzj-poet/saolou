@@ -165,4 +165,3 @@ close_backup_snapshot() {
     BACKUP_SNAPSHOT_PID=
   fi
 }
-
