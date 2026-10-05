@@ -17,7 +17,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:deployment": "node --test tests/deployment/*.test.mjs",
     "test:backup:integration": "node --test tests/deployment/backup-restore.integration.test.mjs",
-    "test:backup:windows": "pwsh -NoProfile -File tests/deployment/windows-backup-client.test.ps1",
+    "test:backup:windows": "pwsh -NoProfile -File tests/deployment/windows-backup-client.test.ps1 && pwsh -NoProfile -File tests/deployment/windows-restore-client.test.ps1",
     "test:e2e": "playwright test",
     "db:dev": "prisma dev --name campus-sweep-foundation",
     "db:generate": "prisma generate",

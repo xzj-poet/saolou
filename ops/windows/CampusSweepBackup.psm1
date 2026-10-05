@@ -117,6 +117,12 @@ function Test-BackupClientOverdue {
   return ($Now.ToUniversalTime() - [datetime]::Parse($State.lastSuccessAt).ToUniversalTime()).TotalHours -gt 48
 }
 
+function Test-BackupRestoreOverdue {
+  param($State, [datetime]$Now = [datetime]::UtcNow)
+  if (-not $State.lastRestoreSuccessAt) { return $true }
+  return ($Now.ToUniversalTime() - [datetime]::Parse($State.lastRestoreSuccessAt).ToUniversalTime()).TotalDays -gt 35
+}
+
 function Enter-BackupMutex {
   param([Parameter(Mandatory)][string]$Name)
   $mutex = [Threading.Mutex]::new($false, $Name)
@@ -126,4 +132,4 @@ function Enter-BackupMutex {
 
 function Exit-BackupMutex { param($Mutex) if ($Mutex) { $Mutex.ReleaseMutex(); $Mutex.Dispose() } }
 
-Export-ModuleMember -Function Test-BackupStem, Get-CompleteBackupSet, Test-BackupSet, Sync-BackupSets, Remove-ExpiredBackupSets, Read-BackupClientState, Write-BackupClientState, Test-BackupClientOverdue, Enter-BackupMutex, Exit-BackupMutex
+Export-ModuleMember -Function Test-BackupStem, Get-CompleteBackupSet, Test-BackupSet, Sync-BackupSets, Remove-ExpiredBackupSets, Read-BackupClientState, Write-BackupClientState, Test-BackupClientOverdue, Test-BackupRestoreOverdue, Enter-BackupMutex, Exit-BackupMutex

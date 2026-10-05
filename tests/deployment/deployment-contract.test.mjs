@@ -141,15 +141,16 @@ test("restore verification is isolated and CI exercises the PostgreSQL 18 round 
 });
 
 test("Windows offsite client uses SSH, SFTP, DPAPI, and a mutex without a cloud vendor", async () => {
-  const [module, setup, pull, install, workflow, packageJson] = await Promise.all([
+  const [module, setup, pull, restore, install, workflow, packageJson] = await Promise.all([
     read("ops/windows/CampusSweepBackup.psm1"),
     read("ops/windows/setup-backup-client.ps1"),
     read("ops/windows/pull-backups.ps1"),
+    read("ops/windows/verify-backup.ps1"),
     read("ops/windows/install-backup-task.ps1"),
     read(".github/workflows/ci.yml"),
     read("package.json"),
   ]);
-  for (const symbol of ["Test-BackupStem", "Get-CompleteBackupSet", "Test-BackupSet", "Sync-BackupSets", "Remove-ExpiredBackupSets", "Read-BackupClientState", "Write-BackupClientState"]) {
+  for (const symbol of ["Test-BackupStem", "Get-CompleteBackupSet", "Test-BackupSet", "Sync-BackupSets", "Remove-ExpiredBackupSets", "Read-BackupClientState", "Write-BackupClientState", "Test-BackupRestoreOverdue"]) {
     assert.match(module, new RegExp(`function ${symbol}`));
   }
   assert.match(setup, /ConvertFrom-SecureString/);
@@ -157,8 +158,16 @@ test("Windows offsite client uses SSH, SFTP, DPAPI, and a mutex without a cloud 
   assert.match(pull, /\bsftp\b/);
   assert.match(pull, /Enter-BackupMutex/);
   assert.match(install, /New-ScheduledTaskTrigger/);
+  assert.match(install, /Campus Sweep Backup Restore Verification/);
+  assert.match(install, /-WeeksInterval 4/);
   assert.match(install, /StartWhenAvailable/);
+  assert.match(restore, /Get-CompleteBackupSet/);
+  assert.match(restore, /incoming\/\$restoreId/);
+  assert.match(restore, /\bsftp\b/);
+  assert.match(restore, /restore-backup\.sh verify/);
+  assert.match(restore, /finally/);
+  assert.match(restore, /lastRestoreSuccessAt/);
   assert.match(workflow, /npm run test:backup:windows/);
-  assert.equal(JSON.parse(packageJson).scripts["test:backup:windows"], "pwsh -NoProfile -File tests/deployment/windows-backup-client.test.ps1");
-  assert.doesNotMatch(`${module}${setup}${pull}${install}`, /amazon|aliyun|tencent|azure/i);
+  assert.equal(JSON.parse(packageJson).scripts["test:backup:windows"], "pwsh -NoProfile -File tests/deployment/windows-backup-client.test.ps1 && pwsh -NoProfile -File tests/deployment/windows-restore-client.test.ps1");
+  assert.doesNotMatch(`${module}${setup}${pull}${restore}${install}`, /amazon|aliyun|tencent|azure/i);
 });
