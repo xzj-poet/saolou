@@ -15,7 +15,6 @@ require_backup_environment() {
     (*[!A-Za-z0-9_:.-]*) backup_error "数据库名称或用户名称包含不支持的字符。"; return 1 ;;
   esac
 }
-
 validate_backup_stem() {
   local stem=${1:-} timestamp normalized
   if [[ ! "$stem" =~ ^campus-sweep-([0-9]{8}T[0-9]{6}Z)$ ]]; then

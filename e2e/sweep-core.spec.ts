@@ -139,6 +139,10 @@ test("concurrent agent, administrator, delete, and batch conflicts require expli
   const rightCustom = right.getByRole("button", { name: "自定义备注" });
   await Promise.all([leftCustom.click(), rightCustom.click()]);
   await Promise.all([expect(leftCustom).toHaveAttribute("aria-pressed", "true"), expect(rightCustom).toHaveAttribute("aria-pressed", "true")]);
+  await Promise.all([
+    expect(left.getByRole("textbox", { name: "备注" })).toHaveValue("并发初始值"),
+    expect(right.getByRole("textbox", { name: "备注" })).toHaveValue("并发初始值"),
+  ]);
   await left.getByRole("textbox", { name: "备注" }).fill("左侧已保存");
   await right.getByRole("textbox", { name: "备注" }).fill("右侧保留草稿");
   await expect(right.getByRole("textbox", { name: "备注" })).toHaveValue("右侧保留草稿");

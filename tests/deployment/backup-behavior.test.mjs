@@ -181,7 +181,6 @@ test("complete-set listing ignores incomplete and unrelated files", async (t) =>
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.stdout.trim().split(/\r?\n/), ["campus-sweep-20261005T010203Z"]);
 });
-
 test("publication never exposes a manifest for an incomplete set", async (t) => {
   const directory = await mkdtemp(path.join(tmpdir(), "campus-backup-publish-"));
   t.after(() => import("node:fs/promises").then(({ rm }) => rm(directory, { recursive: true, force: true })));
