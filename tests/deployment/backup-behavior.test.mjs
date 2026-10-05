@@ -92,6 +92,76 @@ async function createSet(directory, stem) {
   ]);
 }
 
+async function writeExecutable(file, content) {
+  await writeFile(file, content);
+  await import("node:fs/promises").then(({ chmod }) => chmod(file, 0o755));
+}
+
+async function createDeployFixture(t) {
+  const root = await mkdtemp(path.join(tmpdir(), "campus-deploy-run-"));
+  const binDirectory = path.join(root, "bin");
+  await mkdir(path.join(root, "ops", "server"), { recursive: true });
+  await mkdir(binDirectory, { recursive: true });
+  await Promise.all([
+    cp(path.join(repoRoot, "deploy.sh"), path.join(root, "deploy.sh")),
+    cp(path.join(repoRoot, "compose.yaml"), path.join(root, "compose.yaml")),
+    writeExecutable(path.join(root, "ops", "server", "backup.sh"), "#!/usr/bin/env bash\nprintf 'backup:%s\\n' \"$*\" >> \"$FAKE_EVENT_LOG\"\n[ \"${FAKE_BACKUP_FAIL:-0}\" != 1 ]\n"),
+    writeExecutable(path.join(root, "ops", "server", "install-backup-timer.sh"), "#!/usr/bin/env bash\nprintf 'timer-installed\\n' >> \"$FAKE_EVENT_LOG\"\n"),
+    writeExecutable(path.join(binDirectory, "docker"), `#!/usr/bin/env bash
+printf 'docker:%s\\n' "$*" >> "$FAKE_EVENT_LOG"
+if [ "$1 $2" = "compose version" ]; then exit 0; fi
+if [ "$1" = "inspect" ]; then printf 'healthy\\n'; exit 0; fi
+case " $* " in
+  *" ps -a -q db"*) [ "\${FAKE_EXISTING_DB:-0}" = 1 ] && printf 'db-container\\n';;
+  *" ps -q app"*) printf 'app-container\\n';;
+esac
+exit 0
+`),
+    writeFile(path.join(root, "fake-env.sh"), `openssl() {
+  if [ "$1 $2" = "rand -hex" ]; then
+    counter_file="$FAKE_SECRET_COUNTER"
+    count=0
+    [ ! -f "$counter_file" ] || count=$(cat "$counter_file")
+    count=$((count + 1))
+    printf '%s' "$count" > "$counter_file"
+    printf 'generated-secret-%02d-abcdefghijklmnopqrstuvwx\\n' "$count"
+    return 0
+  fi
+  command openssl "$@"
+}
+`),
+  ]);
+  t.after(() => rm(root, { recursive: true, force: true }));
+  return {
+    root,
+    binDirectory,
+    eventLog: path.join(root, "events.log"),
+    secretCounter: path.join(root, "secret-counter"),
+  };
+}
+
+function runDeploy(fixture, env = {}) {
+  return spawnSync(bash, [bashPath(path.join(fixture.root, "deploy.sh"))], {
+    cwd: fixture.root,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${bashPath(fixture.binDirectory)}:${process.env.PATH}`,
+      BASH_ENV: bashPath(path.join(fixture.root, "fake-env.sh")),
+      FAKE_EVENT_LOG: bashPath(fixture.eventLog),
+      FAKE_SECRET_COUNTER: bashPath(fixture.secretCounter),
+      ...env,
+    },
+  });
+}
+
+function parseEnvFile(content) {
+  return Object.fromEntries(content.trim().split(/\r?\n/).map((line) => {
+    const index = line.indexOf("=");
+    return [line.slice(0, index), line.slice(index + 1)];
+  }));
+}
+
 test("backup stems reject traversal and shell metacharacters", () => {
   for (const stem of ["../campus-sweep-20261005T010203Z", "campus-sweep-20261005T010203Z;id", "campus-sweep-99999999T999999Z", "other-20261005T010203Z"]) {
     const result = runLibrary('validate_backup_stem "$1"', [stem]);
@@ -215,5 +285,113 @@ test("exclusive lock rejects a competing backup", async (t) => {
     child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`first backup exited ${code}`)));
     child.once("error", reject);
   });
+});
+
+test("first deploy creates a distinct backup secret and upgrade preserves it", async (t) => {
+  const fixture = await createDeployFixture(t);
+  const first = runDeploy(fixture);
+  assert.equal(first.status, 0, first.stderr);
+  const firstEnv = parseEnvFile(await import("node:fs/promises").then(({ readFile }) => readFile(path.join(fixture.root, ".env.production"), "utf8")));
+  assert.ok(firstEnv.BACKUP_ENCRYPTION_PASSWORD);
+  assert.notEqual(firstEnv.BACKUP_ENCRYPTION_PASSWORD, firstEnv.POSTGRES_PASSWORD);
+  assert.notEqual(firstEnv.BACKUP_ENCRYPTION_PASSWORD, firstEnv.POSTGRES_APP_PASSWORD);
+  assert.notEqual(firstEnv.BACKUP_ENCRYPTION_PASSWORD, firstEnv.ADMIN_PASSWORD);
+  if (process.platform !== "win32") {
+    assert.equal((await stat(path.join(fixture.root, ".env.production"))).mode & 0o777, 0o600);
+  }
+
+  const second = runDeploy(fixture, { FAKE_EXISTING_DB: "1" });
+  assert.equal(second.status, 0, second.stderr);
+  const secondEnv = parseEnvFile(await import("node:fs/promises").then(({ readFile }) => readFile(path.join(fixture.root, ".env.production"), "utf8")));
+  assert.equal(secondEnv.BACKUP_ENCRYPTION_PASSWORD, firstEnv.BACKUP_ENCRYPTION_PASSWORD);
+  const events = await import("node:fs/promises").then(({ readFile }) => readFile(fixture.eventLog, "utf8"));
+  assert.match(events, /backup:--reason pre-deploy/);
+  assert.match(events, /timer-installed/);
+});
+
+test("failed pre-deploy backup stops migration and provisioning", async (t) => {
+  const fixture = await createDeployFixture(t);
+  assert.equal(runDeploy(fixture).status, 0);
+  await writeFile(fixture.eventLog, "");
+  const result = runDeploy(fixture, { FAKE_EXISTING_DB: "1", FAKE_BACKUP_FAIL: "1" });
+  assert.notEqual(result.status, 0);
+  const events = await import("node:fs/promises").then(({ readFile }) => readFile(fixture.eventLog, "utf8"));
+  assert.match(events, /backup:--reason pre-deploy/);
+  assert.doesNotMatch(events, /run --rm provision/);
+});
+
+test("timer installation renders stable absolute units for paths with spaces", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "campus timer root "));
+  const unitDirectory = path.join(root, "units");
+  const binDirectory = path.join(root, "bin");
+  await mkdir(path.join(root, "ops", "server"), { recursive: true });
+  await mkdir(path.join(root, "ops", "systemd"), { recursive: true });
+  await mkdir(unitDirectory);
+  await mkdir(binDirectory);
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await Promise.all([
+    cp(path.join(repoRoot, "ops", "server", "install-backup-timer.sh"), path.join(root, "ops", "server", "install-backup-timer.sh")),
+    cp(path.join(repoRoot, "ops", "systemd", "campus-sweep-backup.service.in"), path.join(root, "ops", "systemd", "campus-sweep-backup.service.in")),
+    cp(path.join(repoRoot, "ops", "systemd", "campus-sweep-backup.timer"), path.join(root, "ops", "systemd", "campus-sweep-backup.timer")),
+    writeExecutable(path.join(binDirectory, "systemctl"), "#!/usr/bin/env bash\nexit 0\n"),
+  ]);
+  const env = { ...process.env, PATH: `${bashPath(binDirectory)}:${process.env.PATH}`, SYSTEMD_UNIT_DIR: bashPath(unitDirectory), DEPLOYMENT_USER: "backup_operator" };
+  const script = bashPath(path.join(root, "ops", "server", "install-backup-timer.sh"));
+  const first = spawnSync(bash, [script], { cwd: root, encoding: "utf8", env });
+  assert.equal(first.status, 0, first.stderr);
+  const servicePath = path.join(unitDirectory, "campus-sweep-backup.service");
+  const firstService = await import("node:fs/promises").then(({ readFile }) => readFile(servicePath, "utf8"));
+  const second = spawnSync(bash, [script], { cwd: root, encoding: "utf8", env });
+  assert.equal(second.status, 0, second.stderr);
+  const secondService = await import("node:fs/promises").then(({ readFile }) => readFile(servicePath, "utf8"));
+  assert.equal(secondService, firstService);
+  assert.match(firstService, /User=backup_operator/);
+  assert.match(firstService, /WorkingDirectory=".*campus timer root /);
+  assert.match(firstService, /ExecStart=.*backup\.sh.*--reason scheduled/);
+});
+
+test("backup status distinguishes absent, fresh, overdue, and corrupt sets", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "campus-status-"));
+  const backupDirectory = path.join(root, "backups");
+  await mkdir(path.join(root, "ops", "server"), { recursive: true });
+  await mkdir(backupDirectory);
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await Promise.all([
+    cp(path.join(repoRoot, "ops", "server", "backup-status.sh"), path.join(root, "ops", "server", "backup-status.sh")),
+    cp(path.join(repoRoot, "ops", "server", "backup-lib.sh"), path.join(root, "ops", "server", "backup-lib.sh")),
+    writeFile(path.join(root, ".env.production"), `BACKUP_DIR=${bashPath(backupDirectory)}\n`),
+  ]);
+  const statusScript = bashPath(path.join(root, "ops", "server", "backup-status.sh"));
+  const status = () => spawnSync(bash, [statusScript, "--json"], { cwd: root, encoding: "utf8" });
+  let result = status();
+  assert.equal(result.status, 1);
+  assert.equal(JSON.parse(result.stdout).status, "absent");
+
+  const freshStem = `campus-sweep-${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")}`;
+  await createSet(backupDirectory, freshStem);
+  const dumpPath = path.join(backupDirectory, `${freshStem}.dump.enc`);
+  const hash = (await import("node:crypto")).createHash("sha256").update("encrypted").digest("hex");
+  await writeFile(path.join(backupDirectory, `${freshStem}.dump.enc.sha256`), `${hash}  ${freshStem}.dump.enc\n`);
+  result = status();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).status, "fresh");
+
+  await rm(dumpPath);
+  await writeFile(dumpPath, "corrupted");
+  result = status();
+  assert.equal(result.status, 1);
+  assert.equal(JSON.parse(result.stdout).status, "corrupt");
+
+  await rm(backupDirectory, { recursive: true, force: true });
+  await mkdir(backupDirectory);
+  const overdue = new Date(Date.now() - 49 * 60 * 60 * 1000).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  const overdueStem = `campus-sweep-${overdue}`;
+  await createSet(backupDirectory, overdueStem);
+  const overdueHash = (await import("node:crypto")).createHash("sha256").update("encrypted").digest("hex");
+  await writeFile(path.join(backupDirectory, `${overdueStem}.dump.enc.sha256`), `${overdueHash}  ${overdueStem}.dump.enc\n`);
+  result = status();
+  assert.equal(result.status, 1);
+  assert.equal(JSON.parse(result.stdout).status, "overdue");
+  assert.doesNotMatch(`${result.stdout}${result.stderr}`, /BACKUP_ENCRYPTION_PASSWORD/);
 });
 

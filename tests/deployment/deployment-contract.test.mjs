@@ -95,3 +95,25 @@ test("production backups are atomic, encrypted, locked, and path constrained", a
   assert.match(gitignore, /quarantine/);
   assert.match(gitignore, /restore-reports/);
 });
+
+test("deployment reuses encrypted backups and installs the daily timer after health", async () => {
+  const [deploy, example, service, timer, status] = await Promise.all([
+    read("deploy.sh"),
+    read(".env.example"),
+    read("ops/systemd/campus-sweep-backup.service.in"),
+    read("ops/systemd/campus-sweep-backup.timer"),
+    read("ops/server/backup-status.sh"),
+  ]);
+  assert.match(deploy, /BACKUP_ENCRYPTION_PASSWORD/);
+  assert.match(deploy, /backup\.sh" --reason pre-deploy/);
+  assert.doesNotMatch(deploy, /pg_dump[^\n]*gzip/);
+  assert.ok(deploy.indexOf("install-backup-timer.sh") > deploy.indexOf("healthy"));
+  assert.match(example, /BACKUP_ENCRYPTION_PASSWORD/);
+  assert.match(service, /@DEPLOYMENT_USER@/);
+  assert.match(service, /@WORKING_DIRECTORY@/);
+  assert.match(timer, /OnCalendar=\*-\*-\* 03:17:00 UTC/);
+  assert.match(timer, /RandomizedDelaySec=30m/);
+  assert.match(timer, /Persistent=true/);
+  assert.match(status, /--json/);
+  assert.doesNotMatch(`${deploy}${service}${timer}${status}`, /amazon|aliyun|tencent|azure/i);
+});

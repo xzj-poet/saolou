@@ -1,0 +1,11 @@
+[Unit]
+Description=Campus Sweep encrypted PostgreSQL backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=@DEPLOYMENT_USER@
+WorkingDirectory=@WORKING_DIRECTORY@
+ExecStart=/usr/bin/env bash @BACKUP_SCRIPT@ --reason scheduled
+UMask=0077

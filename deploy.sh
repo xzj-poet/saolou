@@ -26,6 +26,7 @@ if [ ! -f "$env_file" ]; then
   postgres_password=$(random_secret)
   app_password=$(random_secret)
   admin_password=$(random_secret)
+  backup_password=$(random_secret)
   umask 077
   printf '%s\n' \
     'POSTGRES_DB=campus_sweep' \
@@ -37,6 +38,7 @@ if [ ! -f "$env_file" ]; then
     "DATABASE_URL=postgresql://campus_sweep_app:$app_password@db:5432/campus_sweep?schema=public" \
     'ADMIN_USERNAME=admin' \
     "ADMIN_PASSWORD=$admin_password" \
+    "BACKUP_ENCRYPTION_PASSWORD=$backup_password" \
     'SITE_ADDRESS=:80' > "$env_file"
   generated_env=1
 fi
@@ -45,6 +47,18 @@ set -a
 # shellcheck disable=SC1090
 . "$env_file"
 set +a
+
+if [ -z "${BACKUP_ENCRYPTION_PASSWORD:-}" ]; then
+  backup_password=$(random_secret)
+  temporary_env=$(mktemp "$root_dir/.env.production.XXXXXX")
+  grep -Ev '^BACKUP_ENCRYPTION_PASSWORD=' "$env_file" > "$temporary_env"
+  printf 'BACKUP_ENCRYPTION_PASSWORD=%s\n' "$backup_password" >> "$temporary_env"
+  chmod 600 "$temporary_env"
+  mv "$temporary_env" "$env_file"
+  BACKUP_ENCRYPTION_PASSWORD=$backup_password
+  export BACKUP_ENCRYPTION_PASSWORD
+fi
+chmod 600 "$env_file"
 
 if [ -z "${POSTGRES_APP_PASSWORD:-}" ]; then
   app_password=$(random_secret)
@@ -79,10 +93,7 @@ until compose exec -T db sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 done
 
 if [ -n "$existing_db" ]; then
-  mkdir -p "$root_dir/backups"
-  backup_file="$root_dir/backups/pre-deploy-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
-  compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip -c' > "$backup_file"
-  echo "部署前数据库备份：$backup_file"
+  "$root_dir/ops/server/backup.sh" --reason pre-deploy
 fi
 
 compose build app provision
@@ -100,6 +111,8 @@ while [ "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}
   fi
   sleep 2
 done
+
+"$root_dir/ops/server/install-backup-timer.sh"
 
 echo "部署完成。访问地址由 .env.production 中的 SITE_ADDRESS 决定。"
 if [ "$generated_env" -eq 1 ]; then
