@@ -167,7 +167,6 @@ close_backup_snapshot() {
   fi
   if [ -n "${BACKUP_SNAPSHOT_PID:-}" ]; then
     kill "$BACKUP_SNAPSHOT_PID" 2>/dev/null || true
-    wait "$BACKUP_SNAPSHOT_PID" 2>/dev/null || true
     BACKUP_SNAPSHOT_PID=
   fi
 }
