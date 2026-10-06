@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 20
     volumes:
-      - campus_sweep_pgdata:/var/lib/postgresql/data
+      - campus_sweep_pgdata:/var/lib/postgresql
 
   provision:
     build:

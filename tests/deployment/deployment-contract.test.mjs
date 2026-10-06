@@ -25,6 +25,8 @@ test("production deployment is pinned, persistent, and health checked", async ()
   assert.match(compose, /condition: service_healthy/);
   assert.match(compose, /condition: service_completed_successfully/);
   assert.match(compose, /campus_sweep_pgdata:/);
+  assert.match(compose, /campus_sweep_pgdata:\/var\/lib\/postgresql\s*$/m);
+  assert.doesNotMatch(compose, /campus_sweep_pgdata:\/var\/lib\/postgresql\/data/);
   assert.match(compose, /GIT_COMMIT: \$\{APP_GIT_COMMIT:-unknown\}/);
   assert.match(compose, /caddy_data:/);
   assert.match(compose, /\/api\/health/);
@@ -140,6 +142,8 @@ test("restore verification is isolated and CI exercises the PostgreSQL 18 round 
   assert.match(verify, /SweepRecord/);
   assert.match(verify, /SweepAudit/);
   assert.match(fixture, /postgres:18-alpine/);
+  assert.match(fixture, /source_data:\/var\/lib\/postgresql\s*$/m);
+  assert.doesNotMatch(fixture, /source_data:\/var\/lib\/postgresql\/data/);
   assert.match(workflow, /npm run test:backup:integration/);
   assert.equal(JSON.parse(packageJson).scripts["test:backup:integration"], "node --test tests/deployment/backup-restore.integration.test.mjs");
 });

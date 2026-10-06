@@ -13,7 +13,7 @@ services:
       timeout: 2s
       retries: 30
     volumes:
-      - source_data:/var/lib/postgresql/data
+      - source_data:/var/lib/postgresql
 
 volumes:
   source_data:
