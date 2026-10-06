@@ -120,7 +120,7 @@ trap cleanup EXIT
 trap on_signal INT TERM
 
 docker volume create "$volume" >/dev/null
-docker run -d --name "$container" --label campus-sweep.restore=true -e POSTGRES_DB=restore -e POSTGRES_USER=restore -e POSTGRES_PASSWORD=restore-only-password -v "$volume:/var/lib/postgresql/data" postgres:18-alpine >/dev/null
+docker run -d --name "$container" --label campus-sweep.restore=true -e POSTGRES_DB=restore -e POSTGRES_USER=restore -e POSTGRES_PASSWORD=restore-only-password -v "$volume:/var/lib/postgresql" postgres:18-alpine >/dev/null
 for _ in {1..30}; do
   if docker exec "$container" pg_isready -U restore -d restore >/dev/null 2>&1; then break; fi
   sleep 1

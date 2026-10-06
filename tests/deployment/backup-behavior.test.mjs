@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, mkdir, readdir, rm, stat, utimes, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, readdir, rm, stat, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
@@ -44,11 +44,18 @@ async function createBackupFixture(t) {
       "",
     ].join("\n")),
     writeFile(path.join(binDirectory, "docker"), `#!/usr/bin/env bash
+printf '%s %s\\n' "$$" "$*" >> "$FAKE_EVENT_LOG"
 if [ "$1 $2" = "compose version" ]; then exit 0; fi
 case " $* " in
+  *" pg_terminate_backend("*)
+    printf 't\\n'
+    ;;
   *" psql "*)
-    printf '%s\\n' '00000003-00000001-1' '1048576' '2' '1' '2' '3' '4' '5' '6' '7'
-    sleep "\${FAKE_SNAPSHOT_SLEEP:-0}"
+    printf '%s\\n' '00000003-00000001-1' '4242' '1048576' '2' '1' '2' '3' '4' '5' '6' '7'
+    sleep "\${FAKE_SNAPSHOT_SLEEP:-0}" &
+    sleeper=$!
+    trap 'kill "$sleeper" 2>/dev/null || true; wait "$sleeper" 2>/dev/null || true; exit 143' INT TERM
+    wait "$sleeper"
     ;;
   *" pg_dump "*)
     [ "\${FAKE_DUMP_FAIL:-0}" = 1 ] && exit 41
@@ -72,14 +79,14 @@ esac
     await import("node:fs/promises").then(({ chmod }) => chmod(path.join(binDirectory, name), 0o755));
   }
   t.after(() => rm(root, { recursive: true, force: true }));
-  return { root, backupDirectory, binDirectory };
+  return { root, backupDirectory, binDirectory, eventLog: path.join(root, "backup-events.log") };
 }
 
 function runBackup(fixture, env = {}) {
   return spawnSync(bash, [bashPath(path.join(fixture.root, "ops", "server", "backup.sh")), "--reason", "manual"], {
     cwd: fixture.root,
     encoding: "utf8",
-    env: { ...process.env, PATH: `${bashPath(fixture.binDirectory)}:${process.env.PATH}`, BASH_ENV: bashPath(path.join(fixture.root, "fake-env.sh")), ...env },
+    env: { ...process.env, PATH: `${bashPath(fixture.binDirectory)}:${process.env.PATH}`, BASH_ENV: bashPath(path.join(fixture.root, "fake-env.sh")), FAKE_EVENT_LOG: bashPath(fixture.eventLog), ...env },
     timeout: 10_000,
   });
 }
@@ -267,6 +274,15 @@ test("encryption failure publishes no ready manifest", async (t) => {
   assert.notEqual(result.status, 0, JSON.stringify({ status: result.status, stdout: result.stdout, stderr: result.stderr }));
   assert.equal((await readdir(fixture.backupDirectory)).some((name) => name.endsWith(".manifest.json")), false);
   assert.doesNotMatch(`${result.stdout}${result.stderr}`, /never-print-this-backup-secret/);
+});
+
+test("backup terminates the exported snapshot session after the dump", async (t) => {
+  const fixture = await createBackupFixture(t);
+  const startedAt = Date.now();
+  const result = runBackup(fixture, { FAKE_SNAPSHOT_SLEEP: "20" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(Date.now() - startedAt < 5_000, "backup waited for the snapshot session instead of terminating it");
+  assert.match(await readFile(fixture.eventLog, "utf8"), /pg_terminate_backend\(4242\)/);
 });
 
 test("exclusive lock rejects a competing backup", async (t) => {

@@ -125,9 +125,10 @@ require_backup_space() {
 
 open_backup_snapshot() {
   coproc CAMPUS_SWEEP_SNAPSHOT {
-    compose exec -T db psql -X -qAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL'
+    exec docker compose --project-directory "$root_dir" --env-file "$env_file" -f "$root_dir/compose.yaml" exec -T db psql -X -qAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL'
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;
 SELECT pg_export_snapshot();
+SELECT pg_backend_pid();
 SELECT pg_database_size(current_database());
 SELECT count(*) FROM "_prisma_migrations";
 SELECT count(*) FROM "User";
@@ -143,6 +144,7 @@ SQL
   BACKUP_SNAPSHOT_PID=$CAMPUS_SWEEP_SNAPSHOT_PID
   BACKUP_SNAPSHOT_FD=${CAMPUS_SWEEP_SNAPSHOT[0]}
   IFS= read -r BACKUP_SNAPSHOT_ID <&"$BACKUP_SNAPSHOT_FD"
+  IFS= read -r BACKUP_SNAPSHOT_BACKEND_PID <&"$BACKUP_SNAPSHOT_FD"
   IFS= read -r BACKUP_DATABASE_BYTES <&"$BACKUP_SNAPSHOT_FD"
   IFS= read -r BACKUP_MIGRATION_COUNT <&"$BACKUP_SNAPSHOT_FD"
   IFS= read -r BACKUP_USER_COUNT <&"$BACKUP_SNAPSHOT_FD"
@@ -152,13 +154,17 @@ SQL
   IFS= read -r BACKUP_SWEEP_RECORD_COUNT <&"$BACKUP_SNAPSHOT_FD"
   IFS= read -r BACKUP_SWEEP_AUDIT_COUNT <&"$BACKUP_SNAPSHOT_FD"
   IFS= read -r BACKUP_SESSION_COUNT <&"$BACKUP_SNAPSHOT_FD"
-  [[ "$BACKUP_SNAPSHOT_ID" =~ ^[0-9]+-[0-9]+-[0-9]+$ ]] || {
+  [[ "$BACKUP_SNAPSHOT_ID" =~ ^[0-9]+-[0-9]+-[0-9]+$ && "$BACKUP_SNAPSHOT_BACKEND_PID" =~ ^[0-9]+$ ]] || {
     backup_error "无法取得数据库一致性快照。"
     return 1
   }
 }
 
 close_backup_snapshot() {
+  if [[ "${BACKUP_SNAPSHOT_BACKEND_PID:-}" =~ ^[0-9]+$ ]]; then
+    compose exec -T db psql -X -qAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT pg_terminate_backend($BACKUP_SNAPSHOT_BACKEND_PID);" >/dev/null 2>&1 || true
+    BACKUP_SNAPSHOT_BACKEND_PID=
+  fi
   if [ -n "${BACKUP_SNAPSHOT_PID:-}" ]; then
     kill "$BACKUP_SNAPSHOT_PID" 2>/dev/null || true
     wait "$BACKUP_SNAPSHOT_PID" 2>/dev/null || true
