@@ -46,7 +46,11 @@ if [ "$1" = "run" ]; then printf 'container-id\\n'; exit 0; fi
 if [ "$1" = "inspect" ]; then printf 'true\\n'; exit 0; fi
 if [ "$1" = "exec" ] && [[ " $* " == *" pg_isready "* ]]; then exit 0; fi
 if [ "$1" = "exec" ] && [[ " $* " == *" pg_restore "* ]]; then cat >/dev/null; sleep "\${FAKE_PG_RESTORE_DELAY:-0}"; [ "\${FAKE_PG_RESTORE_FAIL:-0}" != 1 ]; exit; fi
-if [ "$1" = "exec" ] && [[ " $* " == *" psql "* ]]; then cat >/dev/null; printf '0\\n0\\n0\\n0\\n0\\n0\\n0\\n0\\n8\\n0\\n0\\n'; exit 0; fi
+if [ "$1" = "exec" ] && [[ " $* " == *" psql "* ]]; then
+  if [ "$2" = "-i" ]; then cat >/dev/null; fi
+  printf '0\\n0\\n0\\n0\\n0\\n0\\n0\\n0\\n8\\n0\\n0\\n'
+  exit 0
+fi
 if [[ " $* " == *" compose "*" ps -a -q db"* ]] && [ "\${FAKE_PRODUCTION_EXISTS:-0}" = 1 ]; then printf 'existing-db\\n'; fi
 exit 0
 `);
@@ -179,6 +183,23 @@ test("verify removes an uploaded incoming backup set after the drill", async (t)
   const result = runRestore(fixture, ["verify", "--backup", bashPath(path.join(incoming, `${stem}.dump.enc`))]);
   assert.equal(result.status, 0, result.stderr);
   await assert.rejects(readdir(incoming));
+});
+
+test("readiness query does not consume the restore input stream", async (t) => {
+  const fixture = await makeFixture(t);
+  const child = spawn(bash, [bashPath(path.join(fixture.bin, "docker")), "exec", "restore", "psql", "-X", "-qAt", "-U", "restore", "-d", "restore", "-c", "SHOW listen_addresses;"], {
+    env: { ...process.env, FAKE_DOCKER_LOG: bashPath(fixture.eventLog) },
+  });
+  t.after(() => child.kill("SIGKILL"));
+  let stdout = "";
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  const exitCode = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("readiness query waited for restore input")), 1_000);
+    child.once("exit", (code) => { clearTimeout(timer); resolve(code); });
+    child.once("error", (error) => { clearTimeout(timer); reject(error); });
+  });
+  assert.equal(exitCode, 0);
+  assert.match(stdout, /0/);
 });
 
 test("verify cleans isolated resources when interrupted", { skip: process.platform === "win32" }, async (t) => {
