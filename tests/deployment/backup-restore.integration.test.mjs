@@ -83,6 +83,23 @@ function runRestore(fixture, args, env = {}) {
   });
 }
 
+function waitForExit(child, label, timeoutMs = 45_000) {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      child.kill("SIGKILL");
+      reject(new Error(`${label} exceeded ${timeoutMs}ms`));
+    }, timeoutMs);
+    child.once("exit", (code) => {
+      clearTimeout(timeout);
+      resolve(code);
+    });
+    child.once("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+  });
+}
+
 test("restore rejects a missing manifest and checksum mismatch before Docker", async (t) => {
   const fixture = await makeFixture(t);
   await writeFile(path.join(fixture.root, ".env.production"), "POSTGRES_DB=campus_sweep\nPOSTGRES_USER=owner\nBACKUP_ENCRYPTION_PASSWORD=correct-recovery-key\n");
@@ -190,12 +207,16 @@ test("verify cleans isolated resources when interrupted", { skip: process.platfo
   assert.match(events, /volume rm -f campus-sweep-restore-/);
 });
 
-test("real PostgreSQL 18 backup and isolated restore preserve the source", { skip: !hasDocker }, async (t) => {
+test("real PostgreSQL 18 backup and isolated restore preserve the source", { skip: !hasDocker, timeout: 120_000 }, async (t) => {
   const fixture = await makeFixture(t, { fakeDocker: false });
   const project = `campus-sweep-backup-${randomBytes(6).toString("hex")}`;
   const env = { ...process.env, COMPOSE_PROJECT_NAME: project, POSTGRES_DB: "campus_sweep", POSTGRES_USER: "owner", POSTGRES_PASSWORD: "source-password", BACKUP_ENCRYPTION_PASSWORD: "round-trip-key", BACKUP_DIR: bashPath(fixture.backupDirectory) };
   await writeFile(path.join(fixture.root, ".env.production"), Object.entries(env).filter(([key]) => ["POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD", "BACKUP_ENCRYPTION_PASSWORD", "BACKUP_DIR"].includes(key)).map(([key, value]) => `${key}=${value}`).join("\n") + "\n");
-  const compose = (...args) => spawnSync("docker", ["compose", "-p", project, "-f", path.join(fixture.root, "compose.yaml"), ...args], { cwd: fixture.root, env, encoding: "utf8" });
+  const compose = (...args) => {
+    const result = spawnSync("docker", ["compose", "-p", project, "-f", path.join(fixture.root, "compose.yaml"), ...args], { cwd: fixture.root, env, encoding: "utf8", timeout: 30_000 });
+    if (result.error?.code === "ETIMEDOUT") throw new Error(`docker compose ${args.join(" ")} exceeded 30000ms`);
+    return result;
+  };
   t.after(() => compose("down", "-v", "--remove-orphans"));
   assert.equal(compose("up", "-d", "--wait", "db").status, 0);
   const schema = `
@@ -220,10 +241,17 @@ INSERT INTO "BackupGate" VALUES (1);
   const seeded = spawnSync("docker", ["compose", "-p", project, "-f", path.join(fixture.root, "compose.yaml"), "exec", "-T", "db", "psql", "-v", "ON_ERROR_STOP=1", "-U", "owner", "-d", "campus_sweep"], { cwd: fixture.root, env, input: schema, encoding: "utf8" });
   assert.equal(seeded.status, 0, seeded.stderr);
   const volumeBefore = compose("ps", "-q", "db").stdout.trim();
-  const lock = spawn("docker", ["compose", "-p", project, "-f", path.join(fixture.root, "compose.yaml"), "exec", "-T", "db", "psql", "-v", "ON_ERROR_STOP=1", "-U", "owner", "-d", "campus_sweep"], { cwd: fixture.root, env });
+  let lock;
+  let backup;
+  t.after(() => {
+    for (const child of [backup, lock]) {
+      if (child?.exitCode === null) child.kill("SIGKILL");
+    }
+  });
+  lock = spawn("docker", ["compose", "-p", project, "-f", path.join(fixture.root, "compose.yaml"), "exec", "-T", "db", "psql", "-v", "ON_ERROR_STOP=1", "-U", "owner", "-d", "campus_sweep"], { cwd: fixture.root, env });
   lock.stdin.end('BEGIN; LOCK TABLE "BackupGate" IN ACCESS EXCLUSIVE MODE; SELECT pg_sleep(5); COMMIT;\n');
   await new Promise((resolve) => setTimeout(resolve, 250));
-  const backup = spawn(bash, [bashPath(path.join(fixture.server, "backup.sh")), "--reason", "manual"], { cwd: fixture.root, env });
+  backup = spawn(bash, [bashPath(path.join(fixture.server, "backup.sh")), "--reason", "manual"], { cwd: fixture.root, env });
   let dumpWaits = 0;
   while (dumpWaits < 40) {
     const waiting = compose("exec", "-T", "db", "psql", "-X", "-qAt", "-U", "owner", "-d", "campus_sweep", "-c", "SELECT count(*) FROM pg_locks AS lock JOIN pg_class AS relation ON relation.oid = lock.relation WHERE relation.relname = 'BackupGate' AND NOT lock.granted;");
@@ -234,15 +262,9 @@ INSERT INTO "BackupGate" VALUES (1);
   assert.ok(dumpWaits < 40, "pg_dump never waited on the gate after exporting its snapshot");
   const concurrentWrite = compose("exec", "-T", "db", "psql", "-v", "ON_ERROR_STOP=1", "-U", "owner", "-d", "campus_sweep", "-c", "INSERT INTO \"User\" VALUES ('late-agent', 'AGENT');");
   assert.equal(concurrentWrite.status, 0, concurrentWrite.stderr);
-  const backupExit = await new Promise((resolve, reject) => {
-    backup.once("exit", (code) => resolve(code));
-    backup.once("error", reject);
-  });
+  const backupExit = await waitForExit(backup, "backup command");
   assert.equal(backupExit, 0);
-  const lockExit = await new Promise((resolve, reject) => {
-    lock.once("exit", (code) => resolve(code));
-    lock.once("error", reject);
-  });
+  const lockExit = await waitForExit(lock, "database lock command", 15_000);
   assert.equal(lockExit, 0);
   const dumpName = (await readdir(fixture.backupDirectory)).find((name) => name.endsWith(".dump.enc"));
   assert.ok(dumpName);
