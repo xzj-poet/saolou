@@ -121,11 +121,15 @@ trap on_signal INT TERM
 
 docker volume create "$volume" >/dev/null
 docker run -d --name "$container" --label campus-sweep.restore=true -e POSTGRES_DB=restore -e POSTGRES_USER=restore -e POSTGRES_PASSWORD=restore-only-password -v "$volume:/var/lib/postgresql" postgres:18-alpine >/dev/null
+restore_database_ready() {
+  docker exec "$container" pg_isready -U restore -d restore >/dev/null 2>&1 \
+    && [ -n "$(docker exec "$container" psql -X -qAt -U restore -d restore -c 'SHOW listen_addresses;' 2>/dev/null)" ]
+}
 for _ in {1..30}; do
-  if docker exec "$container" pg_isready -U restore -d restore >/dev/null 2>&1; then break; fi
+  if restore_database_ready; then break; fi
   sleep 1
 done
-docker exec "$container" pg_isready -U restore -d restore >/dev/null 2>&1 || { echo "错误：临时恢复数据库未就绪。" >&2; exit 1; }
+restore_database_ready || { echo "错误：临时恢复数据库未就绪。" >&2; exit 1; }
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -pass env:BACKUP_ENCRYPTION_PASSWORD -in "$backup_path" \
   | docker exec -i "$container" pg_restore -U restore -d restore --exit-on-error --no-owner
 checks=$("$root_dir/ops/server/verify-restored-data.sh" "$container" "$manifest")

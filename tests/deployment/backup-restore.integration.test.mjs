@@ -162,6 +162,7 @@ test("successful verify emits a redacted report and cleans resources", async (t)
   assert.ok(Array.isArray(parsed.checks));
   assert.doesNotMatch(await readFile(report, "utf8"), /correct-recovery-key/);
   const events = await readFile(fixture.eventLog, "utf8");
+  assert.match(events, /SHOW listen_addresses/);
   assert.match(events, /rm -f campus-sweep-restore-/);
   assert.match(events, /volume rm -f campus-sweep-restore-/);
 });
