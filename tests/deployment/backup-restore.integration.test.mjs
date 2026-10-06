@@ -252,11 +252,18 @@ INSERT INTO "BackupGate" VALUES (1);
   lock = spawn("docker", ["compose", "-p", project, "-f", path.join(fixture.root, "compose.yaml"), "exec", "-T", "db", "psql", "-v", "ON_ERROR_STOP=1", "-U", "owner", "-d", "campus_sweep"], { cwd: fixture.root, env });
   lock.stdin.end('BEGIN; LOCK TABLE "BackupGate" IN ACCESS EXCLUSIVE MODE; SELECT pg_sleep(5); COMMIT;\n');
   const lockExitPromise = waitForExit(lock, "database lock command", 15_000);
-  await new Promise((resolve) => setTimeout(resolve, 250));
+  let gateLocks = 0;
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const held = compose("exec", "-T", "db", "psql", "-X", "-qAt", "-U", "owner", "-d", "campus_sweep", "-c", "SELECT count(*) FROM pg_locks AS lock JOIN pg_class AS relation ON relation.oid = lock.relation WHERE relation.relname = 'BackupGate' AND lock.granted;");
+    gateLocks = held.status === 0 ? Number(held.stdout.trim()) : 0;
+    if (gateLocks > 0) break;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  assert.ok(gateLocks > 0, "database lock command never acquired BackupGate");
   backup = spawn(bash, [bashPath(path.join(fixture.server, "backup.sh")), "--reason", "manual"], { cwd: fixture.root, env });
   const backupExitPromise = waitForExit(backup, "backup command");
   let dumpWaits = 0;
-  while (dumpWaits < 40) {
+  while (dumpWaits < 80) {
     const waiting = compose("exec", "-T", "db", "psql", "-X", "-qAt", "-U", "owner", "-d", "campus_sweep", "-c", "SELECT count(*) FROM pg_locks AS lock JOIN pg_class AS relation ON relation.oid = lock.relation WHERE relation.relname = 'BackupGate' AND NOT lock.granted;");
     if (waiting.status === 0 && Number(waiting.stdout.trim()) > 0) break;
     dumpWaits += 1;
