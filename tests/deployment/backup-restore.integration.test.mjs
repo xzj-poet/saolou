@@ -218,7 +218,8 @@ test("real PostgreSQL 18 backup and isolated restore preserve the source", { ski
     return result;
   };
   t.after(() => compose("down", "-v", "--remove-orphans"));
-  assert.equal(compose("up", "-d", "--wait", "db").status, 0);
+  const databaseStarted = compose("up", "-d", "--wait", "db");
+  assert.equal(databaseStarted.status, 0, `source database failed to become healthy:\n${databaseStarted.stdout}\n${databaseStarted.stderr}`);
   const schema = `
 CREATE TABLE "_prisma_migrations" (id text primary key);
 CREATE TABLE "User" (id text primary key, role text not null);
