@@ -38,8 +38,9 @@ try {
   Assert-Equal $state.lastRestoreStem $newStem 'successful drill updates the restored stem'
   Assert-True ($null -ne $state.lastRestoreSuccessAt) 'successful drill records success time'
   Import-Module (Join-Path $repoRoot 'ops/windows/CampusSweepBackup.psm1') -Force
-  Assert-True (Test-BackupRestoreOverdue -State $state -Now ([datetime]'2026-11-10T00:00:00Z')) 'a successful drill older than the monthly interval is overdue'
-  Assert-True (-not (Test-BackupRestoreOverdue -State $state -Now ([datetime]'2026-10-20T00:00:00Z'))) 'a recent successful drill is not overdue'
+  $fixedRestoreState = [pscustomobject]@{ lastRestoreSuccessAt = '2026-10-05T00:00:00Z' }
+  Assert-True (Test-BackupRestoreOverdue -State $fixedRestoreState -Now ([datetime]'2026-11-10T00:00:00Z')) 'a successful drill older than the monthly interval is overdue'
+  Assert-True (-not (Test-BackupRestoreOverdue -State $fixedRestoreState -Now ([datetime]'2026-10-20T00:00:00Z'))) 'a recent successful drill is not overdue'
 
   $events.Clear()
   $failedInvoke = { param($id, $stem) $events.Add("invoke:$($stem):$($id)"); throw 'remote verify failed' }
