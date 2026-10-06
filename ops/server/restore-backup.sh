@@ -127,7 +127,7 @@ for _ in {1..30}; do
 done
 docker exec "$container" pg_isready -U restore -d restore >/dev/null 2>&1 || { echo "错误：临时恢复数据库未就绪。" >&2; exit 1; }
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -pass env:BACKUP_ENCRYPTION_PASSWORD -in "$backup_path" \
-  | docker exec -i "$container" pg_restore -U restore -d restore --exit-on-error
+  | docker exec -i "$container" pg_restore -U restore -d restore --exit-on-error --no-owner
 checks=$("$root_dir/ops/server/verify-restored-data.sh" "$container" "$manifest")
 finished_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 if [ -z "$report_path" ]; then

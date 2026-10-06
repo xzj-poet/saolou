@@ -137,6 +137,7 @@ test("restore verification is isolated and CI exercises the PostgreSQL 18 round 
   assert.match(restore, /postgres:18-alpine/);
   assert.match(restore, /docker volume create/);
   assert.match(restore, /-v "\$volume:\/var\/lib\/postgresql"/);
+  assert.match(restore, /pg_restore -U restore -d restore --exit-on-error --no-owner/);
   assert.match(restore, /docker rm -f/);
   assert.match(restore, /docker volume rm -f/);
   assert.doesNotMatch(restore, /\/var\/lib\/postgresql\/data/);
