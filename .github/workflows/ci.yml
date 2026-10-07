@@ -59,8 +59,17 @@ jobs:
       - run: npm run build
       - run: npm run test:deployment
       - run: npm run test:backup:integration
-      - run: npm run test:backup:windows
       - run: docker compose config --quiet
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: docker build --target app --tag campus-sweep-saas:${{ github.sha }} .
+
+  windows-backup-client:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm run test:backup:windows

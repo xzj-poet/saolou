@@ -5,18 +5,21 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../../${path}`, import.meta.url), "utf8");
 
 test("production deployment is pinned, persistent, and health checked", async () => {
-  const [dockerfile, compose, caddyfile, deploy] = await Promise.all([
+  const [dockerfile, compose, caddyfile, deploy, protectedLayout] = await Promise.all([
     read("Dockerfile"),
     read("compose.yaml"),
     read("Caddyfile"),
     read("deploy.sh"),
+    read("src/app/(protected)/layout.tsx"),
   ]);
 
   assert.match(dockerfile, /FROM node:24-alpine AS deps/);
   assert.match(dockerfile, /npm ci/);
+  assert.match(dockerfile, /FROM deps AS tools[\s\S]*ENV DATABASE_URL=postgresql:\/\/build:build@127\.0\.0\.1:5432\/build[\s\S]*RUN npm run db:generate/);
   assert.match(dockerfile, /FROM node:24-alpine AS app/);
   assert.match(dockerfile, /org\.opencontainers\.image\.revision/);
   assert.doesNotMatch(dockerfile, /:latest\b/);
+  assert.match(protectedLayout, /export const dynamic = "force-dynamic"/);
 
   for (const service of ["db", "provision", "app", "caddy"]) {
     assert.match(compose, new RegExp(`^  ${service}:`, "m"));
@@ -34,6 +37,14 @@ test("production deployment is pinned, persistent, and health checked", async ()
   assert.match(caddyfile, /reverse_proxy app:3000/);
   assert.match(deploy, /APP_GIT_COMMIT/);
   assert.doesNotMatch(compose.match(/^  app:[\s\S]*?(?=^  caddy:)/m)?.[0] ?? "", /DATABASE_ADMIN_URL/);
+});
+
+test("development PostgreSQL 18 uses the version-aware data root", async () => {
+  const compose = await read("compose.dev.yaml");
+
+  assert.match(compose, /postgres:18-alpine/);
+  assert.match(compose, /campus_sweep_pgdata:\/var\/lib\/postgresql\s*$/m);
+  assert.doesNotMatch(compose, /campus_sweep_pgdata:\/var\/lib\/postgresql\/data/);
 });
 
 test("the one-command entry validates configuration and provisions the app", async () => {
@@ -75,6 +86,16 @@ test("continuous verification uses Node 24 and PostgreSQL 18", async () => {
   ]) {
     assert.match(workflow, new RegExp(command.replaceAll(" ", "\\s+")));
   }
+});
+
+test("CI runs the Windows backup client only on Windows", async () => {
+  const workflow = await read(".github/workflows/ci.yml");
+  const [linuxWorkflow, windowsWorkflow = ""] = workflow.split(/\n  windows-backup-client:\r?\n/);
+
+  assert.match(linuxWorkflow, /runs-on: ubuntu-latest/);
+  assert.doesNotMatch(linuxWorkflow, /npm run test:backup:windows/);
+  assert.match(windowsWorkflow, /runs-on: windows-latest/);
+  assert.match(windowsWorkflow, /npm run test:backup:windows/);
 });
 
 test("production backups are atomic, encrypted, locked, and path constrained", async () => {

@@ -7,11 +7,11 @@ RUN npm ci
 
 FROM deps AS tools
 COPY . .
+ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
 RUN npm run db:generate
 
 FROM tools AS builder
 ENV NODE_ENV=production
-ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
 ENV ADMIN_USERNAME=build
 ENV ADMIN_PASSWORD=build-only-password
 RUN npm run build

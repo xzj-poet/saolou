@@ -4,10 +4,7 @@ import { prisma } from "../src/lib/db";
 import { expect, test } from "./fixtures/sweep";
 
 async function navigate(page: Page, path: string) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try { await page.goto(path, { waitUntil: "domcontentloaded" }); return; }
-    catch (error) { if (attempt === 2 || !String(error).includes("ERR_ABORTED")) throw error; }
-  }
+  await page.goto(path, { waitUntil: "networkidle" });
 }
 
 async function login(page: Page, username: string, password: string) {
@@ -150,9 +147,11 @@ test("concurrent agent, administrator, delete, and batch conflicts require expli
   expect((await putRecord(left, room201, { customNote: "左侧已保存", expectedRecordId: initial.id, expectedVersion: initial.version, status: "PENDING" })).ok()).toBe(true);
   await right.getByRole("textbox", { name: "备注" }).fill("右侧保留草稿");
   await expect(right.getByRole("textbox", { name: "备注" })).toHaveValue("右侧保留草稿");
-  const rightConflict = right.waitForResponse((response) => response.url().includes(`/api/dormitories/${room201}/my-record`) && response.request().method() === "PUT");
-  await right.getByRole("button", { name: "保存记录" }).click();
-  expect((await rightConflict).status()).toBe(409);
+  const [rightConflict] = await Promise.all([
+    right.waitForResponse((response) => response.url().includes(`/api/dormitories/${room201}/my-record`) && response.request().method() === "PUT", { timeout: 30_000 }),
+    right.getByRole("button", { name: "保存记录" }).click({ timeout: 30_000 }),
+  ]);
+  expect(rightConflict.status()).toBe(409);
   await expect(right.getByText("记录已被其他操作更新，请加载最新内容后确认")).toBeVisible();
   await expect(right.getByRole("textbox", { name: "备注" })).toHaveValue("右侧保留草稿");
   await expect(right.getByText(/左侧已保存/)).toBeVisible();
@@ -176,7 +175,11 @@ test("concurrent agent, administrator, delete, and batch conflicts require expli
   await adminNote.fill("管理员未覆盖草稿");
   const current = await prisma.sweepRecord.findFirstOrThrow({ where: { dormitoryId: room201, agent: { username: authUsers.agent.username } } });
   expect((await putRecord(left, room201, { customNote: "代理抢先更新", expectedRecordId: current.id, expectedVersion: current.version, status: "COVERED" })).ok()).toBe(true);
-  await page.getByRole("button", { name: "保存修改" }).click();
+  const [adminConflict] = await Promise.all([
+    page.waitForResponse((response) => response.url().includes(`/api/admin/sweep-records/${current.id}`) && response.request().method() === "PUT", { timeout: 30_000 }),
+    page.getByRole("button", { name: "保存修改" }).click({ timeout: 30_000 }),
+  ]);
+  expect(adminConflict.status()).toBe(409);
   await expect(page.getByText("记录已被其他操作更新，请刷新最新数据后重试")).toBeVisible();
   await expect(adminNote).toHaveValue("管理员未覆盖草稿");
   const adminRefresh = page.waitForResponse((response) => response.url().includes("/admin/sweep-data") && response.request().method() === "GET");

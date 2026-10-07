@@ -7,6 +7,8 @@ import {
   requireUser,
 } from "@/modules/auth/current-user";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProtectedLayout({ children }: { children: ReactNode }) {
   try {
     await requireUser();
