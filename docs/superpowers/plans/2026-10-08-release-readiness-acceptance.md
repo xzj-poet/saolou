@@ -211,31 +211,31 @@ git commit -m "test: cover v1 release acceptance paths"
 - Consumes: the repository's locked toolchain, deployment scripts, PostgreSQL 18 image, Docker image, backup/restore scripts, and all earlier task tests.
 - Produces: a dated release evidence section with commands, counts, commit SHA, and any explicit residual risk.
 
-- [ ] **Step 1: Start from disposable PostgreSQL 18 state**
+- [x] **Step 1: Start from disposable PostgreSQL 18 state**
 
 Create uniquely named disposable containers/volumes, run migrations, provision and verify the runtime role, and bootstrap the administrator. Never reuse or remove unrelated user containers or volumes.
 
-- [ ] **Step 2: Run the full local release gate**
+- [x] **Step 2: Run the full local release gate**
 
 Run database generation, lint, typecheck, unit tests, integration tests, production build, deployment tests, real backup/restore integration, Docker Compose validation, Playwright, and Windows backup client tests.
 
 Expected: every applicable check exits 0; deployment and backup integration report zero skipped environment tests.
 
-- [ ] **Step 3: Build and health-check the production image**
+- [x] **Step 3: Build and health-check the production image**
 
 Build the `app` target, start it against disposable PostgreSQL state, and verify `/api/health` succeeds before teardown.
 
-- [ ] **Step 4: Record evidence and clean only disposable resources**
+- [x] **Step 4: Record evidence and clean only disposable resources**
 
 Update the acceptance matrix from `partial/gap` to `covered` only where fresh output proves it. Record intentional Playwright project filters separately from environment skips.
 
-- [ ] **Step 5: Verify the final branch**
+- [x] **Step 5: Verify the final branch**
 
 Run: `git diff --check`, `git status --short`, and the full release commands again if any production file changed after its corresponding check.
 
 Expected: no whitespace errors; only intended release-readiness changes are present before the final commit.
 
-- [ ] **Step 6: Commit without pushing**
+- [x] **Step 6: Commit without pushing**
 
 ```bash
 git add docs/acceptance/2026-10-08-v1-release-readiness.md
