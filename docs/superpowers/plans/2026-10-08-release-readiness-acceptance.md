@@ -73,25 +73,25 @@ git commit -m "docs: map v1 release acceptance"
 - Consumes: `EditorStatus`, active quick notes, and the existing `useRecordEditor` actions `chooseNone`, `chooseQuick`, and `chooseCustom`.
 - Produces: `QuickNotePicker({ notes, noteMode, onChooseCustom, onChooseNone, onChooseQuick, selectedId })` and the same editor request payloads already consumed by sweep APIs.
 
-- [ ] **Step 1: Write failing component tests**
+- [x] **Step 1: Write failing component tests**
 
 Test that the picker is collapsed by default, opens from a full-width button, renders active notes in order, keeps “自定义备注” last, closes after selection, supports clearing the note, and exposes a scrollable option list for six notes.
 
-- [ ] **Step 2: Run the focused tests and verify RED**
+- [x] **Step 2: Run the focused tests and verify RED**
 
 Run: `npm test -- src/modules/sweep/agent/quick-note-picker.test.tsx src/modules/sweep/agent/record-editor.test.tsx`
 
 Expected: FAIL because `QuickNotePicker` and its collapsed interaction do not exist.
 
-- [ ] **Step 3: Implement the minimal picker and integrate it**
+- [x] **Step 3: Implement the minimal picker and integrate it**
 
 Use a local expanded state, an `aria-expanded` trigger, one listbox-like option panel, and existing editor actions. Keep custom-note text input behavior and save payloads unchanged.
 
-- [ ] **Step 4: Apply the bounded list styling**
+- [x] **Step 4: Apply the bounded list styling**
 
 Keep the trigger at least 48 px high and bound the open option panel to five 48 px rows with internal vertical scrolling.
 
-- [ ] **Step 5: Run focused and full unit suites**
+- [x] **Step 5: Run focused and full unit suites**
 
 Run: `npm test -- src/modules/sweep/agent/quick-note-picker.test.tsx src/modules/sweep/agent/record-editor.test.tsx`
 
@@ -101,7 +101,7 @@ Run: `npm test`
 
 Expected: all unit test files pass with zero failures.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/modules/sweep/agent/quick-note-picker.tsx src/modules/sweep/agent/quick-note-picker.test.tsx src/modules/sweep/agent/record-editor.tsx src/modules/sweep/agent/record-editor.test.tsx src/app/globals.css
@@ -122,28 +122,28 @@ git commit -m "feat: add collapsed quick note picker"
 - Modify: `src/app/globals.css`
 
 **Interfaces:**
-- Consumes: App Router `error.tsx` reset callback, the existing school authorization flags, and matrix floors.
-- Produces: `AgentPageLoading`, `AgentPageError({ reset })`, an explicit no-authorized-school notice, and an empty-building state that omits batch actions.
+- Consumes: App Router `error.tsx` retry callback, the existing school authorization flags, and matrix floors.
+- Produces: `AgentPageLoading`, `AgentPageError({ retry })`, an explicit no-authorized-school notice, and an empty-building state that omits batch actions.
 
-- [ ] **Step 1: Write failing state tests**
+- [x] **Step 1: Write failing state tests**
 
 Test the loading copy, retry callback, 48 px retry control class, no-authorized-school message, and empty-building behavior with no batch link.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 Run: `npm test -- src/components/agent-page-state.test.tsx src/modules/campus/agent/school-list.test.tsx src/modules/sweep/agent/building-matrix.test.tsx`
 
 Expected: FAIL because the route state components and missing empty states do not exist.
 
-- [ ] **Step 3: Implement shared route states and segment files**
+- [x] **Step 3: Implement shared route states and segment files**
 
-Keep the page shell stable, describe that fresh data could not be loaded, and call only the supplied `reset()` on retry. Do not introduce cached fallback data.
+Keep the page shell stable, describe that fresh data could not be loaded, and call only the supplied `retry()` on retry. Do not introduce cached fallback data.
 
-- [ ] **Step 4: Implement the two missing empty states**
+- [x] **Step 4: Implement the two missing empty states**
 
 Show a contact-admin notice when no school is authorized. For zero active dormitories, show a return-oriented empty panel and omit floor navigation and batch marking.
 
-- [ ] **Step 5: Run focused and full unit suites**
+- [x] **Step 5: Run focused and full unit suites**
 
 Run the focused command from Step 2, then `npm test`.
 

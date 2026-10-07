@@ -17,4 +17,14 @@ describe("SchoolList", () => {
     expect(screen.getByText("苏州大学北区").closest("div")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("未授权")).toBeInTheDocument();
   });
+
+  it("tells an agent to contact the administrator when no school is authorized", () => {
+    render(<SchoolList schools={[
+      { id: "school-1", isAuthorized: false, name: "苏州大学本部", sortOrder: 1 },
+      { id: "school-2", isAuthorized: false, name: "苏州大学北区", sortOrder: 2 },
+    ]} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("当前没有已授权学校，请联系管理员授权。");
+    expect(screen.getAllByText("未授权")).toHaveLength(2);
+  });
 });
