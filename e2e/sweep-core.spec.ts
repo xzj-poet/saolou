@@ -38,10 +38,11 @@ test("agents complete single and batch sweep flows while administrators can trac
     await pendingStatusButton.click();
     await expect(pendingStatusButton).toHaveAttribute("aria-pressed", "true");
   }).toPass({ timeout: 30_000 });
-  const pendingNoteButton = first.getByRole("button", { name: sweepScenario.pendingNote });
+  await first.getByRole("button", { name: /快捷备注/ }).click();
+  const pendingNoteButton = first.getByRole("option", { name: sweepScenario.pendingNote });
   await expect(async () => {
     await pendingNoteButton.click();
-    await expect(pendingNoteButton).toHaveAttribute("aria-pressed", "true");
+    await expect(first.getByRole("button", { name: `快捷备注：${sweepScenario.pendingNote}` })).toHaveAttribute("aria-expanded", "false");
   }).toPass({ timeout: 30_000 });
   const singleSaveResponse = first.waitForResponse((response) => response.url().includes(`/api/dormitories/${sweepScenario.dormitoryIds["201"]}/my-record`) && response.request().method() === "PUT", { timeout: 30_000 });
   await first.getByRole("button", { name: "保存记录" }).click();
@@ -75,9 +76,10 @@ test("agents complete single and batch sweep flows while administrators can trac
   const coveredButton = first.getByRole("button", { exact: true, name: "已覆盖" });
   await coveredButton.click();
   await expect(coveredButton).toHaveAttribute("aria-pressed", "true");
-  const coveredNoteButton = first.getByRole("button", { name: sweepScenario.coveredNote });
+  await first.getByRole("button", { name: /快捷备注/ }).click();
+  const coveredNoteButton = first.getByRole("option", { name: sweepScenario.coveredNote });
   await coveredNoteButton.click();
-  await expect(coveredNoteButton).toHaveAttribute("aria-pressed", "true");
+  await expect(first.getByRole("button", { name: `快捷备注：${sweepScenario.coveredNote}` })).toHaveAttribute("aria-expanded", "false");
   const batchSaveResponse = first.waitForResponse((response) => response.url().endsWith("/api/sweep-records/batch") && response.request().method() === "POST", { timeout: 30_000 });
   await first.getByRole("button", { name: "保存1间宿舍" }).click();
   expect((await batchSaveResponse).ok()).toBe(true);
@@ -132,10 +134,17 @@ test("concurrent agent, administrator, delete, and batch conflicts require expli
     navigate(left, `/app/dormitories/${room201}/record?floor=2`),
     navigate(right, `/app/dormitories/${room201}/record?floor=2`),
   ]);
-  const leftCustom = left.getByRole("button", { name: "自定义备注" });
-  const rightCustom = right.getByRole("button", { name: "自定义备注" });
+  await Promise.all([
+    left.getByRole("button", { name: /快捷备注/ }).click(),
+    right.getByRole("button", { name: /快捷备注/ }).click(),
+  ]);
+  const leftCustom = left.getByRole("option", { name: "自定义备注" });
+  const rightCustom = right.getByRole("option", { name: "自定义备注" });
   await Promise.all([leftCustom.click(), rightCustom.click()]);
-  await Promise.all([expect(leftCustom).toHaveAttribute("aria-pressed", "true"), expect(rightCustom).toHaveAttribute("aria-pressed", "true")]);
+  await Promise.all([
+    expect(left.getByRole("button", { name: "快捷备注：自定义备注" })).toHaveAttribute("aria-expanded", "false"),
+    expect(right.getByRole("button", { name: "快捷备注：自定义备注" })).toHaveAttribute("aria-expanded", "false"),
+  ]);
   await Promise.all([
     expect(left.getByRole("textbox", { name: "备注" })).toHaveValue("并发初始值"),
     expect(right.getByRole("textbox", { name: "备注" })).toHaveValue("并发初始值"),
@@ -204,9 +213,10 @@ test("concurrent agent, administrator, delete, and batch conflicts require expli
   const batchPending = left.getByRole("button", { exact: true, name: "待补扫" });
   await batchPending.click();
   await expect(batchPending).toHaveAttribute("aria-pressed", "true");
-  const batchCustom = left.getByRole("button", { name: "自定义备注" });
+  await left.getByRole("button", { name: /快捷备注/ }).click();
+  const batchCustom = left.getByRole("option", { name: "自定义备注" });
   await batchCustom.click();
-  await expect(batchCustom).toHaveAttribute("aria-pressed", "true");
+  await expect(left.getByRole("button", { name: "快捷备注：自定义备注" })).toHaveAttribute("aria-expanded", "false");
   await left.getByRole("textbox", { name: "备注" }).fill("保留的批量草稿");
   expect((await putRecord(right, room202, { customNote: "他处新建", expectedRecordId: null, expectedVersion: null, status: "COVERED" })).ok()).toBe(true);
   const batchConflict = left.waitForResponse((response) => response.url().endsWith("/api/sweep-records/batch") && response.request().method() === "POST");

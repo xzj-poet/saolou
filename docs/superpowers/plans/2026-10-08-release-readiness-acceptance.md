@@ -149,7 +149,7 @@ Run the focused command from Step 2, then `npm test`.
 
 Expected: all tests pass with zero failures.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/agent-page-state.tsx src/components/agent-page-state.test.tsx "src/app/(protected)/app/loading.tsx" "src/app/(protected)/app/error.tsx" src/modules/campus/agent/school-list.tsx src/modules/campus/agent/school-list.test.tsx src/modules/sweep/agent/building-matrix.tsx src/modules/sweep/agent/building-matrix.test.tsx src/app/globals.css
@@ -160,31 +160,32 @@ git commit -m "feat: add recoverable agent page states"
 
 **Files:**
 - Modify: `e2e/fixtures/sweep.ts`
+- Modify: `e2e/sweep-core.spec.ts`
 - Create: `e2e/release-readiness.spec.ts`
 
 **Interfaces:**
 - Consumes: the real login route, matrix/editor UI, batch API, quick-note manager API, and PostgreSQL fixture cleanup.
 - Produces: browser evidence for criteria 1, 7, 8, and 24 without changing production interfaces.
 
-- [ ] **Step 1: Write a desktop acceptance test for 20 rooms**
+- [x] **Step 1: Write a desktop acceptance test for 20 rooms**
 
 Create twenty rooms on one floor, select ten rooms per round through the real matrix UI, save both atomic batches, and assert the matrix reports twenty covered rooms.
 
-- [ ] **Step 2: Run it against the completed Tasks 2-3 behavior**
+- [x] **Step 2: Run it against the completed Tasks 2-3 behavior**
 
 Run: `npx playwright test e2e/release-readiness.spec.ts --project=desktop-chromium`
 
 Expected: PASS. This task adds acceptance evidence for existing batch behavior after Tasks 2-3; it does not introduce production behavior. Any failure is a product finding and must be reproduced in a focused test before production code changes.
 
-- [ ] **Step 3: Complete the fixture and browser flow**
+- [x] **Step 3: Complete the fixture and browser flow**
 
 Keep generated rows uniquely prefixed and remove sessions, audits, records, access, dormitories, buildings, schools, notes, and users in dependency order.
 
-- [ ] **Step 4: Add the mobile primary-control test**
+- [x] **Step 4: Add the mobile primary-control test**
 
 At Pixel 7 dimensions, verify the school row, building row, matrix room, return control, batch action, editor status buttons, picker trigger, and save action are each at least 48 px high.
 
-- [ ] **Step 5: Run focused and complete Playwright suites**
+- [x] **Step 5: Run focused and complete Playwright suites**
 
 Run: `npx playwright test e2e/release-readiness.spec.ts`
 
@@ -194,10 +195,10 @@ Run: `npm run test:e2e`
 
 Expected: all applicable tests pass; only named cross-project filters are skipped.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
-git add e2e/fixtures/sweep.ts e2e/release-readiness.spec.ts
+git add e2e/fixtures/sweep.ts e2e/sweep-core.spec.ts e2e/release-readiness.spec.ts
 git commit -m "test: cover v1 release acceptance paths"
 ```
 

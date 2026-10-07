@@ -8,7 +8,11 @@ export type SweepScenario = {
   buildingId: string;
   coveredNote: string;
   dormitoryIds: Record<"201" | "202", string>;
+  overflowNotes: string[];
   pendingNote: string;
+  releaseBuildingId: string;
+  releaseRoomIds: string[];
+  releaseRoomNumbers: string[];
   schoolId: string;
   schoolName: string;
   secondAgent: { id: string; password: string; username: string };
@@ -25,13 +29,20 @@ export const test = authTest.extend<{ sweepScenario: SweepScenario }>({
     const secondAgent = await prisma.user.create({ data: { name: "第二代理", passwordHash: await hashPassword(secondPassword), role: "AGENT", username: `sweep-agent-${suffix}` } });
     const school = await prisma.school.create({ data: { name: `扫楼验收学校-${suffix}` } });
     const building = await prisma.building.create({ data: { name: "验收3号楼", schoolId: school.id } });
+    const releaseBuilding = await prisma.building.create({ data: { name: "发布验收20间楼", schoolId: school.id } });
     const rooms = await Promise.all(["201", "202"].map((roomNo, index) => prisma.dormitory.create({ data: { buildingId: building.id, floor: "2", roomNo, sortOrder: index } })));
+    const releaseRoomNumbers = Array.from({ length: 20 }, (_, index) => String(301 + index));
+    const releaseRooms = await Promise.all(releaseRoomNumbers.map((roomNo, index) => prisma.dormitory.create({ data: { buildingId: releaseBuilding.id, floor: "3", roomNo, sortOrder: index } })));
     await prisma.agentSchoolAccess.createMany({ data: [firstAgent.id, secondAgent.id].map(agentId => ({ agentId, grantedBy: admin.id, schoolId: school.id })) });
     const scenario: SweepScenario = {
       buildingId: building.id,
       coveredNote: `验收已覆盖-${suffix.slice(-6)}`,
       dormitoryIds: { "201": rooms[0].id, "202": rooms[1].id },
+      overflowNotes: Array.from({ length: 5 }, (_, index) => `验收快捷备注${index + 1}-${suffix.slice(-6)}`),
       pendingNote: `验收待补扫-${suffix.slice(-6)}`,
+      releaseBuildingId: releaseBuilding.id,
+      releaseRoomIds: releaseRooms.map(({ id }) => id),
+      releaseRoomNumbers,
       schoolId: school.id,
       schoolName: school.name,
       secondAgent: { id: secondAgent.id, password: secondPassword, username: secondAgent.username },
@@ -39,19 +50,21 @@ export const test = authTest.extend<{ sweepScenario: SweepScenario }>({
     await prisma.quickNote.createMany({ data: [
       { content: scenario.pendingNote, status: "PENDING" },
       { content: scenario.coveredNote, status: "COVERED" },
+      ...scenario.overflowNotes.map((content) => ({ content, status: "COVERED" as const })),
     ] });
 
     try {
       await runScenario(scenario);
     } finally {
       await prisma.session.deleteMany({ where: { userId: secondAgent.id } });
-      await prisma.sweepAudit.deleteMany({ where: { dormitoryId: { in: rooms.map(({ id }) => id) } } });
-      await prisma.sweepRecord.deleteMany({ where: { dormitoryId: { in: rooms.map(({ id }) => id) } } });
+      const dormitoryIds = [...rooms, ...releaseRooms].map(({ id }) => id);
+      await prisma.sweepAudit.deleteMany({ where: { dormitoryId: { in: dormitoryIds } } });
+      await prisma.sweepRecord.deleteMany({ where: { dormitoryId: { in: dormitoryIds } } });
       await prisma.agentSchoolAccess.deleteMany({ where: { schoolId: school.id } });
-      await prisma.dormitory.deleteMany({ where: { buildingId: building.id } });
-      await prisma.building.delete({ where: { id: building.id } });
+      await prisma.dormitory.deleteMany({ where: { buildingId: { in: [building.id, releaseBuilding.id] } } });
+      await prisma.building.deleteMany({ where: { id: { in: [building.id, releaseBuilding.id] } } });
       await prisma.school.delete({ where: { id: school.id } });
-      await prisma.quickNote.deleteMany({ where: { content: { in: [scenario.pendingNote, scenario.coveredNote] } } });
+      await prisma.quickNote.deleteMany({ where: { content: { in: [scenario.pendingNote, scenario.coveredNote, ...scenario.overflowNotes] } } });
       await prisma.user.delete({ where: { id: secondAgent.id } });
     }
   },
