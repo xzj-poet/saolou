@@ -33,6 +33,11 @@ function renderEditor(props: Partial<React.ComponentProps<typeof RecordEditor>> 
   /></UnsavedChangesProvider>);
 }
 
+function chooseNote(name: string) {
+  fireEvent.click(screen.getByRole("button", { name: /快捷备注/ }));
+  fireEvent.click(screen.getByRole("option", { name }));
+}
+
 describe("RecordEditor", () => {
   beforeEach(() => {
     navigation.push.mockReset();
@@ -52,7 +57,9 @@ describe("RecordEditor", () => {
     expect(screen.getByRole("button", { name: "保存记录" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "待补扫" }));
     expect(screen.getByRole("button", { name: "保存记录" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "晚点再来" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "晚点再来" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /选择快捷备注/ }));
+    expect(screen.getByRole("option", { name: "晚点再来" })).toBeInTheDocument();
   });
 
   it("sends the selected shortcut and concurrency token", async () => {
@@ -60,7 +67,7 @@ describe("RecordEditor", () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
     renderEditor();
     fireEvent.click(screen.getByRole("button", { name: "待补扫" }));
-    fireEvent.click(screen.getByRole("button", { name: "晚点再来" }));
+    chooseNote("晚点再来");
     fireEvent.click(screen.getByRole("button", { name: "保存记录" }));
     await act(async () => Promise.resolve());
 
@@ -85,7 +92,7 @@ describe("RecordEditor", () => {
       .mockResolvedValueOnce(new Response(JSON.stringify(conflict), { status: 409 }))
       .mockResolvedValueOnce(new Response("{}", { status: 200 }));
     renderEditor({ dormitories: [editDormitory], initialNote: "旧值", initialStatus: "PENDING", mode: "edit", title: "编辑 101" });
-    fireEvent.click(screen.getByRole("button", { name: "自定义备注" }));
+    chooseNote("自定义备注");
     fireEvent.change(screen.getByRole("textbox", { name: "备注" }), { target: { value: "我的草稿" } });
     fireEvent.click(screen.getByRole("button", { name: "保存记录" }));
 
@@ -121,7 +128,7 @@ describe("RecordEditor", () => {
       .mockRejectedValueOnce(new TypeError("offline"))
       .mockResolvedValueOnce(new Response("{}", { status: 200 }));
     renderEditor({ dormitories: [editDormitory], initialNote: "旧值", initialStatus: "PENDING", mode: "edit", title: "编辑 101" });
-    fireEvent.click(screen.getByRole("button", { name: "自定义备注" }));
+    chooseNote("自定义备注");
     fireEvent.change(screen.getByRole("textbox", { name: "备注" }), { target: { value: "敲门无人应答" } });
     fireEvent.click(screen.getByRole("button", { name: "保存记录" }));
     await screen.findByText("尚未保存，请检查网络后重新保存");
@@ -145,7 +152,7 @@ describe("RecordEditor", () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
     renderEditor({ dormitories: [{ ...createDormitory }, { expectedRecordId: "r2", expectedVersion: 4, id: "d2", roomNo: "102" }], mode: "batch", title: "标记 101、102" });
     fireEvent.click(screen.getByRole("button", { name: "待补扫" }));
-    fireEvent.click(screen.getByRole("button", { name: "无备注" }));
+    chooseNote("无备注");
     fireEvent.click(screen.getByRole("button", { name: "保存2间宿舍" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/sweep-records/batch", expect.objectContaining({ method: "POST" })));
     expect(submittedBody(fetchMock)).toEqual({ buildingId: "b1", targets: [{ dormitoryId: "d1", expectedRecordId: null, expectedVersion: null }, { dormitoryId: "d2", expectedRecordId: "r2", expectedVersion: 4 }], customNote: null, status: "PENDING" });
@@ -161,7 +168,7 @@ describe("RecordEditor", () => {
       .mockResolvedValueOnce(new Response("{}", { status: 200 }));
     renderEditor({ dormitories: [{ ...createDormitory }, { ...editDormitory, id: "d2", roomNo: "102" }], mode: "batch", title: "标记 101、102" });
     fireEvent.click(screen.getByRole("button", { name: "待补扫" }));
-    fireEvent.click(screen.getByRole("button", { name: "自定义备注" }));
+    chooseNote("自定义备注");
     fireEvent.change(screen.getByRole("textbox", { name: "备注" }), { target: { value: "批量草稿" } });
     fireEvent.click(screen.getByRole("button", { name: "保存2间宿舍" }));
     await screen.findByText(/101 最新记录/);

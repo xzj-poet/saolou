@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useUnsavedChanges } from "@/components/unsaved-changes-provider";
+import { QuickNotePicker } from "@/modules/sweep/agent/quick-note-picker";
 import { type EditorStatus, useRecordEditor } from "@/modules/sweep/agent/use-record-editor";
 
 type QuickNote = { content: string; id: string; status: EditorStatus };
@@ -133,13 +134,14 @@ export function RecordEditor({ backHref, buildingId, dormitories, floor, initial
     </div>
     <section className="record-note-panel">
       <h2>备注</h2>
-      <div className="quick-note-picker">
-        {availableNotes.map((note) => <button aria-pressed={editor.quickNoteId === note.id} key={note.id} onClick={() => editor.actions.chooseQuick(note.id)} type="button">{note.content}</button>)}
-      </div>
-      <div className="note-mode-actions">
-        <button aria-pressed={editor.noteMode === "none"} onClick={editor.actions.chooseNone} type="button">无备注</button>
-        <button aria-pressed={editor.noteMode === "custom"} onClick={editor.actions.chooseCustom} type="button">自定义备注</button>
-      </div>
+      <QuickNotePicker
+        noteMode={editor.noteMode}
+        notes={availableNotes}
+        onChooseCustom={editor.actions.chooseCustom}
+        onChooseNone={editor.actions.chooseNone}
+        onChooseQuick={editor.actions.chooseQuick}
+        selectedId={editor.quickNoteId}
+      />
       {editor.noteMode === "custom" ? <label className="field-label" htmlFor="record-note">备注<textarea aria-label="备注" id="record-note" maxLength={60} onChange={(event) => editor.actions.changeCustom(event.target.value)} value={editor.customNote} /></label> : null}
     </section>
     {conflicts.length ? <section className="record-conflict-panel">

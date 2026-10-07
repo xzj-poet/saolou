@@ -982,8 +982,7 @@ h1 {
   opacity: 0.35;
 }
 
-.record-status-tabs,
-.note-mode-actions {
+.record-status-tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 9px;
@@ -991,8 +990,8 @@ h1 {
 }
 
 .record-status-tabs button,
-.note-mode-actions button,
-.quick-note-picker button {
+.quick-note-trigger,
+.quick-note-options button {
   min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -1002,8 +1001,7 @@ h1 {
 }
 
 .record-status-tabs button[aria-pressed="true"],
-.note-mode-actions button[aria-pressed="true"],
-.quick-note-picker button[aria-pressed="true"] {
+.quick-note-options button[aria-selected="true"] {
   border-color: var(--green);
   background: var(--green-soft);
   color: var(--green);
@@ -1019,7 +1017,10 @@ h1 {
 }
 
 .record-note-panel h2 { margin: 0 0 12px; }
-.quick-note-picker { max-height: 250px; display: grid; gap: 8px; overflow: auto; }
+.quick-note-dropdown { position: relative; }
+.quick-note-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; text-align: left; }
+.quick-note-options { position: relative; z-index: 2; max-height: calc(48px * 5 + 8px * 4); display: grid; gap: 8px; margin-top: 8px; overflow-y: auto; overscroll-behavior: contain; }
+.quick-note-options button { flex: 0 0 48px; padding: 0 14px; text-align: left; }
 .record-note-panel textarea { min-height: 100px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; resize: vertical; }
 .save-message { min-height: 24px; color: var(--green); }
 .record-conflict-panel { display: grid; gap: 12px; margin: 16px 0; padding: 16px; border: 1px solid #e9c85e; border-radius: 14px; background: #fff6d8; color: #765100; }
