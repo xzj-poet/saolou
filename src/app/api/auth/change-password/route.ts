@@ -6,12 +6,27 @@ import { requireSameOrigin } from "@/lib/http/require-same-origin";
 import { changePasswordSchema } from "@/modules/auth/change-password-schema";
 import { changePendingAgentPassword } from "@/modules/auth/change-password-service";
 import { userFromRequest } from "@/modules/auth/current-user";
+import { SESSION_COOKIE_NAME } from "@/modules/auth/session-cookie";
+
+function tokenFromRequest(request: Request): string | undefined {
+  const cookieHeader = request.headers.get("cookie");
+  return cookieHeader
+    ?.split(";")
+    .map((pair) => pair.trim().split("="))
+    .find(([name]) => name === SESSION_COOKIE_NAME)
+    ?.slice(1)
+    .join("=");
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     requireSameOrigin(request);
     const user = await userFromRequest(request);
     if (!user) {
+      throw new ApiError(401, "UNAUTHENTICATED", "请先登录");
+    }
+    const sessionToken = tokenFromRequest(request);
+    if (!sessionToken) {
       throw new ApiError(401, "UNAUTHENTICATED", "请先登录");
     }
 
@@ -28,7 +43,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       });
     }
 
-    await changePendingAgentPassword(user, parsed.data.newPassword);
+    await changePendingAgentPassword(user, parsed.data.newPassword, sessionToken);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return apiErrorResponse(error, request);
