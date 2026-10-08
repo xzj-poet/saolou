@@ -14,5 +14,8 @@ export default async function AgentLayout({ children }: { children: ReactNode })
   if (user.role !== "AGENT") {
     redirect("/admin");
   }
+  if (user.mustChangePassword) {
+    redirect("/change-password");
+  }
   return <AppShell user={user}>{children}</AppShell>;
 }

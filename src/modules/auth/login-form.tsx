@@ -5,7 +5,7 @@ import { type FormEvent, useState } from "react";
 
 interface LoginResponse {
   error?: { message?: string };
-  user?: { role: "ADMIN" | "AGENT" };
+  user?: { mustChangePassword: boolean; role: "ADMIN" | "AGENT" };
 }
 
 export function LoginForm() {
@@ -36,7 +36,13 @@ export function LoginForm() {
         return;
       }
 
-      router.replace(body.user.role === "ADMIN" ? "/admin" : "/app/schools");
+      router.replace(
+        body.user.role === "ADMIN"
+          ? "/admin"
+          : body.user.mustChangePassword
+            ? "/change-password"
+            : "/app/schools",
+      );
     } catch {
       setError("网络连接失败，请稍后重试");
     } finally {
