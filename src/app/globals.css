@@ -56,20 +56,8 @@ input {
   box-shadow: 0 24px 60px rgb(23 34 56 / 12%);
 }
 
-.landing-mark {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  background: var(--ink);
-  color: white;
-  font-size: 20px;
-  font-weight: 900;
-}
-
 .eyebrow {
-  margin: 24px 0 8px;
+  margin: 0 0 8px;
   color: var(--green);
   font-size: 13px;
   font-weight: 800;
@@ -126,6 +114,21 @@ h1 {
 .page-copy {
   color: var(--muted);
   line-height: 1.65;
+}
+
+.change-password-account,
+.password-help {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.change-password-account {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--gray-soft);
+  color: var(--ink);
+  font-weight: 750;
 }
 
 .login-form {
@@ -251,15 +254,107 @@ h1 {
   background: white;
 }
 
-.admin-header > div:first-child,
-.agent-header > div:first-child {
-  display: grid;
+.usage-guide-trigger {
+  flex: 0 0 auto;
 }
 
-.admin-header strong,
-.agent-header strong {
-  font-size: 20px;
+.usage-guide {
+  display: grid;
+  gap: 18px;
 }
+
+.usage-guide-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.usage-guide-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, .72fr);
+  gap: 22px;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+.guide-kicker {
+  margin: 0 0 4px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.usage-guide-section h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 19px;
+}
+
+.usage-guide-steps,
+.usage-guide-rules {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.guide-rule-key {
+  color: #0d5f46;
+  font-weight: 800;
+}
+
+.usage-visual {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.usage-visual svg {
+  width: 100%;
+  height: auto;
+}
+
+.usage-visual figcaption {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.usage-statuses {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.usage-statuses p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.status-unvisited { background: #b6bfcf; }
+.status-pending { background: #e6ae27; }
+.status-covered { background: #2eb67d; }
+.status-star { color: #2563eb; font-size: 17px; line-height: 10px; }
 
 .admin-body {
   display: grid;
@@ -1094,6 +1189,18 @@ h1 {
 
   .identity-copy span {
     font-size: 11px;
+  }
+
+  .usage-guide-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .usage-visual {
+    max-width: 320px;
+    width: 100%;
+    margin-inline: auto;
   }
 
   .admin-body {

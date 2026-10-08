@@ -93,7 +93,7 @@ describe("AgentManager", () => {
     fireEvent.click(screen.getByRole("button", { name: "创建账号" }));
 
     expect(await screen.findByText("Abcd2345!efgh678")).toBeInTheDocument();
-    expect(screen.getByText("此密码只展示一次，请立即复制并安全交给代理。")).toBeInTheDocument();
+    expect(screen.getByText("这是临时密码，只展示一次，请立即复制并安全交给代理。代理登录后必须自行设置新密码。")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "复制密码" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "关闭创建代理" }));
     fireEvent.click(screen.getByRole("button", { name: /创建代理/ }));
