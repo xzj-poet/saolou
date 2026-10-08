@@ -199,13 +199,13 @@ git commit -m "feat: add agent password change screen"
 - Consumes: completed Tasks 1–3.
 - Produces: verified migration, production build, and a locally accepted mobile login/change/reset lifecycle.
 
-- [ ] **Step 1: Generate Prisma client and apply the development migration**
+- [x] **Step 1: Generate Prisma client and apply the development migration**
 
 Run: `npm run db:generate && npm run db:migrate`
 
 Expected: Prisma client generation and the new migration complete successfully against the local development database.
 
-- [ ] **Step 2: Run static and automated validation**
+- [x] **Step 2: Run static and automated validation**
 
 Run: `npm run lint && npm run typecheck && npm test && npm run build`
 
@@ -215,7 +215,6 @@ Expected: all commands exit with status 0.
 
 Using a newly created agent, verify: temporary-password login opens `/change-password`; a six-character password saves and opens the school page; the temporary password no longer logs in; administrator reset invalidates the active session; the new temporary password reopens the forced change page. Verify the administrator’s one-time dialog calls the value “临时密码”.
 
-- [ ] **Step 4: Inspect final changes and commit generated metadata if changed**
+- [x] **Step 4: Inspect final changes and commit generated metadata if changed**
 
 Run: `git diff --check && git status --short`. Stage only feature-owned generated metadata such as `next-env.d.ts` if Next.js changed it as part of this work; preserve all pre-existing mobile-preview edits for their separate review.
-
