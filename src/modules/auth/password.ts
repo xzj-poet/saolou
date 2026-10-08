@@ -9,8 +9,8 @@ const KEY_BYTES = 64;
 const MAX_MEMORY = 32 * 1024 * 1024;
 
 function validatePassword(password: string) {
-  if (password.length < 10 || password.length > 128) {
-    throw new Error("Password must contain between 10 and 128 characters.");
+  if (password.length < 6 || password.length > 128) {
+    throw new Error("Password must contain between 6 and 128 characters.");
   }
 }
 

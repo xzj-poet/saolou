@@ -47,6 +47,7 @@ export async function createAgent(_administratorId: string, input: AgentCreateIn
     const agent = await prisma.user.create({
       data: {
         name: input.name.trim(),
+        mustChangePassword: true,
         passwordHash: await hashPassword(temporaryPassword),
         role: "AGENT",
         username: input.username.trim().toLowerCase(),
@@ -78,7 +79,10 @@ export async function resetAgentPassword(agentId: string) {
   const temporaryPassword = generateTemporaryPassword();
   const passwordHash = await hashPassword(temporaryPassword);
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ data: { passwordHash }, where: { id: agentId } });
+    await tx.user.update({
+      data: { mustChangePassword: true, passwordHash },
+      where: { id: agentId },
+    });
     await tx.session.deleteMany({ where: { userId: agentId } });
   });
   return { temporaryPassword };

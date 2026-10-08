@@ -56,6 +56,7 @@ export async function resolveSession(
 
   return {
     id: session.user.id,
+    mustChangePassword: session.user.mustChangePassword,
     name: session.user.name,
     role: session.user.role,
     username: session.user.username,

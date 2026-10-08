@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword } from "@/modules/auth/password";
 
 export interface AuthenticatedUser {
   id: string;
+  mustChangePassword: boolean;
   name: string;
   role: UserRole;
   username: string;
@@ -36,6 +37,7 @@ export async function authenticateCredentials(
 
   return {
     id: user.id,
+    mustChangePassword: user.mustChangePassword,
     name: user.name,
     role: user.role,
     username: user.username,

@@ -27,7 +27,8 @@ describe("password hashing", () => {
   });
 
   it("enforces the service password length boundary", async () => {
-    await expect(hashPassword("short")).rejects.toThrow(/10.*128/);
-    await expect(hashPassword("x".repeat(129))).rejects.toThrow(/10.*128/);
+    await expect(hashPassword("abcdef")).resolves.toMatch(/^scrypt\$/);
+    await expect(hashPassword("short")).rejects.toThrow(/6.*128/);
+    await expect(hashPassword("x".repeat(129))).rejects.toThrow(/6.*128/);
   });
 });

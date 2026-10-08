@@ -33,6 +33,7 @@ model User {
   name                String
   username            String              @unique
   passwordHash        String              @map("password_hash")
+  mustChangePassword  Boolean             @default(false) @map("must_change_password")
   role                UserRole
   status              UserStatus          @default(ACTIVE)
   createdAt           DateTime            @default(now()) @map("created_at")
