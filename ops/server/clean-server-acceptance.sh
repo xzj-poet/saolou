@@ -70,13 +70,13 @@ volume_identity=$(docker volume inspect --format '{{.Mountpoint}}' campus-sweep_
 
 counts=$(compose exec -T db psql -X -qAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL'
 SELECT 'migrationCount=' || count(*) FROM "_prisma_migrations";
-SELECT 'User=' || count(*) FROM "User";
-SELECT 'School=' || count(*) FROM "School";
-SELECT 'Building=' || count(*) FROM "Building";
-SELECT 'Dormitory=' || count(*) FROM "Dormitory";
-SELECT 'SweepRecord=' || count(*) FROM "SweepRecord";
-SELECT 'SweepAudit=' || count(*) FROM "SweepAudit";
-SELECT 'Session=' || count(*) FROM "Session";
+SELECT 'User=' || count(*) FROM "users";
+SELECT 'School=' || count(*) FROM "schools";
+SELECT 'Building=' || count(*) FROM "buildings";
+SELECT 'Dormitory=' || count(*) FROM "dormitories";
+SELECT 'SweepRecord=' || count(*) FROM "sweep_records";
+SELECT 'SweepAudit=' || count(*) FROM "sweep_audits";
+SELECT 'Session=' || count(*) FROM "sessions";
 SQL
 )
 

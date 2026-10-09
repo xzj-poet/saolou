@@ -145,6 +145,27 @@ test("deployment reuses encrypted backups and installs the daily timer after hea
   assert.doesNotMatch(`${deploy}${service}${timer}${status}`, /amazon|aliyun|tencent|azure/i);
 });
 
+test("production operations query the Prisma tables using their deployed lowercase names", async () => {
+  const [backupLibrary, acceptance, restoredData, integrationFixture] = await Promise.all([
+    read("ops/server/backup-lib.sh"),
+    read("ops/server/clean-server-acceptance.sh"),
+    read("ops/server/verify-restored-data.sh"),
+    read("tests/deployment/backup-restore.integration.test.mjs"),
+  ]);
+  const operations = [backupLibrary, acceptance, restoredData].join("\n");
+
+  for (const table of ["users", "schools", "buildings", "dormitories", "sweep_records", "sweep_audits", "sessions"]) {
+    assert.match(operations, new RegExp(`SELECT count\\(\\*\\) FROM "${table}"`));
+  }
+  assert.doesNotMatch(operations, /FROM "(?:User|School|Building|Dormitory|SweepRecord|SweepAudit|Session)"/);
+  assert.match(restoredData, /record\."agent_id"/);
+  assert.match(restoredData, /record\."dormitory_id"/);
+  assert.doesNotMatch(restoredData, /record\."(?:agentId|dormitoryId)"/);
+  assert.match(integrationFixture, /CREATE TABLE "users"/);
+  assert.doesNotMatch(integrationFixture, /CREATE TABLE "User"/);
+  assert.match(integrationFixture, /CREATE TABLE "sweep_records"[\s\S]*"agent_id" text[\s\S]*"dormitory_id" text/);
+});
+
 test("restore verification is isolated and CI exercises the PostgreSQL 18 round trip", async () => {
   const [restore, verify, fixture, workflow, packageJson] = await Promise.all([
     read("ops/server/restore-backup.sh"),

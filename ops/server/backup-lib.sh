@@ -131,13 +131,13 @@ SELECT pg_export_snapshot();
 SELECT pg_backend_pid();
 SELECT pg_database_size(current_database());
 SELECT count(*) FROM "_prisma_migrations";
-SELECT count(*) FROM "User";
-SELECT count(*) FROM "School";
-SELECT count(*) FROM "Building";
-SELECT count(*) FROM "Dormitory";
-SELECT count(*) FROM "SweepRecord";
-SELECT count(*) FROM "SweepAudit";
-SELECT count(*) FROM "Session";
+SELECT count(*) FROM "users";
+SELECT count(*) FROM "schools";
+SELECT count(*) FROM "buildings";
+SELECT count(*) FROM "dormitories";
+SELECT count(*) FROM "sweep_records";
+SELECT count(*) FROM "sweep_audits";
+SELECT count(*) FROM "sessions";
 SELECT pg_sleep(86400);
 SQL
   }
