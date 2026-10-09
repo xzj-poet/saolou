@@ -1,22 +1,27 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { prisma } from "@/lib/db";
+import { POST as changePassword } from "@/app/api/auth/change-password/route";
 import { POST as login } from "@/app/api/auth/login/route";
 import { POST as logout } from "@/app/api/auth/logout/route";
 import { GET as me } from "@/app/api/auth/me/route";
 import { GET as clearExpiredSession } from "@/app/api/auth/session-expired/route";
+import { GET as listSchools } from "@/app/api/schools/route";
 import { hashPassword } from "@/modules/auth/password";
 import { resetRateLimitsForTests } from "@/lib/http/rate-limit";
 
 const origin = "http://localhost";
 const username = "route-agent";
 const disabledUsername = "route-disabled";
+const pendingUsername = "route-pending";
+const pendingValidationUsername = "route-pending-validation";
 
-function postRequest(path: string, body: unknown, requestOrigin = origin) {
+function postRequest(path: string, body: unknown, requestOrigin = origin, cookie?: string) {
   return new Request(`${origin}${path}`, {
     body: JSON.stringify(body),
     headers: {
       "Content-Type": "application/json",
+      ...(cookie ? { Cookie: cookie } : {}),
       Origin: requestOrigin,
     },
     method: "POST",
@@ -45,6 +50,22 @@ beforeAll(async () => {
         status: "DISABLED",
         username: disabledUsername,
       },
+      {
+        mustChangePassword: true,
+        name: "待改密代理",
+        passwordHash,
+        role: "AGENT",
+        status: "ACTIVE",
+        username: pendingUsername,
+      },
+      {
+        mustChangePassword: true,
+        name: "待校验代理",
+        passwordHash,
+        role: "AGENT",
+        status: "ACTIVE",
+        username: pendingValidationUsername,
+      },
     ],
   });
 });
@@ -52,13 +73,13 @@ beforeAll(async () => {
 afterAll(async () => {
   const users = await prisma.user.findMany({
     select: { id: true },
-    where: { username: { in: [username, disabledUsername] } },
+    where: { username: { in: [username, disabledUsername, pendingUsername, pendingValidationUsername] } },
   });
   await prisma.session.deleteMany({
     where: { userId: { in: users.map((user) => user.id) } },
   });
   await prisma.user.deleteMany({
-    where: { username: { in: [username, disabledUsername] } },
+    where: { username: { in: [username, disabledUsername, pendingUsername, pendingValidationUsername] } },
   });
 });
 
@@ -163,10 +184,63 @@ describe("authentication routes", () => {
     expect(response.status).toBe(200);
     expect(Object.keys((await responseJson(response)).user as object).sort()).toEqual([
       "id",
+      "mustChangePassword",
       "name",
       "role",
       "username",
     ]);
+  });
+
+  it("lets a pending agent replace the temporary password but blocks business data first", async () => {
+    const loginResponse = await login(postRequest("/api/auth/login", {
+      password: "route-password-123",
+      username: pendingUsername,
+    }));
+    const cookie = loginResponse.headers.get("set-cookie")?.split(";", 1)[0] ?? "";
+
+    expect(await responseJson(loginResponse)).toMatchObject({
+      user: { mustChangePassword: true, role: "AGENT" },
+    });
+    const blocked = await listSchools(new Request(`${origin}/api/schools`, { headers: { Cookie: cookie } }));
+    expect(blocked.status).toBe(403);
+    await expect(responseJson(blocked)).resolves.toMatchObject({
+      error: { code: "PASSWORD_CHANGE_REQUIRED" },
+    });
+
+    const changed = await changePassword(postRequest(
+      "/api/auth/change-password",
+      { confirmPassword: "abcdef", newPassword: "abcdef" },
+      origin,
+      cookie,
+    ));
+    expect(changed.status).toBe(200);
+    await expect(login(postRequest("/api/auth/login", {
+      password: "route-password-123",
+      username: pendingUsername,
+    }))).resolves.toMatchObject({ status: 401 });
+    await expect(login(postRequest("/api/auth/login", {
+      password: "abcdef",
+      username: pendingUsername,
+    }))).resolves.toMatchObject({ status: 200 });
+  });
+
+  it("rejects mismatched and short replacement passwords", async () => {
+    const loginResponse = await login(postRequest("/api/auth/login", {
+      password: "route-password-123",
+      username: pendingValidationUsername,
+    }));
+    const cookie = loginResponse.headers.get("set-cookie")?.split(";", 1)[0] ?? "";
+
+    for (const body of [
+      { confirmPassword: "abcdef", newPassword: "abcde" },
+      { confirmPassword: "abcdef", newPassword: "ghijkl" },
+    ]) {
+      const response = await changePassword(postRequest("/api/auth/change-password", body, origin, cookie));
+      expect(response.status).toBe(400);
+      await expect(responseJson(response)).resolves.toMatchObject({
+        error: { code: "VALIDATION_ERROR" },
+      });
+    }
   });
 
   it("revokes the session and clears its cookie on logout", async () => {

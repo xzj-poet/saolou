@@ -39,7 +39,7 @@ function PasswordPanel({ password }: { password: string }) {
   }
   return (
     <div className="password-result">
-      <p>此密码只展示一次，请立即复制并安全交给代理。</p>
+      <p>这是临时密码，只展示一次，请立即复制并安全交给代理。代理登录后必须自行设置新密码。</p>
       <code>{password}</code>
       <button className="quiet-button" onClick={copy} type="button">{copied ? "已复制" : "复制密码"}</button>
     </div>

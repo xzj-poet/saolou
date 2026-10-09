@@ -12,13 +12,15 @@ export const schoolCreateSchema = z.object({ name: trimmedName }).strict();
 export const schoolUpdateSchema = z.object({ name: trimmedName }).strict();
 export const activeStatusSchema = z.object({ isActive: z.boolean() }).strict();
 
+export const buildingGenderSchema = z.enum(["MALE", "FEMALE"]);
+
 export const buildingCreateSchema = z
-  .object({ name: trimmedName, note: optionalNote, schoolId: z.uuid() })
+  .object({ gender: buildingGenderSchema.default("MALE"), name: trimmedName, note: optionalNote, schoolId: z.uuid() })
   .strict();
 export const buildingUpdateSchema = z
-  .object({ name: trimmedName.optional(), note: optionalNote })
+  .object({ gender: buildingGenderSchema.optional(), name: trimmedName.optional(), note: optionalNote })
   .strict()
-  .refine((value) => value.name !== undefined || value.note !== undefined, {
+  .refine((value) => value.name !== undefined || value.note !== undefined || value.gender !== undefined, {
     message: "至少提供一个需要修改的字段",
   });
 

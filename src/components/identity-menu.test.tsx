@@ -24,7 +24,7 @@ describe("IdentityMenu", () => {
   ] as const)("shows the current %s identity and only logout", (role, roleLabel) => {
     render(
       <IdentityMenu
-        user={{ id: "user-1", name: "张三", role, username: "zhangsan" }}
+        user={{ id: "user-1", mustChangePassword: false, name: "张三", role, username: "zhangsan" }}
       />,
     );
 
@@ -42,7 +42,7 @@ describe("IdentityMenu", () => {
     );
     render(
       <IdentityMenu
-        user={{ id: "user-1", name: "张三", role: "AGENT", username: "zhangsan" }}
+        user={{ id: "user-1", mustChangePassword: false, name: "张三", role: "AGENT", username: "zhangsan" }}
       />,
     );
 
@@ -61,7 +61,7 @@ describe("IdentityMenu", () => {
 
     function DirtyEditor() {
       useUnsavedChanges(true);
-      return <IdentityMenu user={{ id: "user-1", name: "张三", role: "AGENT", username: "zhangsan" }} />;
+      return <IdentityMenu user={{ id: "user-1", mustChangePassword: false, name: "张三", role: "AGENT", username: "zhangsan" }} />;
     }
 
     render(<UnsavedChangesProvider><DirtyEditor /></UnsavedChangesProvider>);

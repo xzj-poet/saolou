@@ -38,6 +38,7 @@ const schools: AdminSchoolSummary[] = [
         ],
         dormitoryCount: 2,
         floorCount: 1,
+        gender: "MALE",
         id: "building-3",
         isActive: true,
         name: "3号楼",
@@ -67,7 +68,7 @@ describe("CampusManager", () => {
       "aria-expanded",
       "true",
     );
-    expect(screen.getByText("1层 · 2间宿舍")).toBeInTheDocument();
+    expect(screen.getByText("男生宿舍楼 · 1层 · 2间宿舍")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /展开3号楼/ })).not.toBeInTheDocument();
   });
 
@@ -76,8 +77,9 @@ describe("CampusManager", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "3号楼操作" }));
     expect(screen.queryByRole("dialog", { name: "3号楼宿舍蓝图" })).not.toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "编辑楼栋名称" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "编辑楼栋备注" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "编辑楼栋信息" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "编辑楼栋名称" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "编辑楼栋备注" })).not.toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "宿舍管理" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "删除/停用楼栋" })).toHaveClass(
       "danger-action",
@@ -90,6 +92,18 @@ describe("CampusManager", () => {
     expect(within(dialog).queryByRole("button", { name: /2楼/ })).not.toBeInTheDocument();
     expect(within(dialog).getByText("201")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("201 有扫楼记录，受保护")).toBeInTheDocument();
+  });
+
+  it("combines name, gender, and note into one building information dialog", () => {
+    render(<CampusManager initialSchoolId="school-main" schools={schools} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "3号楼操作" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "编辑楼栋信息" }));
+
+    const dialog = screen.getByRole("dialog", { name: "编辑楼栋信息" });
+    expect(within(dialog).getByLabelText("楼栋名称")).toHaveValue("3号楼");
+    expect(within(dialog).getByLabelText("宿舍类型")).toHaveValue("MALE");
+    expect(within(dialog).getByLabelText("楼栋备注（可选）")).toHaveValue("靠近东门，备注写着99层 999间");
   });
 
   it("exposes the approved school actions and the three dormitory-management tabs", () => {

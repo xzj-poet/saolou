@@ -45,10 +45,12 @@ async function sessionFor(
   username: string,
   role: "ADMIN" | "AGENT",
   disabled = false,
+  mustChangePassword = false,
 ) {
   const user = await prisma.user.create({
     data: {
       name: username,
+      mustChangePassword,
       passwordHash: "unused",
       role,
       status: "ACTIVE",
@@ -83,6 +85,13 @@ describe("protected route layouts", () => {
     await sessionFor("layout-admin", "ADMIN");
     await expect(AgentLayout({ children: "content" })).rejects.toThrow(
       "REDIRECT:/admin",
+    );
+  });
+
+  it("redirects a pending agent away from business pages", async () => {
+    await sessionFor("layout-agent", "AGENT", false, true);
+    await expect(AgentLayout({ children: "content" })).rejects.toThrow(
+      "REDIRECT:/change-password",
     );
   });
 

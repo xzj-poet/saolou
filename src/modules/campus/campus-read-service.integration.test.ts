@@ -142,6 +142,7 @@ describe("campus read service", () => {
     expect(activeResult?.buildings.find(({ id }) => id === building.id)).toMatchObject({
       dormitoryCount: 2,
       floorCount: 1,
+      gender: "MALE",
       id: building.id,
       note: "靠近东门，备注里写着99层 999间",
     });
@@ -195,6 +196,7 @@ describe("campus read service", () => {
       expect.objectContaining({
         dormitoryCount: 2,
         floorCount: 1,
+        gender: "MALE",
         id: building.id,
       }),
     ]);

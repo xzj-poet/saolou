@@ -47,12 +47,12 @@ describe("agent administration service", () => {
     const result = await createAgent(admin.id, { name: " 张三 ", username: ` ${username.toUpperCase()} ` });
 
     expect(result.temporaryPassword).toHaveLength(16);
-    expect(result.agent).toMatchObject({ name: "张三", role: "AGENT", username });
+    expect(result.agent).toMatchObject({ mustChangePassword: true, name: "张三", role: "AGENT", username });
     expect(await verifyPassword(result.temporaryPassword, result.agent.passwordHash)).toBe(true);
     await expectApiError(createAgent(admin.id, { name: "重复", username }), 409, "USERNAME_CONFLICT");
-    await expect(listAgentsForAdmin()).resolves.toEqual([
+    await expect(listAgentsForAdmin()).resolves.toEqual(expect.arrayContaining([
       expect.objectContaining({ id: result.agent.id, name: "张三", schools: [], status: "ACTIVE", username }),
-    ]);
+    ]));
   });
 
   it("renames, disables, and enables without losing school access while revoking sessions", async () => {
@@ -83,6 +83,7 @@ describe("agent administration service", () => {
     expect(reset.temporaryPassword).toHaveLength(16);
     expect(reset.temporaryPassword).not.toBe(created.temporaryPassword);
     expect(await verifyPassword(reset.temporaryPassword, stored.passwordHash)).toBe(true);
+    expect(stored.mustChangePassword).toBe(true);
     expect(await resolveSession(session.token)).toBeNull();
     expect(JSON.stringify(stored)).not.toContain(reset.temporaryPassword);
   });

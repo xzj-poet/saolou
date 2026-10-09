@@ -102,13 +102,14 @@ describe("administrator campus service", () => {
       schoolId: school.id,
     });
 
-    expect(building).toMatchObject({ name: "3号楼", note: "靠近东门" });
+    expect(building).toMatchObject({ gender: "MALE", name: "3号楼", note: "靠近东门" });
     await expectApiError(
       createBuilding({ name: "3号楼", schoolId: school.id }),
       409,
       "BUILDING_NAME_CONFLICT",
     );
-    await expect(updateBuilding(building.id, { name: "三号楼", note: " 夜间通行 " })).resolves.toMatchObject({
+    await expect(updateBuilding(building.id, { gender: "FEMALE", name: "三号楼", note: " 夜间通行 " })).resolves.toMatchObject({
+      gender: "FEMALE",
       name: "三号楼",
       note: "夜间通行",
     });

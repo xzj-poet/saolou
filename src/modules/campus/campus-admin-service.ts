@@ -4,8 +4,8 @@ import type { DormitoryRangeInput } from "@/modules/campus/dormitory-range";
 import { DormitoryRangeError, generateDormitoryRange } from "@/modules/campus/dormitory-range";
 
 type SchoolInput = { name: string };
-type BuildingCreateInput = { name: string; note?: string | null; schoolId: string };
-type BuildingUpdateInput = { name?: string; note?: string | null };
+type BuildingCreateInput = { gender?: "MALE" | "FEMALE"; name: string; note?: string | null; schoolId: string };
+type BuildingUpdateInput = { gender?: "MALE" | "FEMALE"; name?: string; note?: string | null };
 type DormitoryCreateInput = { buildingId: string; floor: string; roomNo: string };
 
 function normalizedName(name: string) {
@@ -111,6 +111,7 @@ export async function createBuilding(input: BuildingCreateInput) {
   try {
     return await prisma.building.create({
       data: {
+        gender: input.gender ?? "MALE",
         name: normalizedName(input.name),
         note: normalizedNote(input.note),
         schoolId: input.schoolId,
@@ -128,6 +129,7 @@ export async function updateBuilding(id: string, input: BuildingUpdateInput) {
   try {
     return await prisma.building.update({
       data: {
+        ...(input.gender === undefined ? {} : { gender: input.gender }),
         ...(input.name === undefined ? {} : { name: normalizedName(input.name) }),
         ...(input.note === undefined ? {} : { note: normalizedNote(input.note) }),
       },

@@ -56,6 +56,7 @@ describe("credential authentication", () => {
 
     await expect(authenticateCredentials(requestLikeInput)).resolves.toEqual({
       id: databaseUser.id,
+      mustChangePassword: false,
       name: databaseUser.name,
       role,
       username,

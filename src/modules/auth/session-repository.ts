@@ -7,7 +7,7 @@ const SESSION_BYTES = 32;
 const SESSION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1_000;
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
-function hashToken(token: string): string {
+export function hashSessionToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
@@ -27,7 +27,7 @@ export async function createSession(
   await prisma.session.create({
     data: {
       expiresAt,
-      tokenHash: hashToken(token),
+      tokenHash: hashSessionToken(token),
       userId,
     },
   });
@@ -44,7 +44,7 @@ export async function resolveSession(
 
   const session = await prisma.session.findUnique({
     include: { user: true },
-    where: { tokenHash: hashToken(token) },
+    where: { tokenHash: hashSessionToken(token) },
   });
   if (
     !session ||
@@ -56,6 +56,7 @@ export async function resolveSession(
 
   return {
     id: session.user.id,
+    mustChangePassword: session.user.mustChangePassword,
     name: session.user.name,
     role: session.user.role,
     username: session.user.username,
@@ -68,6 +69,6 @@ export async function revokeSession(token: string): Promise<void> {
   }
 
   await prisma.session.deleteMany({
-    where: { tokenHash: hashToken(token) },
+    where: { tokenHash: hashSessionToken(token) },
   });
 }

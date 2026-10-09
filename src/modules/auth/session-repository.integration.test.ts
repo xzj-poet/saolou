@@ -57,6 +57,7 @@ describe("database-backed sessions", () => {
 
     await expect(resolveSession(session.token)).resolves.toEqual({
       id: user.id,
+      mustChangePassword: false,
       name: user.name,
       role: "AGENT",
       username,
