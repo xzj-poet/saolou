@@ -158,8 +158,12 @@ test("production operations query the Prisma tables using their deployed lowerca
     assert.match(operations, new RegExp(`SELECT count\\(\\*\\) FROM "${table}"`));
   }
   assert.doesNotMatch(operations, /FROM "(?:User|School|Building|Dormitory|SweepRecord|SweepAudit|Session)"/);
+  assert.match(restoredData, /record\."agent_id"/);
+  assert.match(restoredData, /record\."dormitory_id"/);
+  assert.doesNotMatch(restoredData, /record\."(?:agentId|dormitoryId)"/);
   assert.match(integrationFixture, /CREATE TABLE "users"/);
   assert.doesNotMatch(integrationFixture, /CREATE TABLE "User"/);
+  assert.match(integrationFixture, /CREATE TABLE "sweep_records"[\s\S]*"agent_id" text[\s\S]*"dormitory_id" text/);
 });
 
 test("restore verification is isolated and CI exercises the PostgreSQL 18 round trip", async () => {

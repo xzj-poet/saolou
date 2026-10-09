@@ -39,8 +39,8 @@ SELECT count(*) FROM "sweep_records";
 SELECT count(*) FROM "sweep_audits";
 SELECT count(*) FROM "sessions";
 SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('_prisma_migrations', 'users', 'schools', 'buildings', 'dormitories', 'sweep_records', 'sweep_audits', 'sessions');
-SELECT count(*) FROM (SELECT "agentId", "dormitoryId" FROM "sweep_records" GROUP BY "agentId", "dormitoryId" HAVING count(*) > 1) AS duplicates;
-SELECT count(*) FROM "sweep_records" AS record LEFT JOIN "users" AS agent ON agent.id = record."agentId" LEFT JOIN "dormitories" AS dormitory ON dormitory.id = record."dormitoryId" WHERE agent.id IS NULL OR dormitory.id IS NULL;
+SELECT count(*) FROM (SELECT "agent_id", "dormitory_id" FROM "sweep_records" GROUP BY "agent_id", "dormitory_id" HAVING count(*) > 1) AS duplicates;
+SELECT count(*) FROM "sweep_records" AS record LEFT JOIN "users" AS agent ON agent.id = record."agent_id" LEFT JOIN "dormitories" AS dormitory ON dormitory.id = record."dormitory_id" WHERE agent.id IS NULL OR dormitory.id IS NULL;
 SQL
 )
 

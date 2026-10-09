@@ -246,9 +246,9 @@ test("real PostgreSQL 18 backup and isolated restore preserve the source", { ski
 CREATE TABLE "_prisma_migrations" (id text primary key);
 CREATE TABLE "users" (id text primary key, role text not null);
 CREATE TABLE "schools" (id text primary key);
-CREATE TABLE "buildings" (id text primary key, "schoolId" text references "schools"(id));
-CREATE TABLE "dormitories" (id text primary key, "buildingId" text references "buildings"(id));
-CREATE TABLE "sweep_records" (id text primary key, "agentId" text references "users"(id), "dormitoryId" text references "dormitories"(id), UNIQUE("agentId", "dormitoryId"));
+CREATE TABLE "buildings" (id text primary key, "school_id" text references "schools"(id));
+CREATE TABLE "dormitories" (id text primary key, "building_id" text references "buildings"(id));
+CREATE TABLE "sweep_records" (id text primary key, "agent_id" text references "users"(id), "dormitory_id" text references "dormitories"(id), UNIQUE("agent_id", "dormitory_id"));
 CREATE TABLE "sweep_audits" (id text primary key);
 CREATE TABLE "sessions" (id text primary key);
 INSERT INTO "_prisma_migrations" VALUES ('migration-1');
