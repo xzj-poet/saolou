@@ -146,17 +146,20 @@ test("deployment reuses encrypted backups and installs the daily timer after hea
 });
 
 test("production operations query the Prisma tables using their deployed lowercase names", async () => {
-  const scripts = await Promise.all([
+  const [backupLibrary, acceptance, restoredData, integrationFixture] = await Promise.all([
     read("ops/server/backup-lib.sh"),
     read("ops/server/clean-server-acceptance.sh"),
     read("ops/server/verify-restored-data.sh"),
+    read("tests/deployment/backup-restore.integration.test.mjs"),
   ]);
-  const operations = scripts.join("\n");
+  const operations = [backupLibrary, acceptance, restoredData].join("\n");
 
   for (const table of ["users", "schools", "buildings", "dormitories", "sweep_records", "sweep_audits", "sessions"]) {
     assert.match(operations, new RegExp(`SELECT count\\(\\*\\) FROM "${table}"`));
   }
   assert.doesNotMatch(operations, /FROM "(?:User|School|Building|Dormitory|SweepRecord|SweepAudit|Session)"/);
+  assert.match(integrationFixture, /CREATE TABLE "users"/);
+  assert.doesNotMatch(integrationFixture, /CREATE TABLE "User"/);
 });
 
 test("restore verification is isolated and CI exercises the PostgreSQL 18 round trip", async () => {
