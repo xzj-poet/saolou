@@ -109,6 +109,10 @@ test("administrator builds campus data and controls one agent's school access", 
   const agentContext = await browser.newContext(testInfo.project.use);
   const agentPage = await agentContext.newPage();
   await login(agentPage, campusScenario.agentUsername, temporaryPassword!);
+  await expect(agentPage).toHaveURL(/\/change-password$/);
+  await agentPage.getByLabel("新密码", { exact: true }).fill("E2e-updated-password-123");
+  await agentPage.getByLabel("确认新密码", { exact: true }).fill("E2e-updated-password-123");
+  await agentPage.getByRole("button", { name: "保存新密码" }).click();
   await expect(agentPage).toHaveURL(/\/app\/schools$/);
   await expect(agentPage.getByText(campusScenario.agentName)).toBeVisible();
   await expect(agentPage.getByRole("heading", { name: "选择学校" })).toBeVisible();

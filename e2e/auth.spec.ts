@@ -13,7 +13,8 @@ test("administrator enters the administrator shell", async ({ authUsers, page })
   await login(page, authUsers.admin.username, authUsers.admin.password);
 
   await expect(page).toHaveURL(/\/admin\/campus$/);
-  await expect(page.getByText("管理员后台").first()).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "后台导航" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "学校、楼栋与宿舍" })).toBeVisible();
   await expect(page.getByText("测试管理员")).toBeVisible();
 });
 
