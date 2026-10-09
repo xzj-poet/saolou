@@ -31,16 +31,16 @@ expected_session=$(manifest_number Session)
 
 mapfile -t actual < <(docker exec -i "$container" psql -X -qAt -v ON_ERROR_STOP=1 -U restore -d restore <<'SQL'
 SELECT count(*) FROM "_prisma_migrations";
-SELECT count(*) FROM "User";
-SELECT count(*) FROM "School";
-SELECT count(*) FROM "Building";
-SELECT count(*) FROM "Dormitory";
-SELECT count(*) FROM "SweepRecord";
-SELECT count(*) FROM "SweepAudit";
-SELECT count(*) FROM "Session";
-SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('_prisma_migrations', 'User', 'School', 'Building', 'Dormitory', 'SweepRecord', 'SweepAudit', 'Session');
-SELECT count(*) FROM (SELECT "agentId", "dormitoryId" FROM "SweepRecord" GROUP BY "agentId", "dormitoryId" HAVING count(*) > 1) AS duplicates;
-SELECT count(*) FROM "SweepRecord" AS record LEFT JOIN "User" AS agent ON agent.id = record."agentId" LEFT JOIN "Dormitory" AS dormitory ON dormitory.id = record."dormitoryId" WHERE agent.id IS NULL OR dormitory.id IS NULL;
+SELECT count(*) FROM "users";
+SELECT count(*) FROM "schools";
+SELECT count(*) FROM "buildings";
+SELECT count(*) FROM "dormitories";
+SELECT count(*) FROM "sweep_records";
+SELECT count(*) FROM "sweep_audits";
+SELECT count(*) FROM "sessions";
+SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('_prisma_migrations', 'users', 'schools', 'buildings', 'dormitories', 'sweep_records', 'sweep_audits', 'sessions');
+SELECT count(*) FROM (SELECT "agentId", "dormitoryId" FROM "sweep_records" GROUP BY "agentId", "dormitoryId" HAVING count(*) > 1) AS duplicates;
+SELECT count(*) FROM "sweep_records" AS record LEFT JOIN "users" AS agent ON agent.id = record."agentId" LEFT JOIN "dormitories" AS dormitory ON dormitory.id = record."dormitoryId" WHERE agent.id IS NULL OR dormitory.id IS NULL;
 SQL
 )
 
