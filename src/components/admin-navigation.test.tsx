@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -25,5 +28,15 @@ describe("AdminNavigation", () => {
       "href",
       "/admin/sweep-data",
     );
+  });
+
+  it("keeps every admin destination available as a horizontally scrollable navigation strip on phones", async () => {
+    const styles = await readFile(resolve(process.cwd(), "src", "app", "globals.css"), "utf8");
+    const phoneStyles = styles.slice(styles.indexOf("@media (max-width: 480px)"));
+
+    expect(phoneStyles).toMatch(/\.admin-nav\s*\{[\s\S]*display:\s*flex/);
+    expect(phoneStyles).toMatch(/\.admin-nav\s*\{[\s\S]*flex-direction:\s*row/);
+    expect(phoneStyles).toMatch(/\.admin-nav\s*\{[\s\S]*overflow-x:\s*auto/);
+    expect(phoneStyles).not.toMatch(/\.admin-nav\s*\{[\s\S]*display:\s*none/);
   });
 });
