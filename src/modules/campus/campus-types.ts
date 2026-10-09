@@ -11,6 +11,7 @@ export type AdminBuildingSummary = {
   dormitories: AdminDormitorySummary[];
   dormitoryCount: number;
   floorCount: number;
+  gender: "MALE" | "FEMALE";
   id: string;
   isActive: boolean;
   name: string;
@@ -40,6 +41,7 @@ export type AgentBuildingSummary = {
   counts: { covered: number; pending: number; unvisited: number };
   dormitoryCount: number;
   floorCount: number;
+  gender: "MALE" | "FEMALE";
   id: string;
   name: string;
   note: string | null;

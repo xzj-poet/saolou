@@ -4,10 +4,9 @@ export default function LoginPage() {
   return (
     <main className="login-shell">
       <section aria-labelledby="login-title" className="login-card">
-        <div aria-hidden="true" className="landing-mark">门</div>
-        <p className="eyebrow">单团队 · 在线使用</p>
+        <p className="eyebrow">自研扫楼系统 内部使用</p>
         <h1 id="login-title">登录扫楼系统</h1>
-        <p className="login-copy">查看哪些宿舍仍值得继续敲门。</p>
+        <p className="login-copy">记录扫楼数据，提高扫楼效率！</p>
         <LoginForm />
       </section>
     </main>

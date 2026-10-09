@@ -12,8 +12,10 @@ type DialogState =
   | { kind: "school-create" }
   | { kind: "school-edit" | "school-retire"; school: AdminSchoolSummary }
   | { kind: "building-create"; school: AdminSchoolSummary }
-  | { kind: "building-name" | "building-note" | "building-retire"; building: AdminBuildingSummary }
+  | { kind: "building-edit" | "building-retire"; building: AdminBuildingSummary }
   | null;
+
+const buildingGenderLabels = { FEMALE: "女生宿舍楼", MALE: "男生宿舍楼" } as const;
 
 type ApiFailure = { error?: { message?: string } };
 
@@ -74,7 +76,7 @@ function SimpleForm({
   onSubmit,
   submitLabel = "保存",
 }: {
-  fields: Array<{ label: string; name: string; value?: string }>;
+  fields: Array<{ label: string; name: string; options?: Array<{ label: string; value: string }>; value?: string }>;
   onSubmit: (values: Record<string, string>) => Promise<void>;
   submitLabel?: string;
 }) {
@@ -96,7 +98,7 @@ function SimpleForm({
       {fields.map((field) => (
         <label key={field.name}>
           <span>{field.label}</span>
-          <input className="text-input" defaultValue={field.value} name={field.name} required={field.name !== "note"} />
+          {field.options ? <select className="text-input" defaultValue={field.value} name={field.name}>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input className="text-input" defaultValue={field.value} name={field.name} required={field.name !== "note"} />}
         </label>
       ))}
       <p aria-live="polite" className="form-error">{error}</p>
@@ -229,12 +231,11 @@ export function CampusManager({ initialSchoolId, schools }: { initialSchoolId?: 
               </MoreMenu>
             </div>
             {openSchoolId === school.id ? <div className="building-grid">{school.buildings.length === 0 ? <div className="empty-panel compact">该学校还没有楼栋。</div> : school.buildings.map((building) => (
-              <article className={`building-card${building.isActive ? "" : " is-disabled"}`} key={building.id}>
-                <button aria-label={`查看${building.name}宿舍蓝图`} className="building-card-body" onClick={() => setDialog({ building, kind: "blueprint" })} type="button"><strong>{building.name}</strong><span>{building.floorCount}层 · {building.dormitoryCount}间宿舍</span>{building.note ? <small>{building.note}</small> : null}</button>
+              <article className={`building-card is-${building.gender.toLowerCase()}${building.isActive ? "" : " is-disabled"}`} key={building.id}>
+                <button aria-label={`查看${building.name}宿舍蓝图`} className="building-card-body" onClick={() => setDialog({ building, kind: "blueprint" })} type="button"><strong>{building.name}</strong><span>{buildingGenderLabels[building.gender]} · {building.floorCount}层 · {building.dormitoryCount}间宿舍</span>{building.note ? <small>{building.note}</small> : null}</button>
                 <span className="status-pill">{building.isActive ? "启用中" : "已停用"}</span>
                 <MoreMenu id={`building-${building.id}`} label={`${building.name}操作`} menu={menu} onToggle={setMenu}>
-                  <MenuAction onClick={() => setDialog({ building, kind: "building-name" })}>编辑楼栋名称</MenuAction>
-                  <MenuAction onClick={() => setDialog({ building, kind: "building-note" })}>编辑楼栋备注</MenuAction>
+                  <MenuAction onClick={() => setDialog({ building, kind: "building-edit" })}>编辑楼栋信息</MenuAction>
                   <MenuAction onClick={() => setDialog({ building, kind: "dormitories" })}>宿舍管理</MenuAction>
                   <MenuAction danger onClick={() => setDialog({ building, kind: "building-retire" })}>删除/停用楼栋</MenuAction>
                 </MoreMenu>
@@ -249,9 +250,8 @@ export function CampusManager({ initialSchoolId, schools }: { initialSchoolId?: 
       {dialog?.kind === "dormitories" ? <CampusDialog onClose={() => setDialog(null)} title={`${dialog.building.name}宿舍管理`} wide><DormitoryManager building={dialog.building} onChanged={(message) => changed(message)} /></CampusDialog> : null}
       {dialog?.kind === "school-create" ? <CampusDialog onClose={() => setDialog(null)} title="添加学校"><SimpleForm fields={[{ label: "学校名称", name: "name" }]} onSubmit={async (values) => { await requestJson("/api/admin/schools", "POST", values); changed("学校已添加"); }} /></CampusDialog> : null}
       {dialog?.kind === "school-edit" ? <CampusDialog onClose={() => setDialog(null)} title="编辑学校名称"><SimpleForm fields={[{ label: "学校名称", name: "name", value: dialog.school.name }]} onSubmit={async (values) => { await requestJson(`/api/admin/schools/${dialog.school.id}`, "PATCH", values); changed("学校名称已更新"); }} /></CampusDialog> : null}
-      {dialog?.kind === "building-create" ? <CampusDialog onClose={() => setDialog(null)} title="新建楼栋"><SimpleForm fields={[{ label: "楼栋名称", name: "name" }, { label: "楼栋备注（可选）", name: "note" }]} onSubmit={async (values) => { await requestJson("/api/admin/buildings", "POST", { ...values, schoolId: dialog.school.id }); changed("楼栋已添加"); }} /></CampusDialog> : null}
-      {dialog?.kind === "building-name" ? <CampusDialog onClose={() => setDialog(null)} title="编辑楼栋名称"><SimpleForm fields={[{ label: "楼栋名称", name: "name", value: dialog.building.name }]} onSubmit={async (values) => { await requestJson(`/api/admin/buildings/${dialog.building.id}`, "PATCH", values); changed("楼栋名称已更新"); }} /></CampusDialog> : null}
-      {dialog?.kind === "building-note" ? <CampusDialog onClose={() => setDialog(null)} title="编辑楼栋备注"><SimpleForm fields={[{ label: "楼栋备注（可选）", name: "note", value: dialog.building.note ?? "" }]} onSubmit={async (values) => { await requestJson(`/api/admin/buildings/${dialog.building.id}`, "PATCH", values); changed("楼栋备注已更新"); }} /></CampusDialog> : null}
+      {dialog?.kind === "building-create" ? <CampusDialog onClose={() => setDialog(null)} title="新建楼栋"><SimpleForm fields={[{ label: "楼栋名称", name: "name" }, { label: "宿舍类型", name: "gender", options: [{ label: "男生宿舍楼", value: "MALE" }, { label: "女生宿舍楼", value: "FEMALE" }], value: "MALE" }, { label: "楼栋备注（可选）", name: "note" }]} onSubmit={async (values) => { await requestJson("/api/admin/buildings", "POST", { ...values, schoolId: dialog.school.id }); changed("楼栋已添加"); }} /></CampusDialog> : null}
+      {dialog?.kind === "building-edit" ? <CampusDialog onClose={() => setDialog(null)} title="编辑楼栋信息"><SimpleForm fields={[{ label: "楼栋名称", name: "name", value: dialog.building.name }, { label: "宿舍类型", name: "gender", options: [{ label: "男生宿舍楼", value: "MALE" }, { label: "女生宿舍楼", value: "FEMALE" }], value: dialog.building.gender }, { label: "楼栋备注（可选）", name: "note", value: dialog.building.note ?? "" }]} onSubmit={async (values) => { await requestJson(`/api/admin/buildings/${dialog.building.id}`, "PATCH", values); changed("楼栋信息已更新"); }} /></CampusDialog> : null}
       {dialog?.kind === "school-retire" ? <CampusDialog onClose={() => setDialog(null)} title="删除/停用学校"><p>空学校将永久删除；已有楼栋时只会停用，历史数据不会丢失。</p><button className="danger-button" onClick={() => retire(`/api/admin/schools/${dialog.school.id}`)} type="button">确认处理</button></CampusDialog> : null}
       {dialog?.kind === "building-retire" ? <CampusDialog onClose={() => setDialog(null)} title="删除/停用楼栋"><p>空楼栋将永久删除；已有宿舍时只会停用。</p><button className="danger-button" onClick={() => retire(`/api/admin/buildings/${dialog.building.id}`)} type="button">确认处理</button></CampusDialog> : null}
     </div>

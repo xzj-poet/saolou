@@ -54,6 +54,7 @@ export async function listCampusTreeForAdmin(): Promise<AdminSchoolSummary[]> {
         })),
         dormitoryCount: activeDormitories.length,
         floorCount: new Set(activeDormitories.map(({ floor }) => floor)).size,
+        gender: building.gender,
         id: building.id,
         isActive: building.isActive,
         name: building.name,
@@ -128,7 +129,7 @@ export async function listBuildingsForAgent(
         const status = deriveOverallStatus(dormitory.sweepRecords.map(({ status }) => status));
         counts[status === "COVERED" ? "covered" : status === "PENDING" ? "pending" : "unvisited"] += 1;
       }
-      return { counts, dormitoryCount: building.dormitories.length, floorCount: new Set(building.dormitories.map(({ floor }) => floor)).size, id: building.id, name: building.name, note: building.note, sortOrder: building.sortOrder };
+      return { counts, dormitoryCount: building.dormitories.length, floorCount: new Set(building.dormitories.map(({ floor }) => floor)).size, gender: building.gender, id: building.id, name: building.name, note: building.note, sortOrder: building.sortOrder };
     }),
     school: { id: school.id, name: school.name },
   };

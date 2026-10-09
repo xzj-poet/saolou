@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { IdentityMenu } from "@/components/identity-menu";
 import { AdminNavigation } from "@/components/admin-navigation";
+import { ProductUsage } from "@/components/product-usage";
 import type { AuthenticatedUser } from "@/modules/auth/auth-service";
 
 export function AdminShell({
@@ -14,10 +15,7 @@ export function AdminShell({
   return (
     <div className="admin-shell">
       <header className="admin-header">
-        <div>
-          <p className="shell-kicker">校园扫楼记录系统</p>
-          <strong>管理员后台</strong>
-        </div>
+        <ProductUsage />
         <IdentityMenu user={user} />
       </header>
       <div className="admin-body">
